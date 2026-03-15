@@ -49,3 +49,19 @@
 
   --color-border: #334155;
 }
+
+:root {
+  /* Chart colors */
+  --chart-1: #6366f1; /* Indigo */
+  --chart-2: #22c55e; /* Green */
+  --chart-3: #f59e0b; /* Amber */
+  --chart-4: #ef4444; /* Red */
+  --chart-5: #06b6d4; /* Cyan */
+  --chart-6: #8b5cf6; /* Purple */
+  --chart-7: #ec4899; /* Pink */
+  --chart-8: #84cc16; /* Lime */
+  --chart-9: #f97316; /* Orange */
+  --chart-10: #14b8a6; /* Teal */
+  --chart-11: #0ea5e9; /* Sky */
+  --chart-12: #a855f7; /* Violet */
+}

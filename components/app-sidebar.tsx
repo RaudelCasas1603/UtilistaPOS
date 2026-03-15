@@ -26,12 +26,14 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
+  Package2,
   Boxes,
   Users,
   BarChart3,
   User2,
   SettingsIcon,
   Moon,
+  Truck,
 } from "lucide-react"
 
 export default function AppSidebar() {
@@ -123,7 +125,7 @@ export default function AppSidebar() {
                 collapsed ? "justify-center px-0" : "gap-4 px-4"
               }`}
             >
-              <Package className="h-7 w-7 shrink-0" />
+              <Package2 className="h-7 w-7 shrink-0" />
               {!collapsed && (
                 <span className="text-lg font-medium">Productos</span>
               )}
@@ -154,6 +156,19 @@ export default function AppSidebar() {
               <Users className="h-7 w-7 shrink-0" />
               {!collapsed && (
                 <span className="text-lg font-medium">Clientes</span>
+              )}
+            </Link>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <Link
+              href="/provedores"
+              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
+                collapsed ? "justify-center px-0" : "gap-4 px-4"
+              }`}
+            >
+              <Truck className="h-7 w-7 shrink-0" />
+              {!collapsed && (
+                <span className="text-lg font-medium">Provedores</span>
               )}
             </Link>
           </SidebarMenuItem>
