@@ -46,6 +46,7 @@ const periodo: Periodo[] = [
   { label: "Semana", value: "semana" },
   { label: "Mes", value: "mes" },
 ]
+
 // Datos de ejemplo para el gráfico
 const data = [
   { day: "Lun", ventas: 1200 },
@@ -89,6 +90,9 @@ const COLORS = [
 ]
 
 export default function DashboardPage() {
+  const [selectedPeriod, setSelectedPeriod] = useState<Periodo | null>(
+    periodo[0]
+  )
   return (
     <>
       <div className="flex items-center justify-between">
@@ -98,6 +102,10 @@ export default function DashboardPage() {
           <div className="w-46">
             <Combobox
               items={periodo}
+              value={selectedPeriod}
+              onValueChange={(period: Periodo | null) => {
+                setSelectedPeriod(period)
+              }}
               itemToStringValue={(period: Periodo) => period.label}
             >
               <ComboboxInput placeholder="Selecciona período" />
@@ -206,14 +214,18 @@ export default function DashboardPage() {
             <XAxis
               dataKey="day"
               label={{
-                value: "Ventas por día",
+                value: `Ventas por ${selectedPeriod?.label.toLowerCase()}`,
                 position: "bottom",
                 offset: 10,
               }}
             />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="ventas" fill="var(--chart-2)" radius={[6, 6, 0, 0]} />
+            <Bar
+              dataKey="ventas"
+              fill="var(--chart-12)"
+              radius={[6, 6, 0, 0]}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
