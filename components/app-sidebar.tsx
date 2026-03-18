@@ -58,7 +58,7 @@ export default function AppSidebar() {
         {collapsed ? (
           <img src={logoIcon} alt="logo" className="h-16 w-auto" />
         ) : (
-          <img src={logoFull} alt="logo" className="h-32 w-auto px-4" />
+          <img src={logoFull} alt="logo" className="h-20 w-auto px-4" />
         )}
       </SidebarHeader>
 
