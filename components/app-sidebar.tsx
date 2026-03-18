@@ -25,7 +25,6 @@ import Link from "next/link"
 import {
   LayoutDashboard,
   ShoppingCart,
-  Package,
   Package2,
   Boxes,
   Users,
@@ -34,6 +33,7 @@ import {
   SettingsIcon,
   Moon,
   Truck,
+  ShoppingBasket,
 } from "lucide-react"
 
 export default function AppSidebar() {
@@ -111,7 +111,7 @@ export default function AppSidebar() {
                 collapsed ? "justify-center px-0" : "gap-4 px-4"
               }`}
             >
-              <Package className="h-7 w-7 shrink-0" />
+              <ShoppingBasket className="h-7 w-7 shrink-0" />
               {!collapsed && (
                 <span className="text-lg font-medium">Ventas</span>
               )}
