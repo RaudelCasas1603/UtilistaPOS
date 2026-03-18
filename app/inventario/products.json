@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "codigoProducto": "P-001",
+    "codigoBarras": "750100000001",
+    "nombre": "Coca Cola 600 ml",
+    "precio": 18,
+    "costo": 12,
+    "precioPublico": 20,
+    "stockActual": 35,
+    "stockMinimo": 10,
+    "stockDeseado": 50
+  },
+  {
+    "id": 2,
+    "codigoProducto": "P-002",
+    "codigoBarras": "750100000002",
+    "nombre": "Sabritas Original",
+    "precio": 22,
+    "costo": 15,
+    "precioPublico": 25,
+    "stockActual": 4,
+    "stockMinimo": 8,
+    "stockDeseado": 20
+  },
+  {
+    "id": 3,
+    "codigoProducto": "P-003",
+    "codigoBarras": "750100000003",
+    "nombre": "Agua Ciel 1L",
+    "precio": 14,
+    "costo": 9,
+    "precioPublico": 16,
+    "stockActual": 0,
+    "stockMinimo": 12,
+    "stockDeseado": 40
+  },
+  {
+    "id": 4,
+    "codigoProducto": "P-004",
+    "codigoBarras": "750100000004",
+    "nombre": "Chocolate Carlos V",
+    "precio": 16,
+    "costo": 10,
+    "precioPublico": 18,
+    "stockActual": 18,
+    "stockMinimo": 6,
+    "stockDeseado": 25
+  },
+  {
+    "id": 5,
+    "codigoProducto": "P-005",
+    "codigoBarras": "750100000005",
+    "nombre": "Galletas Marías",
+    "precio": 19,
+    "costo": 13,
+    "precioPublico": 21,
+    "stockActual": 7,
+    "stockMinimo": 10,
+    "stockDeseado": 30
+  },
+  {
+    "id": 6,
+    "codigoProducto": "P-006",
+    "codigoBarras": "750100000006",
+    "nombre": "Jugo Del Valle Mango",
+    "precio": 17,
+    "costo": 11,
+    "precioPublico": 19,
+    "stockActual": 0,
+    "stockMinimo": 5,
+    "stockDeseado": 18
+  },
+  {
+    "id": 7,
+    "codigoProducto": "P-007",
+    "codigoBarras": "750100000007",
+    "nombre": "Leche Lala Entera 1L",
+    "precio": 29,
+    "costo": 22,
+    "precioPublico": 32,
+    "stockActual": 11,
+    "stockMinimo": 10,
+    "stockDeseado": 24
+  },
+  {
+    "id": 8,
+    "codigoProducto": "P-008",
+    "codigoBarras": "750100000008",
+    "nombre": "Pan Blanco Bimbo",
+    "precio": 42,
+    "costo": 34,
+    "precioPublico": 45,
+    "stockActual": 3,
+    "stockMinimo": 7,
+    "stockDeseado": 20
+  },
+  {
+    "id": 9,
+    "codigoProducto": "P-009",
+    "codigoBarras": "750100000009",
+    "nombre": "Atún Dolores",
+    "precio": 24,
+    "costo": 18,
+    "precioPublico": 27,
+    "stockActual": 14,
+    "stockMinimo": 8,
+    "stockDeseado": 22
+  },
+  {
+    "id": 10,
+    "codigoProducto": "P-010",
+    "codigoBarras": "750100000010",
+    "nombre": "Arroz Verde Valle 900g",
+    "precio": 31,
+    "costo": 24,
+    "precioPublico": 35,
+    "stockActual": 2,
+    "stockMinimo": 6,
+    "stockDeseado": 18
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "nombre": "Juan Pérez",
+    "telefono": "3312345678",
+    "correo": "juan@distribuidoraoccidente.com",
+    "empresa": "Distribuidora Occidente",
+    "referencia": "Abarrotes"
+  },
+  {
+    "id": 2,
+    "nombre": "María González",
+    "telefono": "3323456789",
+    "correo": "maria@bebidasdelcentro.com",
+    "empresa": "Bebidas del Centro",
+    "referencia": "Bebidas"
+  },
+  {
+    "id": 3,
+    "nombre": "Carlos Ramírez",
+    "telefono": "3334567890",
+    "correo": "carlos@snacksmx.com",
+    "empresa": "Snacks MX",
+    "referencia": "Botanas"
+  },
+  {
+    "id": 4,
+    "nombre": "Fernanda Torres",
+    "telefono": "3345678901",
+    "correo": "fernanda@lacteosguadalajara.com",
+    "empresa": "Lácteos Guadalajara",
+    "referencia": "Lácteos"
+  },
+  {
+    "id": 5,
+    "nombre": "Luis Hernández",
+    "telefono": "3356789012",
+    "correo": "luis@panificadoraexpress.com",
+    "empresa": "Panificadora Express",
+    "referencia": "Pan"
+  },
+  {
+    "id": 6,
+    "nombre": "Ana Martínez",
+    "telefono": "3367890123",
+    "correo": "ana@abarroteramoderna.com",
+    "empresa": "Abarrotera Moderna",
+    "referencia": "Despensa"
+  },
+  {
+    "id": 7,
+    "nombre": "José López",
+    "telefono": "3378901234",
+    "correo": "jose@limpiezahogar.com",
+    "empresa": "Limpieza Hogar",
+    "referencia": "Limpieza"
+  },
+  {
+    "id": 8,
+    "nombre": "Patricia Ruiz",
+    "telefono": "3389012345",
+    "correo": "patricia@dulcestradicionales.com",
+    "empresa": "Dulces Tradicionales",
+    "referencia": "Dulces"
+  },
+  {
+    "id": 9,
+    "nombre": "Ricardo Castillo",
+    "telefono": "3390123456",
+    "correo": "ricardo@congeladosdelnorte.com",
+    "empresa": "Congelados del Norte",
+    "referencia": "Congelados"
+  },
+  {
+    "id": 10,
+    "nombre": "Daniela Navarro",
+    "telefono": "3311122233",
+    "correo": "daniela@frutasselectas.com",
+    "empresa": "Frutas Selectas",
+    "referencia": "Frutas y verduras"
+  }
+]

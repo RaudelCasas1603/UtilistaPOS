@@ -33,7 +33,7 @@ import {
   SettingsIcon,
   Moon,
   Truck,
-  ShoppingBasket,
+  LogOut,
 } from "lucide-react"
 
 export default function AppSidebar() {
@@ -92,6 +92,20 @@ export default function AppSidebar() {
 
           <SidebarMenuItem>
             <Link
+              href="/ventas"
+              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
+                collapsed ? "justify-center px-0" : "gap-4 px-4"
+              }`}
+            >
+              <ShoppingCart className="h-7 w-7 shrink-0" />
+              {!collapsed && (
+                <span className="text-lg font-medium">Ventas</span>
+              )}
+            </Link>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <Link
               href="/pedidos"
               className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
                 collapsed ? "justify-center px-0" : "gap-4 px-4"
@@ -99,21 +113,7 @@ export default function AppSidebar() {
             >
               <ShoppingCart className="h-7 w-7 shrink-0" />
               {!collapsed && (
-                <span className="text-lg font-medium">Pedidos</span>
-              )}
-            </Link>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <Link
-              href="/ventas"
-              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
-                collapsed ? "justify-center px-0" : "gap-4 px-4"
-              }`}
-            >
-              <ShoppingBasket className="h-7 w-7 shrink-0" />
-              {!collapsed && (
-                <span className="text-lg font-medium">Ventas</span>
+                <span className="text-lg font-medium">Por definir</span>
               )}
             </Link>
           </SidebarMenuItem>
@@ -237,12 +237,20 @@ export default function AppSidebar() {
             <div className="my-2 h-px bg-border" />
 
             <DropdownMenuItem className="cursor-pointer rounded-lg px-3 py-2 text-foreground focus:bg-accent focus:text-accent-foreground">
-              <SettingsIcon className="mr-2 h-4 w-4" />
-              Configuración
+              <Link
+                href="/configuracion"
+                className="flex items-center text-base font-semibold"
+              >
+                <SettingsIcon className="mr-6 h-5 w-5" />
+                Configuración
+              </Link>
             </DropdownMenuItem>
 
             <DropdownMenuItem className="cursor-pointer rounded-lg px-3 py-2 text-red-500 focus:bg-accent focus:text-red-500">
-              Cerrar sesión
+              <button className="flex text-base font-semibold">
+                <LogOut className="mr-6 h-5 w-5" />
+                Cerrar sesión
+              </button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

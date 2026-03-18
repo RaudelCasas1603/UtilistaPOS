@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "nombre": "Cliente general",
+    "telefono": "0000000000",
+    "correo": "general@cliente.com",
+    "descuento": 0,
+    "referencia": "Mostrador"
+  },
+  {
+    "id": 2,
+    "nombre": "María López",
+    "telefono": "3312345678",
+    "correo": "maria.lopez@gmail.com",
+    "descuento": 5,
+    "referencia": "Facebook"
+  },
+  {
+    "id": 3,
+    "nombre": "Carlos Ruiz",
+    "telefono": "3323456789",
+    "correo": "carlos.ruiz@hotmail.com",
+    "descuento": 10,
+    "referencia": "Recomendación"
+  },
+  {
+    "id": 4,
+    "nombre": "Papelería Centro",
+    "telefono": "3334567890",
+    "correo": "compras@papeleriacentro.com",
+    "descuento": 8,
+    "referencia": "WhatsApp"
+  },
+  {
+    "id": 5,
+    "nombre": "Ana Torres",
+    "telefono": "3345678901",
+    "correo": "anatorres@gmail.com",
+    "descuento": 3,
+    "referencia": "Instagram"
+  },
+  {
+    "id": 6,
+    "nombre": "José Hernández",
+    "telefono": "3356789012",
+    "correo": "jose.hernandez@yahoo.com",
+    "descuento": 12,
+    "referencia": "Sucursal"
+  },
+  {
+    "id": 7,
+    "nombre": "Tienda La Esquina",
+    "telefono": "3367890123",
+    "correo": "contacto@laesquina.com",
+    "descuento": 7,
+    "referencia": "Facebook"
+  },
+  {
+    "id": 8,
+    "nombre": "Fernanda Gómez",
+    "telefono": "3378901234",
+    "correo": "fer.gomez@gmail.com",
+    "descuento": 15,
+    "referencia": "Recomendación"
+  },
+  {
+    "id": 9,
+    "nombre": "Luis Martínez",
+    "telefono": "3389012345",
+    "correo": "luis.mtz@hotmail.com",
+    "descuento": 2,
+    "referencia": "WhatsApp"
+  },
+  {
+    "id": 10,
+    "nombre": "Abarrotes San Juan",
+    "telefono": "3390123456",
+    "correo": "ventas@abarrotessanjuan.com",
+    "descuento": 6,
+    "referencia": "Mostrador"
+  }
+]
