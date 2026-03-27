@@ -338,7 +338,7 @@ export default function ProductosPage() {
         <Card className="border-border/60 shadow-sm">
           <CardContent className="flex items-center justify-between p-5">
             <div>
-              <p className="text-sm text-muted-foreground">Total productos</p>
+              <p className="text-sm text-muted-foreground">Total productos dados de alta </p>
               <p className="mt-1 text-2xl font-bold">{totalProductos}</p>
             </div>
             <Package2 className="h-8 w-8 text-muted-foreground" />
