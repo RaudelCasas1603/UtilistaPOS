@@ -1,0 +1,63 @@
+PANTALLA PRODUCTO 
+    desplegar modal para crear un nuevo producto
+    desplegar un modal para ver detalles, poder editar o eliminar 
+
+    PANTALLA PRODUCTOS > ID
+        cargar el historico de ventas de x tiempo 
+        cargar las ultimas 10 ventas de ese producto
+
+
+PANTALLA INVENTARIO 
+    desplegar modal para crear un nuevo producto
+    desplegar un modal para ver detalles, poder editar o eliminar
+
+
+PANTALLA CLIENTES 
+    desplegar modal para crear un nuevo CLIENTE
+    desplegar un modal para ver detalles, poder editar o eliminar  
+
+    PANTALLA CLIENTE > ID 
+        cargar el historico de las ultimas x ventas 
+
+            PANTALLA CLIENTEID > X VENTA
+                cargar la informacion de X venta 
+
+
+PANTALLA CLIENTES 
+    desplegar modal para crear un nuevo CLIENTE
+    desplegar un modal para ver detalles, poder editar o eliminar 
+
+
+
+PANTALLA ADMINISTRACION  
+
+    cargar un boton donde se administren las categorias de producto (crear, eliminar, editar, listar)
+    cargar un apartado donde se administren las devoluciones/ventas canceladas 
+
+
+PANTALLA CONFIGURACION 
+    cargar un boton donde se administren los usuarios (se crea un crud basico donde se listan usuarios, modifican, eliminan y crean)
+    
+    cargar un boton donde se administre la cuenta de transferencia 
+    (se debe de incluir el nombre del 
+    titular, cuenta clabe / numero de tarjeta, institucion bancaria)
+    
+    cargar un boton donde se definan configuraciones basicas, (si se cobra con tarjeta se debe definir la comision 
+    del banco para no influir en el corte)
+    
+
+
+PANTALLA CORTE DE CAJA 
+    se genera un boton donde le permite sacar el reporte de ventas de ese mismo dia total, la suma de cobros con tarjeta (ya con la comision incluida) y transferencia  
+    se cargan campos donde se ingresaran datos como cantidad de billetes por denominaciones, saldo inicial de caja, devoluciones.
+
+
+
+
+
+
+CONSIDERACIONES EN LA BASE DE DATOS
+
+
+Se deben de tener dos tablas ventas -> detalles de ventas  y    ventas-pendientes -> detalles de ventas-pendientes 
+
