@@ -1,28 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #f7f9fc;
-  --color-foreground: #182839;
+  --color-background: #f8fafc;
+  --color-foreground: #0f172a;
 
   --color-card: #ffffff;
-  --color-card-foreground: #182839;
+  --color-card-foreground: #0f172a;
 
-  --color-primary: #5577cd;
+  --color-primary: #4f6fd6;
   --color-primary-foreground: #ffffff;
 
-  --color-secondary: #33cc99;
+  --color-secondary: #22c55e;
   --color-secondary-foreground: #ffffff;
 
-  --color-accent: #ffcc33;
-  --color-accent-foreground: #182839;
+  --color-accent: #fbbf24;
+  --color-accent-foreground: #1f2937;
 
-  --color-muted: #e6e6e6;
-  --color-muted-foreground: #6b7280;
+  --color-muted: #eef2f7;
+  --color-muted-foreground: #64748b;
 
-  --color-border: #e6e6e6;
+  --color-border: #dbe2ea;
 
-  --color-success: #33cc99;
-  --color-warning: #ffcc33;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
   --color-destructive: #ef4444;
 }
 
@@ -30,38 +30,41 @@
 
 .dark {
   --color-background: #0f172a;
-  --color-foreground: #e6e6e6;
+  --color-foreground: #f8fafc;
 
-  --color-card: #182839;
-  --color-card-foreground: #e6e6e6;
+  --color-card: #111827;
+  --color-card-foreground: #f8fafc;
 
-  --color-primary: #5577cd;
+  --color-primary: #6c8cff;
   --color-primary-foreground: #ffffff;
 
-  --color-secondary: #33cc99;
-  --color-secondary-foreground: #ffffff;
+  --color-secondary: #34d399;
+  --color-secondary-foreground: #052e16;
 
-  --color-accent: #ffcc33;
-  --color-accent-foreground: #182839;
+  --color-accent: #facc15;
+  --color-accent-foreground: #1f2937;
 
-  --color-muted: #1f2937;
-  --color-muted-foreground: #9ca3af;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #cbd5e1;
 
   --color-border: #334155;
+
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-destructive: #f87171;
 }
 
 :root {
-  /* Chart colors */
-  --chart-1: #6366f1; /* Indigo */
-  --chart-2: #22c55e; /* Green */
-  --chart-3: #f59e0b; /* Amber */
-  --chart-4: #ef4444; /* Red */
-  --chart-5: #06b6d4; /* Cyan */
-  --chart-6: #8b5cf6; /* Purple */
-  --chart-7: #ec4899; /* Pink */
-  --chart-8: #84cc16; /* Lime */
-  --chart-9: #f97316; /* Orange */
-  --chart-10: #14b8a6; /* Teal */
-  --chart-11: #0ea5e9; /* Sky */
-  --chart-12: #a855f7; /* Violet */
+  --chart-1: #6366f1;
+  --chart-2: #22c55e;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #06b6d4;
+  --chart-6: #8b5cf6;
+  --chart-7: #ec4899;
+  --chart-8: #84cc16;
+  --chart-9: #f97316;
+  --chart-10: #14b8a6;
+  --chart-11: #0ea5e9;
+  --chart-12: #a855f7;
 }

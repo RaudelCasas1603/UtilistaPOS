@@ -55,7 +55,7 @@ export default function AppSidebar() {
   const logoFull = isDark ? "/LogoOscuro.svg" : "/LogoClaro.svg"
 
   return (
-    <Sidebar collapsible="icon" className="bg-background">
+    <Sidebar collapsible="icon">
       <SidebarHeader className="flex justify-center py-4">
         {collapsed ? (
           <img src={logoIcon} alt="logo" className="h-16 w-auto" />
