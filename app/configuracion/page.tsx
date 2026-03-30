@@ -1,13 +1,22 @@
+"use client"
+
+import { useState } from "react"
+
 import {
   Users,
   ShieldCheck,
   KeyRound,
-  UserPlus,
-  ChevronRight,
-  Search,
-  Ban,
   Save,
   Hash,
+  UserRoundCog,
+  Pencil,
+  UserRound,
+  Landmark,
+  Percent,
+  Building2,
+  ChevronRight,
+  BanknoteArrowUp,
+  CreditCard,
 } from "lucide-react"
 
 import {
@@ -19,10 +28,29 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default function ConfiguracionPage() {
+  //Controla el estado del modo edicion de los datos de transferencia
+  const [editable, setEditable] = useState(false)
+  //Controla el estado del modo edicion de los datos de Terminal
+  const [editableTerminal, setEditableTerminal] = useState(false)
+
+  //Data Dummy
+  const data = {
+    clabe: "012345678901234567",
+    banco: "BBVA Bancomer",
+    titular: "Enrique Peña Nieto",
+  }
+
+  const dataTerminal = {
+    institution: "BBVA Bancomer",
+    commission: "3.5",
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col gap-6 bg-background p-6">
+      <h2 className="text-2xl font-medium">Administración del sistema</h2>
       {/* Usuarios y roles */}
       <Card className="rounded-2xl border shadow-sm">
         <CardHeader className="pb-4">
@@ -53,7 +81,7 @@ export default function ConfiguracionPage() {
             <InfoCard
               title="Roles creados"
               value="4"
-              subtitle="Admin, gerente, cajero y almacén"
+              subtitle="Admin, Cajero y Vendedor"
               icon={<ShieldCheck className="h-4 w-4 text-muted-foreground" />}
             />
 
@@ -64,83 +92,140 @@ export default function ConfiguracionPage() {
               icon={<KeyRound className="h-4 w-4 text-muted-foreground" />}
             />
           </div>
-
-          {/* acciones */}
-          <div className="space-y-3">
-            <QuickAccessItem
-              icon={UserPlus}
-              title="Crear nuevo usuario"
-              subtitle="Registrar cajeros, vendedores, administradores o personal de almacén."
-            />
-
-            <QuickAccessItem
-              icon={ShieldCheck}
-              title="Asignar roles y permisos"
-              subtitle="Definir quién puede vender, editar precios, cancelar tickets o ver reportes."
-            />
-
-            <QuickAccessItem
-              icon={KeyRound}
-              title="Restablecer contraseñas"
-              subtitle="Administrar accesos, bloqueo de sesión y recuperación de cuentas."
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Número de transferencia */}
-      <Card className="rounded-2xl border shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Número de transferencia</CardTitle>
-          <CardDescription>
-            Guarda el número o referencia bancaria que usará el administrador.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <div className="flex flex-col gap-3 md:flex-row">
-            <div className="relative flex-1">
-              <Hash className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Ej. 1234567890 / CLABE / referencia"
-                className="pl-9"
-              />
-            </div>
-
-            <Button className="rounded-xl">
-              <Save className="mr-2 h-4 w-4" />
-              Guardar
+          <Link href="/configuracion/usuarios" className="flex justify-end">
+            <Button className="h-12 w-auto px-4 hover:cursor-pointer hover:bg-primary">
+              <UserRoundCog /> Administrar Usuarios
+              <ChevronRight className="ml-2" />
             </Button>
-          </div>
+          </Link>
         </CardContent>
       </Card>
-
-      {/* Cancelar ventas */}
-      <Card className="rounded-2xl border shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Cancelar ventas</CardTitle>
-          <CardDescription>
-            Busca un folio, ticket o venta para cancelarla manualmente.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <div className="flex flex-col gap-3 md:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por folio, ticket o ID de venta"
-                className="pl-9"
-              />
+      {/* Contenedor para dos columnas  */}
+      <div className="grid grid-cols-2 space-x-6">
+        {/* Número de transferencia */}
+        <Card className="rounded-2xl border shadow-sm">
+          <CardHeader>
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-primary/10 p-3">
+                <BanknoteArrowUp className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">
+                  Datos de Transferencia{" "}
+                </CardTitle>
+                <CardDescription>
+                  Puede consultar o editar los datos para recibir transferencias
+                </CardDescription>
+              </div>
             </div>
+          </CardHeader>
 
-            <Button variant="destructive" className="rounded-xl">
-              <Ban className="mr-2 h-4 w-4" />
-              Cancelar venta
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          <CardContent className="space-y-4">
+            <RowField
+              label="CLABE / Número de cuenta"
+              value={data.clabe}
+              editable={editable}
+              icon={<Hash className="h-4 w-4 text-muted-foreground" />}
+            />
+
+            <RowField
+              label="Institución bancaria"
+              value={data.banco}
+              editable={editable}
+              icon={<Landmark className="h-4 w-4 text-muted-foreground" />}
+            />
+
+            <RowField
+              label="Nombre del titular"
+              value={data.titular}
+              editable={editable}
+              icon={<UserRound className="h-4 w-4 text-muted-foreground" />}
+            />
+
+            {/* Acciones */}
+            <div className="flex justify-end gap-2 pt-4">
+              {!editable ? (
+                <Button
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => setEditable(true)}
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Editar
+                </Button>
+              ) : (
+                <Button
+                  className="rounded-xl"
+                  onClick={() => setEditable(false)}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Guardar
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Configurar Pagos con Terminal  */}
+        <Card className="rounded-2xl border shadow-sm">
+          <CardHeader>
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-primary/10 p-3">
+              <CreditCard className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Pagos con Terminal </CardTitle>
+                <CardDescription>
+                  Configura la institucion que proporciona el servicio y la
+                  comision que cobra
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <div className="space-y-4">
+              <ConfigRow
+                label="Institución financiera"
+                value={dataTerminal.institution}
+                editable={editableTerminal}
+                icon={<Building2 className="h-4 w-4 text-muted-foreground" />}
+                placeholder="Ej. BBVA, Banorte, Santander"
+              />
+
+              <ConfigRow
+                label="Comisión por transferencia (%)"
+                value={`${dataTerminal.commission}%`}
+                editable={editableTerminal}
+                icon={<Percent className="h-4 w-4 text-muted-foreground" />}
+                placeholder="Ej. 3.5"
+              />
+
+              {/* Acción */}
+              <div className="flex justify-end pt-2">
+                {!editableTerminal ? (
+                  <Button
+                    variant="outline"
+                    className="rounded-xl"
+                    onClick={() => setEditableTerminal(true)}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Editar configuración
+                  </Button>
+                ) : (
+                  <Button
+                    className="rounded-xl"
+                    onClick={() => setEditableTerminal(false)}
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    Guardar cambios
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
@@ -169,29 +254,76 @@ function InfoCard({
   )
 }
 
-function QuickAccessItem({
-  icon: Icon,
-  title,
-  subtitle,
+function RowField({
+  label,
+  value,
+  editable,
+  icon,
 }: {
-  icon: React.ElementType
-  title: string
-  subtitle: string
+  label: string
+  value: string
+  editable: boolean
+  icon: React.ReactNode
 }) {
   return (
-    <button className="flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:bg-muted/40">
-      <div className="flex items-center gap-3">
-        <div className="rounded-xl bg-muted p-3">
-          <Icon className="h-5 w-5" />
-        </div>
+    <div className="grid grid-cols-3 items-center gap-4">
+      {/* Label */}
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
 
-        <div>
-          <p className="font-semibold">{title}</p>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
-        </div>
+      {/* Valor / Input */}
+      <div className="col-span-2">
+        {!editable ? (
+          <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+            {icon}
+            <span>{value}</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            {icon}
+            <Input defaultValue={value} className="h-9" />
+          </div>
+        )}
       </div>
+    </div>
+  )
+}
 
-      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-    </button>
+function ConfigRow({
+  label,
+  value,
+  editable,
+  icon,
+  placeholder,
+}: {
+  label: string
+  value: string
+  editable: boolean
+  icon: React.ReactNode
+  placeholder: string
+}) {
+  return (
+    <div className="grid grid-cols-3 items-center gap-4">
+      {/* Label */}
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+
+      {/* Value / Input */}
+      <div className="col-span-2">
+        {!editable ? (
+          <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+            {icon}
+            <span>{value}</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            {icon}
+            <Input
+              placeholder={placeholder}
+              defaultValue={value.replace("%", "")}
+              className="h-9"
+            />
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
