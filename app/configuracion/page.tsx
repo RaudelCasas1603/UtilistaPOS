@@ -171,7 +171,7 @@ export default function ConfiguracionPage() {
           <CardHeader>
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-primary/10 p-3">
-              <CreditCard className="h-6 w-6" />
+                <CreditCard className="h-6 w-6" />
               </div>
               <div>
                 <CardTitle className="text-xl">Pagos con Terminal </CardTitle>
@@ -225,6 +225,14 @@ export default function ConfiguracionPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+      <div>
+        <Link href="/configuracion/admin-categorias">
+          <Button className="flex items-center p-8 text-xl font-semibold">
+            Administracion de Categorias
+            <ChevronRight className="h-8 w-8 font-bold" />
+          </Button>
+        </Link>
       </div>
     </div>
   )
