@@ -1,55 +1,318 @@
-import { UserPlus, ShieldCheck, KeyRound, ChevronRight } from "lucide-react"
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+
+import {
+  User,
+  UserPlus,
+  ShieldCheck,
+  Search,
+  ChevronRight,
+  Pencil,
+  Save,
+   Lock, Eye, EyeOff
+} from "lucide-react"
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+
+/* =========================================================
+   PAGE
+========================================================= */
 
 export default function AdminUsuarios() {
+  const [editableUser, setEditableUser] = useState(false)
+
+  
+const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew, setShowNew] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+
+
+  // Dummy user activo
+  const currentUser = {
+    name: "Juan Pérez",
+    role: "Administrador",
+  }
+
+  // Dummy lista usuarios
+  const users = [
+    { id: "1", name: "Juan Pérez", role: "Administrador" },
+    { id: "2", name: "María López", role: "Cajera" },
+    { id: "3", name: "Carlos Ramírez", role: "Vendedor" },
+  ]
+
   return (
-    <>
-      {/* acciones */}
-      <div className="grid grid-cols-3 h-[10%]">
-        <QuickAccessItem
-          icon={UserPlus}
-          title="Crear nuevo usuario"
-          subtitle="Registrar cajeros, vendedores, administradores"
+    <div className="flex flex-col gap-8 p-6">
+      
+      {/* Título */}
+      <h2 className="text-2xl font-semibold">
+        Administración de usuarios
+      </h2>
+
+      {/* ================================================= */}
+      {/* Perfil de usuario */}
+      {/* ================================================= */}
+      <div className="grid gap-6 md:grid-cols-2">
+      <Card className="max-w-md rounded-2xl">
+        <CardHeader className="flex flex-row items-center gap-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            <User className="h-8 w-8 text-muted-foreground" />
+          </div>
+
+          <div className="flex-1">
+            <CardTitle className="text-lg">
+              Perfil del usuario
+            </CardTitle>
+            <CardDescription>
+              Configuración del usuario activo
+            </CardDescription>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <RowField
+            label="Nombre"
+            value={currentUser.name}
+            editable={editableUser}
+            icon={<User className="h-4 w-4 text-muted-foreground" />}
+          />
+
+          <RowField
+            label="Rol"
+            value={currentUser.role}
+            editable={editableUser}
+            icon={
+              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+            }
+          />
+
+          <div className="flex justify-end">
+            {!editableUser ? (
+              <Button
+                variant="outline"
+                onClick={() => setEditableUser(true)}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Editar
+              </Button>
+            ) : (
+              <Button onClick={() => setEditableUser(false)}>
+                <Save className="mr-2 h-4 w-4" />
+                Guardar
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      
+<Card className="rounded-2xl">
+      <CardHeader>
+        <CardTitle className="text-lg">
+          Cambiar contraseña
+        </CardTitle>
+        <CardDescription>
+          Actualiza la contraseña del administrador
+        </CardDescription>
+      </CardHeader>
+            <div className="grid grid-cols-2">
+                <div>
+      <CardContent className="space-y-4">
+        
+        {/* Contraseña actual */}
+        <PasswordField
+          label="Contraseña actual"
+          placeholder="••••••••"
+          show={showCurrent}
+          onToggle={() => setShowCurrent(!showCurrent)}
         />
 
-        <QuickAccessItem
-          icon={ShieldCheck}
-          title="Asignar roles y permisos"
-          subtitle="Definir quién puede vender, editar precios, cancelar tickets o ver reportes."
+        {/* Nueva contraseña */}
+        <PasswordField
+          label="Nueva contraseña"
+          placeholder="Mínimo 8 caracteres"
+          show={showNew}
+          onToggle={() => setShowNew(!showNew)}
         />
 
-        <QuickAccessItem
-          icon={KeyRound}
-          title="Restablecer contraseñas"
-          subtitle="Administrar accesos, bloqueo de sesión y recuperación de cuentas."
+        {/* Confirmar contraseña */}
+        <PasswordField
+          label="Confirmar contraseña"
+          placeholder="Repite la nueva contraseña"
+          show={showConfirm}
+          onToggle={() => setShowConfirm(!showConfirm)}
         />
+
+
+      </CardContent>
       </div>
-    </>
+      <div>
+        {/* Acción */}
+        <div className="flex justify-end pt-4">
+          <Button className="rounded-xl">
+            Actualizar contraseña
+          </Button>
+        </div>
+      </div>
+      </div>
+    </Card>
+
+
+      </div>
+
+      {/* ================================================= */}
+      {/* Toolbar */}
+      {/* ================================================= */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="relative w-full md:max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar usuario por nombre o rol"
+            className="pl-9"
+          />
+        </div>
+
+        <Button className="rounded-xl">
+          <UserPlus className="mr-2 h-4 w-4" />
+          Agregar usuario
+        </Button>
+      </div>
+
+      {/* ================================================= */}
+      {/* Lista de usuarios */}
+      {/* ================================================= */}
+      <div className="space-y-2">
+        {users.map((user) => (
+          <UserRow
+            key={user.id}
+            id={user.id}
+            name={user.name}
+            role={user.role}
+          />
+        ))}
+      </div>
+    </div>
   )
 }
 
-function QuickAccessItem({
-  icon: Icon,
-  title,
-  subtitle,
+/* =========================================================
+   COMPONENTS
+========================================================= */
+
+function RowField({
+  label,
+  value,
+  editable,
+  icon,
 }: {
-  icon: React.ElementType
-  title: string
-  subtitle: string
+  label: string
+  value: string
+  editable: boolean
+  icon: React.ReactNode
 }) {
   return (
-    <button className="flex w-7/8 items-center justify-center rounded-2xl border p-4 text-left transition hover:bg-muted/40">
+    <div className="grid grid-cols-3 items-center gap-4">
+      <span className="text-sm font-medium text-muted-foreground">
+        {label}
+      </span>
+
+      <div className="col-span-2">
+        {!editable ? (
+          <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+            {icon}
+            <span>{value}</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            {icon}
+            <Input defaultValue={value} className="h-9" />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function UserRow({
+  id,
+  name,
+  role,
+}: {
+  id: string
+  name: string
+  role: string
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border px-4 py-3">
       <div className="flex items-center gap-3">
-        <div className="rounded-xl bg-muted p-3">
-          <Icon className="h-5 w-5" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+          <User className="h-5 w-5 text-muted-foreground" />
         </div>
 
         <div>
-          <p className="font-semibold">{title}</p>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <p className="font-medium">{name}</p>
+          <p className="text-sm text-muted-foreground">
+            {role}
+          </p>
         </div>
       </div>
 
-      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-    </button>
+      <Link href={`/configuracion/usuarios/${id}`}>
+        <Button variant="ghost">
+          Ver detalles
+          <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      </Link>
+    </div>
+  )
+}
+
+function PasswordField({
+  label,
+  placeholder,
+  show,
+  onToggle,
+}: {
+  label: string
+  placeholder: string
+  show: boolean
+  onToggle: () => void
+}) {
+  return (
+    <div className="space-y-1">
+      <label className="text-sm font-medium text-muted-foreground">
+        {label}
+      </label>
+
+      <div className="relative">
+        <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+        <Input
+          type={show ? "text" : "password"}
+          placeholder={placeholder}
+          className="pl-9 pr-10"
+        />
+
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+        >
+          {show ? (
+            <EyeOff className="h-4 w-4" />
+          ) : (
+            <Eye className="h-4 w-4" />
+          )}
+        </button>
+      </div>
+    </div>
   )
 }

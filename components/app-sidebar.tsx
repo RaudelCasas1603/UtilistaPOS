@@ -218,9 +218,9 @@ export default function AppSidebar() {
 
               {!collapsed && (
                 <div className="flex flex-col items-start leading-tight">
-                  <span className="text-lg font-semibold">Usuario</span>
+                  <span className="text-lg font-semibold">Enrique Peña</span>
                   <span className="text-sm text-muted-foreground">
-                    Mi cuenta
+                    Administrador
                   </span>
                 </div>
               )}
