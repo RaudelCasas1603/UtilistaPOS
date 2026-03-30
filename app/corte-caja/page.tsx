@@ -34,7 +34,7 @@ function toNumber(value: string) {
 export default function CorteCajaPage() {
   // Simulación de respuesta de API
   const [resumenDia] = useState({
-    fecha: "27/03/2026",
+    fecha: new Date().toLocaleDateString(),
     totalVentas: 18450.75,
     cobrosTarjetaConComision: 6324.5,
     transferencias: 2810.0,
@@ -126,19 +126,12 @@ export default function CorteCajaPage() {
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Corte de caja</h1>
           <p className="text-sm text-muted-foreground">
             Consulta el resumen del día y captura el arqueo de efectivo.
           </p>
         </div>
-
-        <Button onClick={generarReporte} className="gap-2">
-          <FileText className="h-4 w-4" />
-          Generar reporte del día
-        </Button>
-      </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card className="border-border/60 shadow-sm">
@@ -222,7 +215,7 @@ export default function CorteCajaPage() {
                   value={saldoInicial}
                   onChange={(e) => setSaldoInicial(e.target.value)}
                   placeholder="Saldo inicial en caja"
-                  className="h-24"
+                  className="h-24 !text-2xl font-semibold text-left p-4"
                 />
               </div>
 
@@ -253,7 +246,7 @@ export default function CorteCajaPage() {
                   return (
                     <div
                       key={item.key}
-                      className="rounded-xl border border-border/60 bg-card p-4"
+                      className="rounded-xl border-2 border-border/60 bg-card p-4"
                     >
                       <div className="mb-2 flex items-center justify-between">
                         <Label htmlFor={item.key}>{item.label}</Label>
@@ -295,26 +288,26 @@ export default function CorteCajaPage() {
             </CardHeader>
 
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-base">
                 <span className="text-muted-foreground">Fecha</span>
                 <span className="font-medium">{resumenDia.fecha}</span>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-base">
                 <span className="text-muted-foreground">Saldo inicial</span>
                 <span className="font-medium">
                   {formatCurrency(saldoInicialNumero)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-base">
                 <span className="text-muted-foreground">Efectivo del día</span>
                 <span className="font-medium">
                   {formatCurrency(resumenDia.pagosEfectivo)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-base">
                 <span className="text-muted-foreground">Devoluciones</span>
                 <span className="font-medium">
                   - {formatCurrency(resumenDia.devoluciones)}
@@ -343,7 +336,7 @@ export default function CorteCajaPage() {
 
               <div className="rounded-xl border bg-muted/30 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Diferencia</span>
+                  <span className="text-base font-medium">Diferencia</span>
                   <span
                     className={[
                       "text-lg font-bold",
@@ -358,7 +351,7 @@ export default function CorteCajaPage() {
                   </span>
                 </div>
 
-                <p className="mt-2 text-xs text-muted-foreground">
+                <p className="mt-2 text-base text-muted-foreground">
                   {diferencia > 0
                     ? "Hay sobrante en caja."
                     : diferencia < 0
@@ -368,6 +361,13 @@ export default function CorteCajaPage() {
               </div>
             </CardContent>
           </Card>
+          
+        <div className="flex justify-center">
+        <Button onClick={generarReporte} className="gap-2 w-auto text-xl p-8">
+          <FileText className="h-4 w-4" />
+          Generar reporte del día
+        </Button>
+        </div>
         </div>
       </div>
     </div>
