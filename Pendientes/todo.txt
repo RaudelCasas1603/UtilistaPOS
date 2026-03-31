@@ -32,7 +32,7 @@ PANTALLA CLIENTES
 
 PANTALLA ADMINISTRACION  
 
-    cargar un boton donde se administren las categorias de producto (crear, eliminar, editar, listar)
+    cargar un boton donde se administren las categorias de producto (crear, eliminar, editar, listar) ****LISTO****
     cargar un apartado donde se administren las devoluciones/ventas canceladas 
 
 
@@ -41,18 +41,18 @@ PANTALLA CONFIGURACION
 
     opcion donde el usuario pueda editar su contrasenia de acceso 
     
-    cargar un boton donde se administre la cuenta de transferencia 
+    cargar un boton donde se administre la cuenta de transferencia ****LISTO****
     (se debe de incluir el nombre del 
     titular, cuenta clabe / numero de tarjeta, institucion bancaria)
     
-    cargar un boton donde se definan configuraciones basicas, (si se cobra con tarjeta se debe definir la comision 
+    cargar un boton donde se definan configuraciones basicas, (si se cobra con tarjeta se debe definir la comision ****LISTO****
     del banco para no influir en el corte)
     
 
 
 PANTALLA CORTE DE CAJA 
     se genera un boton donde le permite sacar el reporte de ventas de ese mismo dia total, la suma de cobros con tarjeta (ya con la comision incluida), transferencias y devoluciones  
-    se cargan campos donde se ingresaran datos como cantidad de billetes por denominaciones, saldo inicial de caja.
+    se cargan campos donde se ingresaran datos como cantidad de billetes por denominaciones, saldo inicial de caja. ****LISTO****
 
 
 
