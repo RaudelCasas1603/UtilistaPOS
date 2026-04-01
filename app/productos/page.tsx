@@ -195,8 +195,7 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
         <DialogHeader>
           <DialogTitle>Agregar producto</DialogTitle>
           <DialogDescription>
-            Captura la información del producto siguiendo la estructura de tu
-            JSON.
+            Captura la información del producto
           </DialogDescription>
         </DialogHeader>
 
