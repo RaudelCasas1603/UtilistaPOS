@@ -23,11 +23,22 @@ import {
   Search,
   Wallet,
   BadgeDollarSign,
+  Plus,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Table,
   TableBody,
@@ -60,10 +71,271 @@ function getProfitPercentage(costo: number, precio: number) {
   return ((precio - costo) / costo) * 100
 }
 
+type ProductDialogProps = {
+  onAddProduct: (product: Product) => void
+}
+
+function ProductDialog({ onAddProduct }: ProductDialogProps) {
+  const [open, setOpen] = React.useState(false)
+
+  const [form, setForm] = React.useState({
+    id: "",
+    codigoProducto: "",
+    codigoBarras: "",
+    nombre: "",
+    precio: "",
+    costo: "",
+    precioPublico: "",
+    stock: "",
+  })
+
+  const [errors, setErrors] = React.useState<Record<string, string>>({})
+
+  const handleChange = (field: string, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+
+    setErrors((prev) => ({
+      ...prev,
+      [field]: "",
+    }))
+  }
+
+  const resetForm = () => {
+    setForm({
+      id: "",
+      codigoProducto: "",
+      codigoBarras: "",
+      nombre: "",
+      precio: "",
+      costo: "",
+      precioPublico: "",
+      stock: "",
+    })
+    setErrors({})
+  }
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!form.id.trim()) newErrors.id = "El ID es obligatorio"
+    if (!form.codigoProducto.trim())
+      newErrors.codigoProducto = "El código de producto es obligatorio"
+    if (!form.codigoBarras.trim())
+      newErrors.codigoBarras = "El código de barras es obligatorio"
+    if (!form.nombre.trim()) newErrors.nombre = "El nombre es obligatorio"
+    if (!form.precio.trim()) newErrors.precio = "El precio es obligatorio"
+    if (!form.costo.trim()) newErrors.costo = "El costo es obligatorio"
+    if (!form.precioPublico.trim())
+      newErrors.precioPublico = "El precio público es obligatorio"
+    if (!form.stock.trim()) newErrors.stock = "El stock es obligatorio"
+
+    if (form.id && Number.isNaN(Number(form.id))) {
+      newErrors.id = "El ID debe ser numérico"
+    }
+
+    if (form.precio && Number.isNaN(Number(form.precio))) {
+      newErrors.precio = "El precio debe ser numérico"
+    }
+
+    if (form.costo && Number.isNaN(Number(form.costo))) {
+      newErrors.costo = "El costo debe ser numérico"
+    }
+
+    if (form.precioPublico && Number.isNaN(Number(form.precioPublico))) {
+      newErrors.precioPublico = "El precio público debe ser numérico"
+    }
+
+    if (form.stock && Number.isNaN(Number(form.stock))) {
+      newErrors.stock = "El stock debe ser numérico"
+    }
+
+    setErrors(newErrors)
+
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSave = () => {
+    if (!validateForm()) return
+
+    const newProduct: Product = {
+      id: Number(form.id),
+      codigoProducto: form.codigoProducto.trim(),
+      codigoBarras: form.codigoBarras.trim(),
+      nombre: form.nombre.trim(),
+      precio: Number(form.precio),
+      costo: Number(form.costo),
+      precioPublico: Number(form.precioPublico),
+      stock: Number(form.stock),
+    }
+
+    onAddProduct(newProduct)
+    resetForm()
+    setOpen(false)
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        setOpen(value)
+        if (!value) resetForm()
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Nuevo producto
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-[720px]">
+        <DialogHeader>
+          <DialogTitle>Agregar producto</DialogTitle>
+          <DialogDescription>
+            Captura la información del producto siguiendo la estructura de tu
+            JSON.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-2 md:grid-cols-2">
+          <div className="grid gap-2">
+            <Label htmlFor="id">ID</Label>
+            <Input
+              id="id"
+              type="number"
+              placeholder="Ej. 21"
+              value={form.id}
+              onChange={(e) => handleChange("id", e.target.value)}
+            />
+            {errors.id && <p className="text-xs text-red-500">{errors.id}</p>}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="codigoProducto">Código producto</Label>
+            <Input
+              id="codigoProducto"
+              placeholder="Ej. PROD-021"
+              value={form.codigoProducto}
+              onChange={(e) => handleChange("codigoProducto", e.target.value)}
+            />
+            {errors.codigoProducto && (
+              <p className="text-xs text-red-500">{errors.codigoProducto}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="codigoBarras">Código de barras</Label>
+            <Input
+              id="codigoBarras"
+              placeholder="Ej. 7501234567890"
+              value={form.codigoBarras}
+              onChange={(e) => handleChange("codigoBarras", e.target.value)}
+            />
+            {errors.codigoBarras && (
+              <p className="text-xs text-red-500">{errors.codigoBarras}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="nombre">Nombre</Label>
+            <Input
+              id="nombre"
+              placeholder="Ej. Cuaderno profesional"
+              value={form.nombre}
+              onChange={(e) => handleChange("nombre", e.target.value)}
+            />
+            {errors.nombre && (
+              <p className="text-xs text-red-500">{errors.nombre}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="precio">Precio</Label>
+            <Input
+              id="precio"
+              type="number"
+              step="0.01"
+              placeholder="Ej. 45.5"
+              value={form.precio}
+              onChange={(e) => handleChange("precio", e.target.value)}
+            />
+            {errors.precio && (
+              <p className="text-xs text-red-500">{errors.precio}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="costo">Costo</Label>
+            <Input
+              id="costo"
+              type="number"
+              step="0.01"
+              placeholder="Ej. 30"
+              value={form.costo}
+              onChange={(e) => handleChange("costo", e.target.value)}
+            />
+            {errors.costo && (
+              <p className="text-xs text-red-500">{errors.costo}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="precioPublico">Precio público</Label>
+            <Input
+              id="precioPublico"
+              type="number"
+              step="0.01"
+              placeholder="Ej. 49.9"
+              value={form.precioPublico}
+              onChange={(e) => handleChange("precioPublico", e.target.value)}
+            />
+            {errors.precioPublico && (
+              <p className="text-xs text-red-500">{errors.precioPublico}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="stock">Stock</Label>
+            <Input
+              id="stock"
+              type="number"
+              placeholder="Ej. 120"
+              value={form.stock}
+              onChange={(e) => handleChange("stock", e.target.value)}
+            />
+            {errors.stock && (
+              <p className="text-xs text-red-500">{errors.stock}</p>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave}>Guardar producto</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function ProductosPage() {
-  const data = React.useMemo<Product[]>(() => productsData as Product[], [])
+  const initialData = React.useMemo<Product[]>(
+    () => productsData as Product[],
+    []
+  )
+
+  const [data, setData] = React.useState<Product[]>(initialData)
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
+
+  const handleAddProduct = (product: Product) => {
+    setData((prev) => [product, ...prev])
+  }
 
   const columns = React.useMemo<ColumnDef<Product>[]>(
     () => [
@@ -233,6 +505,26 @@ export default function ProductosPage() {
         ),
       },
       {
+        accessorKey: "stock",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              className="h-auto p-0 font-semibold"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Stock
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
+        cell: ({ row }) => (
+          <span className="font-medium">{row.original.stock}</span>
+        ),
+      },
+      {
         id: "acciones",
         header: "Detalle",
         cell: ({ row }) => {
@@ -280,15 +572,24 @@ export default function ProductosPage() {
   })
 
   const totalProductos = data.length
+
   const promedioCosto =
-    data.reduce((acc, item) => acc + item.costo, 0) / data.length
+    data.length > 0
+      ? data.reduce((acc, item) => acc + item.costo, 0) / data.length
+      : 0
+
   const promedioPrecio =
-    data.reduce((acc, item) => acc + item.precio, 0) / data.length
+    data.length > 0
+      ? data.reduce((acc, item) => acc + item.precio, 0) / data.length
+      : 0
+
   const promedioGanancia =
-    data.reduce(
-      (acc, item) => acc + getProfitPercentage(item.costo, item.precio),
-      0
-    ) / data.length
+    data.length > 0
+      ? data.reduce(
+          (acc, item) => acc + getProfitPercentage(item.costo, item.precio),
+          0
+        ) / data.length
+      : 0
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
@@ -373,9 +674,7 @@ export default function ProductosPage() {
               />
             </div>
 
-            <Button onClick={() => console.log("Nuevo producto")}>
-              Nuevo producto
-            </Button>
+            <ProductDialog onAddProduct={handleAddProduct} />
           </div>
         </CardHeader>
 
