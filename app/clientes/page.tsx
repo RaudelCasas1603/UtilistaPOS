@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import clientsData from "./clientes.json"
 
 import {
@@ -18,10 +19,8 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal,
   Search,
   Users,
-  Phone,
   Mail,
   BadgePercent,
 } from "lucide-react"
@@ -29,12 +28,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -185,39 +178,14 @@ export default function ClientesPage() {
       },
       {
         id: "acciones",
-        header: "",
+        header: "Detalle",
         cell: ({ row }) => {
           const client = row.original
 
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="end"
-                className="border border-border/60 bg-background shadow-lg"
-              >
-                <DropdownMenuItem
-                  onClick={() => console.log("Ver cliente", client)}
-                >
-                  Ver detalle
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => console.log("Editar cliente", client)}
-                >
-                  Editar
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => console.log("Historial cliente", client)}
-                >
-                  Historial
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/clientes/${client.id}`}>Ver detalles</Link>
+            </Button>
           )
         },
       },

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import providersData from "./providers.json"
 
 import {
@@ -20,7 +21,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Mail,
-  MoreHorizontal,
   Search,
   Truck,
   Users,
@@ -29,12 +29,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -160,39 +154,14 @@ export default function ProveedoresPage() {
       },
       {
         id: "acciones",
-        header: "",
+        header: "Detalle",
         cell: ({ row }) => {
           const provider = row.original
 
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="end"
-                className="border border-border/60 bg-background shadow-lg"
-              >
-                <DropdownMenuItem
-                  onClick={() => console.log("Ver proveedor", provider)}
-                >
-                  Ver detalle
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => console.log("Editar proveedor", provider)}
-                >
-                  Editar
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => console.log("Contactar proveedor", provider)}
-                >
-                  Contactar
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/provedores/${provider.id}`}>Ver detalles</Link>
+            </Button>
           )
         },
       },

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import productsData from "./products.json"
 
 import {
@@ -18,7 +19,6 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal,
   Package2,
   Search,
   Wallet,
@@ -28,12 +28,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -240,41 +234,14 @@ export default function ProductosPage() {
       },
       {
         id: "acciones",
-        header: "",
+        header: "Detalle",
         cell: ({ row }) => {
           const product = row.original
 
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="end"
-                className="border border-border bg-background shadow-md"
-              >
-                <DropdownMenuItem
-                  onClick={() => console.log("Ver producto", product)}
-                >
-                  Ver detalle
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onClick={() => console.log("Editar producto", product)}
-                >
-                  Editar
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onClick={() => console.log("Duplicar producto", product)}
-                >
-                  Duplicar
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/productos/${product.id}`}>Ver detalles</Link>
+            </Button>
           )
         },
       },
@@ -339,7 +306,7 @@ export default function ProductosPage() {
           <CardContent className="flex items-center justify-between p-5">
             <div>
               <p className="text-sm text-muted-foreground">
-                Total productos dados de alta{" "}
+                Total productos dados de alta
               </p>
               <p className="mt-1 text-2xl font-bold">{totalProductos}</p>
             </div>
@@ -419,21 +386,19 @@ export default function ProductosPage() {
                 <TableHeader className="bg-muted/40">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => {
-                        return (
-                          <TableHead
-                            key={header.id}
-                            className="whitespace-nowrap"
-                          >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
-                          </TableHead>
-                        )
-                      })}
+                      {headerGroup.headers.map((header) => (
+                        <TableHead
+                          key={header.id}
+                          className="whitespace-nowrap"
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      ))}
                     </TableRow>
                   ))}
                 </TableHeader>

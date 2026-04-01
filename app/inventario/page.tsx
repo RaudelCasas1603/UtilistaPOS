@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import productsData from "./products.json"
 
 import {
@@ -20,7 +21,6 @@ import {
   Boxes,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal,
   Search,
   ShieldAlert,
   Warehouse,
@@ -29,12 +29,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -243,39 +237,14 @@ export default function InventarioPage() {
       },
       {
         id: "acciones",
-        header: "",
+        header: "Detalle",
         cell: ({ row }) => {
           const product = row.original
 
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="end"
-                className="border border-border/60 bg-background shadow-lg"
-              >
-                <DropdownMenuItem
-                  onClick={() => console.log("Ajustar stock", product)}
-                >
-                  Ajustar stock
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => console.log("Ver movimientos", product)}
-                >
-                  Ver movimientos
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => console.log("Reabastecer", product)}
-                >
-                  Reabastecer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/inventario/${product.id}`}>Ver detalles</Link>
+            </Button>
           )
         },
       },

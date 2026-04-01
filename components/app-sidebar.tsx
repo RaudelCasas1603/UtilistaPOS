@@ -121,6 +121,20 @@ export default function AppSidebar() {
 
           <SidebarMenuItem>
             <Link
+              href="/corte-caja"
+              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
+                collapsed ? "justify-center px-0" : "gap-4 px-4"
+              }`}
+            >
+              <FileCheck className="h-7 w-7 shrink-0" />
+              {!collapsed && (
+                <span className="text-lg font-medium">Corte de Caja </span>
+              )}
+            </Link>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <Link
               href="/productos"
               className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
                 collapsed ? "justify-center px-0" : "gap-4 px-4"
@@ -170,20 +184,6 @@ export default function AppSidebar() {
               <Truck className="h-7 w-7 shrink-0" />
               {!collapsed && (
                 <span className="text-lg font-medium">Provedores</span>
-              )}
-            </Link>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <Link
-              href="/corte-caja"
-              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
-                collapsed ? "justify-center px-0" : "gap-4 px-4"
-              }`}
-            >
-              <FileCheck className="h-7 w-7 shrink-0" />
-              {!collapsed && (
-                <span className="text-lg font-medium">Corte de Caja </span>
               )}
             </Link>
           </SidebarMenuItem>
