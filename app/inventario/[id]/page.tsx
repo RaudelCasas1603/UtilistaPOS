@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Pencil,
   Save,
@@ -14,6 +15,7 @@ import {
   Tag,
   Barcode,
   ChartColumn,
+  CheckCircle2,
 } from "lucide-react"
 
 export default function InventarioProductoPage() {
@@ -31,6 +33,7 @@ export default function InventarioProductoPage() {
   }
 
   const [editMode, setEditMode] = useState(false)
+  const [showAlert, setShowAlert] = useState(false)
   const [stockActual, setStockActual] = useState(producto.stockActual)
   const [stockMinimo, setStockMinimo] = useState(producto.stockMinimo)
   const [stockDeseado, setStockDeseado] = useState(producto.stockDeseado)
@@ -59,9 +62,27 @@ export default function InventarioProductoPage() {
       </Badge>
     )
 
+  const handleGuardar = () => {
+    setEditMode(false)
+    setShowAlert(true)
+
+    setTimeout(() => {
+      setShowAlert(false)
+    }, 3000)
+  }
+
   return (
     <div className="flex h-full flex-col gap-4 overflow-hidden">
-      {/* ENCABEZADO VISUAL DEL PRODUCTO */}
+      {showAlert && (
+        <Alert className="border-green-400 bg-green-400">
+          <CheckCircle2 className="h-4 w-4 text-green-800" />
+          <AlertTitle className="text-green-800">Cambios guardados</AlertTitle>
+          <AlertDescription className="text-green-800">
+            El stock del producto se actualizó correctamente.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card className="overflow-hidden border shadow-sm">
         <CardContent className="p-0">
           <div className="flex h-full flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between">
@@ -83,7 +104,6 @@ export default function InventarioProductoPage() {
                   <Badge variant="outline" className="px-3 py-1">
                     {producto.categoria}
                   </Badge>
-                  .
                 </div>
               </div>
             </div>
@@ -114,9 +134,7 @@ export default function InventarioProductoPage() {
         </CardContent>
       </Card>
 
-      {/* CUERPO */}
       <div className="grid flex-1 gap-4 lg:grid-cols-3">
-        {/* PANEL PRINCIPAL */}
         <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <CardTitle className="text-xl font-bold tracking-tight">
@@ -228,7 +246,7 @@ export default function InventarioProductoPage() {
                 </Button>
               ) : (
                 <Button
-                  onClick={() => setEditMode(false)}
+                  onClick={handleGuardar}
                   className="h-14 w-full gap-3 rounded-xl text-lg font-semibold"
                 >
                   <Save className="h-6 w-6" />
@@ -239,7 +257,6 @@ export default function InventarioProductoPage() {
           </CardContent>
         </Card>
 
-        {/* PANEL SECUNDARIO */}
         <Card>
           <CardHeader>
             <CardTitle>Información complementaria</CardTitle>

@@ -26,6 +26,9 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { CheckCircle2 } from "lucide-react"
+
 type Provider = {
   id: number
   nombre: string
@@ -98,16 +101,37 @@ export default function ProveedorDetallePage({ params }: Props) {
     }
   }, [proveedor])
 
+  const [showAlert, setShowAlert] = useState(false)
+
   const handleGuardar = () => {
     setEditMode(false)
+
+    // Simula guardado
     console.log("Proveedor actualizado:", proveedor)
+
+    // Mostrar alerta
+    setShowAlert(true)
+
+    // Ocultar después de 3 segundos
+    setTimeout(() => {
+      setShowAlert(false)
+    }, 2000)
   }
 
   return (
     <div className="flex h-full w-full flex-col gap-6 p-6">
+      {showAlert && (
+        <Alert className="border-green-400 bg-green-400">
+          <CheckCircle2 className="h-4 w-4 text-green-800" />
+          <AlertTitle className="text-green-800">Cambios guardados</AlertTitle>
+          <AlertDescription className="text-green-800">
+            La información del proveedor se actualizó correctamente.
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Detalle del proveedor</h1>
+          <h1 className="text-3xl font-bold">Detalle</h1>
           <p className="text-sm text-muted-foreground">
             Consulta y edita la información del proveedor
           </p>

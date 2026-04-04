@@ -1,23 +1,19 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import {
-  Pencil,
-  Save,
-  UserRound,
-  Mail,
-  Phone,
-  MapPin,
-  CalendarDays,
-  ShoppingCart,
-  Wallet,
-  BadgeDollarSign,
-} from "lucide-react"
+import * as React from "react"
+import clientsData from "../clientes.json"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -27,252 +23,339 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-const comprasIniciales = [
-  { ticket: "TK-1048", fecha: "03/04/2026", hora: "09:12 AM", total: 245.5 },
-  { ticket: "TK-1041", fecha: "02/04/2026", hora: "06:40 PM", total: 520.0 },
-  { ticket: "TK-1033", fecha: "01/04/2026", hora: "01:15 PM", total: 189.0 },
-  { ticket: "TK-1027", fecha: "30/03/2026", hora: "11:08 AM", total: 760.0 },
-  { ticket: "TK-1019", fecha: "29/03/2026", hora: "04:28 PM", total: 315.0 },
-  { ticket: "TK-1011", fecha: "28/03/2026", hora: "12:01 PM", total: 128.0 },
-  { ticket: "TK-1004", fecha: "27/03/2026", hora: "05:55 PM", total: 420.0 },
-  { ticket: "TK-0998", fecha: "26/03/2026", hora: "10:37 AM", total: 96.0 },
-  { ticket: "TK-0991", fecha: "25/03/2026", hora: "03:22 PM", total: 285.0 },
-  { ticket: "TK-0984", fecha: "24/03/2026", hora: "07:11 PM", total: 640.0 },
-]
+import {
+  Pencil,
+  Save,
+  CheckCircle2,
+  UserRound,
+  Phone,
+  Mail,
+  Ticket,
+  ShoppingCart,
+  Wallet,
+  Percent,
+  Clock3,
+} from "lucide-react"
 
-export default function ClienteDetallePage() {
-  const [editMode, setEditMode] = useState(false)
+type Client = {
+  id: number
+  nombre: string
+  telefono: string
+  correo: string
+  descuento: number
+  referencia: string
+}
 
-  const [cliente, setCliente] = useState({
-    id: 1,
-    nombre: "Cliente general",
-    telefono: "0000000000",
-    correo: "general@cliente.com",
-    descuento: 0,
-    referencia: "Mostrador",
-  })
-  const ultimasCompras = comprasIniciales.slice(0, 8)
+type Purchase = {
+  ticket: string
+  fecha: string
+  hora: string
+  total: number
+}
 
-  const totalGastado = useMemo(
-    () => comprasIniciales.reduce((acc, item) => acc + item.total, 0),
-    []
-  )
+type Props = {
+  params: Promise<{
+    id: string
+  }>
+}
 
-  const ticketPromedio = useMemo(
-    () => totalGastado / comprasIniciales.length,
-    [totalGastado]
-  )
+function getMockPurchases(clientId: number): Purchase[] {
+  const base = [
+    { ticket: "TK-10482", fecha: "2026-04-03", hora: "09:14", total: 328.5 },
+    { ticket: "TK-10471", fecha: "2026-04-02", hora: "18:42", total: 1290.0 },
+    { ticket: "TK-10455", fecha: "2026-04-02", hora: "11:08", total: 214.0 },
+    { ticket: "TK-10431", fecha: "2026-04-01", hora: "17:25", total: 860.0 },
+    { ticket: "TK-10412", fecha: "2026-04-01", hora: "10:31", total: 145.5 },
+    { ticket: "TK-10397", fecha: "2026-03-31", hora: "19:03", total: 432.0 },
+    { ticket: "TK-10380", fecha: "2026-03-31", hora: "13:47", total: 119.0 },
+    { ticket: "TK-10366", fecha: "2026-03-30", hora: "16:12", total: 980.0 },
+  ]
 
-  const totalCompras = comprasIniciales.length
+  return base.map((item, index) => ({
+    ...item,
+    total: Number((item.total + clientId * (index + 1) * 1.7).toFixed(2)),
+  }))
+}
 
-  const handleChange = (field: keyof typeof cliente, value: string) => {
-    setCliente((prev) => ({
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+  }).format(value)
+}
+
+function formatDate(date: string) {
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(`${date}T12:00:00`))
+}
+
+export default function ClienteDetallePage({ params }: Props) {
+  const { id } = React.use(params)
+
+  const cliente = (clientsData as Client[]).find((c) => String(c.id) === id)
+
+  const [editMode, setEditMode] = React.useState(false)
+  const [showAlert, setShowAlert] = React.useState(false)
+
+  React.useEffect(() => {
+    if (!showAlert) return
+
+    const timer = setTimeout(() => {
+      setShowAlert(false)
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [showAlert])
+
+  if (!cliente) {
+    return <div className="p-6">Cliente no encontrado</div>
+  }
+
+  const [formData, setFormData] = React.useState<Client>(cliente)
+
+  const purchases = getMockPurchases(cliente.id)
+  const totalComprado = purchases.reduce((acc, item) => acc + item.total, 0)
+  const ticketPromedio = purchases.length ? totalComprado / purchases.length : 0
+  const compraMasAlta = purchases.length
+    ? Math.max(...purchases.map((item) => item.total))
+    : 0
+
+  const frecuenciaLabel =
+    purchases.length >= 7 ? "Alta" : purchases.length >= 4 ? "Media" : "Baja"
+
+  const frecuenciaVariant =
+    frecuenciaLabel === "Alta"
+      ? "default"
+      : frecuenciaLabel === "Media"
+        ? "secondary"
+        : "outline"
+
+  const handleChange = (field: keyof Client, value: string | number) => {
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }))
   }
 
+  const handleSave = () => {
+    setEditMode(false)
+    setShowAlert(true)
+
+    console.log("Datos del cliente guardados:", formData)
+  }
+
   return (
-    <div className="flex h-full w-full flex-col gap-3 overflow-hidden p-3">
-      {/* Encabezado */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Detalle de cliente
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Consulta la información general, actividad y últimas compras.
-          </p>
-        </div>
+    <div className="space-y-6 p-6">
+      {showAlert && (
+        <Alert className="border-green-400 bg-green-400">
+          <CheckCircle2 className="h-4 w-4 text-green-800" />
+          <AlertTitle className="text-green-800">Cambios guardados</AlertTitle>
+          <AlertDescription className="text-green-800">
+            La información del cliente se actualizó correctamente.
+          </AlertDescription>
+        </Alert>
+      )}
 
-        <div className="w-full max-w-[210px]">
-          {!editMode ? (
-            <Button
-              onClick={() => setEditMode(true)}
-              className="h-11 w-full gap-2 text-sm font-semibold"
-            >
-              <Pencil className="h-4 w-4" />
-              Editar
-            </Button>
-          ) : (
-            <Button
-              onClick={() => setEditMode(false)}
-              className="h-11 w-full gap-2 text-sm font-semibold"
-            >
-              <Save className="h-4 w-4" />
-              Guardar
-            </Button>
-          )}
-        </div>
-      </div>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <Card className="xl:col-span-2">
+          <CardHeader className="flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-primary/10 p-3">
+                  <UserRound className="h-6 w-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl font-bold">
+                    Detalle del cliente
+                  </CardTitle>
+                  <CardDescription className="text-sm">
+                    Consulta y edita la información general del cliente.
+                  </CardDescription>
+                </div>
+              </div>
+            </div>
 
-      {/* Parte superior */}
-      <div className="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[2.2fr_1fr]">
-        {/* Información del cliente */}
-        <Card className="h-full">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <UserRound className="h-5 w-5" />
-              Información del cliente
-            </CardTitle>
+            {!editMode ? (
+              <Button onClick={() => setEditMode(true)} className="gap-2">
+                <Pencil className="h-5 w-5" />
+                Editar
+              </Button>
+            ) : (
+              <Button onClick={handleSave} className="gap-2">
+                <Save className="h-5 w-5" />
+                Guardar
+              </Button>
+            )}
           </CardHeader>
 
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {/* Nombre */}
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground">
+                <label className="text-sm font-medium text-muted-foreground">
                   Nombre
-                </Label>
+                </label>
                 <Input
-                  value={cliente.nombre}
+                  value={formData.nombre}
                   disabled={!editMode}
                   onChange={(e) => handleChange("nombre", e.target.value)}
-                  className="h-10 text-sm"
+                  className="h-11 text-base"
                 />
               </div>
 
-              {/* Correo */}
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground">
-                  Correo
-                </Label>
-                <Input
-                  value={cliente.correo}
-                  disabled={!editMode}
-                  onChange={(e) => handleChange("correo", e.target.value)}
-                  className="h-10 text-sm"
-                />
-              </div>
-
-              {/* Teléfono */}
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground">
+                <label className="text-sm font-medium text-muted-foreground">
                   Teléfono
-                </Label>
+                </label>
                 <Input
-                  value={cliente.telefono}
+                  value={formData.telefono}
                   disabled={!editMode}
                   onChange={(e) => handleChange("telefono", e.target.value)}
-                  className="h-10 text-sm"
+                  className="h-11 text-base"
                 />
               </div>
 
-              {/* Descuento */}
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground">
-                  Descuento (%)
-                </Label>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Correo
+                </label>
                 <Input
-                  type="number"
-                  value={cliente.descuento}
+                  value={formData.correo}
                   disabled={!editMode}
-                  onChange={(e) =>
-                    handleChange("descuento", Number(e.target.value))
-                  }
-                  className="h-10 text-sm"
+                  onChange={(e) => handleChange("correo", e.target.value)}
+                  className="h-11 text-base"
                 />
               </div>
 
-              {/* Referencia */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Descuento
+                </label>
+                <div className="relative">
+                  <Percent className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={formData.descuento}
+                    disabled={!editMode}
+                    onChange={(e) =>
+                      handleChange("descuento", Number(e.target.value))
+                    }
+                    className="h-11 pl-9 text-base"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2 md:col-span-2">
-                <Label className="text-xs font-semibold text-muted-foreground">
+                <label className="text-sm font-medium text-muted-foreground">
                   Referencia
-                </Label>
+                </label>
                 <Input
-                  value={cliente.referencia}
+                  value={formData.referencia}
                   disabled={!editMode}
                   onChange={(e) => handleChange("referencia", e.target.value)}
-                  className="h-10 text-sm"
+                  className="h-11 text-base"
                 />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Métricas derechas */}
-        <div className="flex h-full flex-col gap-3">
-          <Card className="flex-1 rounded-2xl">
-            <CardContent className="flex h-full flex-col justify-center p-4">
-              <div className="mb-2 flex items-center gap-2 text-muted-foreground">
-                <ShoppingCart className="h-4 w-4" />
-                <span className="text-sm font-medium">Compras registradas</span>
+        <div className="grid gap-4">
+          <Card>
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="rounded-2xl bg-primary/10 p-3">
+                <ShoppingCart className="h-6 w-6" />
               </div>
-              <p className="text-3xl leading-none font-bold">{totalCompras}</p>
+              <div className="min-w-0">
+                <p className="text-sm text-muted-foreground">
+                  Compras recientes
+                </p>
+                <p className="text-2xl font-bold">{purchases.length}</p>
+                <p className="text-xs text-muted-foreground">
+                  Últimos movimientos registrados
+                </p>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="flex-1 rounded-2xl">
-            <CardContent className="flex h-full flex-col justify-center p-4">
-              <div className="mb-2 flex items-center gap-2 text-muted-foreground">
-                <Wallet className="h-4 w-4" />
-                <span className="text-sm font-medium">Total gastado</span>
+          <Card>
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="rounded-2xl bg-primary/10 p-3">
+                <Wallet className="h-6 w-6" />
               </div>
-              <p className="text-3xl leading-none font-bold">
-                $
-                {totalGastado.toLocaleString("es-MX", {
-                  minimumFractionDigits: 2,
-                })}
-              </p>
+              <div className="min-w-0">
+                <p className="text-sm text-muted-foreground">Ticket promedio</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(ticketPromedio)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Basado en las últimas 8 compras
+                </p>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="flex-1 rounded-2xl">
-            <CardContent className="flex h-full flex-col justify-center p-4">
-              <div className="mb-2 flex items-center gap-2 text-muted-foreground">
-                <BadgeDollarSign className="h-4 w-4" />
-                <span className="text-sm font-medium">Ticket promedio</span>
+          <Card>
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="rounded-2xl bg-primary/10 p-3">
+                <Clock3 className="h-6 w-6" />
               </div>
-              <p className="text-3xl leading-none font-bold">
-                $
-                {ticketPromedio.toLocaleString("es-MX", {
-                  minimumFractionDigits: 2,
-                })}
-              </p>
+              <div className="min-w-0">
+                <p className="text-sm text-muted-foreground">Frecuencia</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <p className="text-2xl font-bold">{frecuenciaLabel}</p>
+                  <Badge variant={frecuenciaVariant}>{frecuenciaLabel}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Compra más alta: {formatCurrency(compraMasAlta)}
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Tabla inferior */}
-      <Card className="min-h-0 flex-1 overflow-hidden">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-2xl">Últimas 8 compras</CardTitle>
+      <Card>
+        <CardHeader className="border-b pb-4">
+          <CardTitle className="text-xl font-bold">Últimas 8 compras</CardTitle>
+          <CardDescription>
+            Historial reciente del cliente con número de ticket, fecha, hora y
+            total.
+          </CardDescription>
         </CardHeader>
 
-        <CardContent className="h-full overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-lg">Número de ticket</TableHead>
-                <TableHead className="text-lg">Fecha</TableHead>
-                <TableHead className="text-lg">Hora</TableHead>
-                <TableHead className="text-right text-lg">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {ultimasCompras.map((compra) => (
-                <TableRow key={compra.ticket}>
-                  <TableCell className="py-2 text-base font-medium">
-                    {compra.ticket}
-                  </TableCell>
-                  <TableCell className="py-2 text-base">
-                    {compra.fecha}
-                  </TableCell>
-                  <TableCell className="py-2 text-base">
-                    {compra.hora}
-                  </TableCell>
-                  <TableCell className="py-2 text-right text-base font-semibold">
-                    $
-                    {compra.total.toLocaleString("es-MX", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </TableCell>
+        <CardContent className="pt-5">
+          <div className="overflow-hidden rounded-xl border">
+            <Table>
+              <TableHeader className="text-xl">
+                <TableRow>
+                  <TableHead className="w-[160px]">Ticket</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Hora</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+
+              <TableBody className="text-md">
+                {purchases.map((purchase) => (
+                  <TableRow key={purchase.ticket}>
+                    <TableCell className="font-medium">
+                      {purchase.ticket}
+                    </TableCell>
+                    <TableCell>{formatDate(purchase.fecha)}</TableCell>
+                    <TableCell>{purchase.hora}</TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {formatCurrency(purchase.total)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

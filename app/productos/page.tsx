@@ -680,7 +680,7 @@ export default function ProductosPage() {
         <CardContent className="space-y-4">
           <div className="overflow-hidden rounded-xl border border-border/60">
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="text-lg">
                 <TableHeader className="bg-muted/40">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>

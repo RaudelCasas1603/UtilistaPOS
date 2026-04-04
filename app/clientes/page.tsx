@@ -23,6 +23,7 @@ import {
   Users,
   Mail,
   BadgePercent,
+  Plus,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -377,7 +378,10 @@ export default function ClientesPage() {
 
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button>Nuevo cliente</Button>
+                <Button className="px-5 text-base">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nuevo cliente
+                </Button>
               </DialogTrigger>
 
               <DialogContent className="sm:max-w-[560px]">
@@ -467,7 +471,7 @@ export default function ClientesPage() {
         <CardContent className="space-y-4">
           <div className="overflow-hidden rounded-xl border border-border/60">
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="text-lg">
                 <TableHeader className="bg-muted/40">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>

@@ -11,7 +11,8 @@ import {
   Cell,
   Tooltip,
 } from "recharts"
-import { Pencil, Save } from "lucide-react"
+import { Pencil, Save, CheckCircle2 } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 type Props = {
   params: Promise<{
@@ -56,6 +57,7 @@ export default function ProductoDetallePage({ params }: Props) {
   const { id } = use(params)
 
   const [isEditing, setIsEditing] = useState(false)
+  const [showAlert, setShowAlert] = useState(false) // ✅ agregado
 
   const [producto, setProducto] = useState({
     id,
@@ -99,6 +101,12 @@ export default function ProductoDetallePage({ params }: Props) {
   const handleToggleEdit = () => {
     if (isEditing) {
       console.log("Guardando producto:", producto)
+
+      // ✅ ALERT
+      setShowAlert(true)
+      setTimeout(() => {
+        setShowAlert(false)
+      }, 2500)
     }
 
     setIsEditing((prev) => !prev)
@@ -130,6 +138,19 @@ export default function ProductoDetallePage({ params }: Props) {
   return (
     <div className="h-full overflow-hidden bg-background p-4 xl:p-5">
       <div className="mx-auto flex h-full max-w-[90%] flex-col gap-4">
+        {/* ✅ ALERT */}
+        {showAlert && (
+          <Alert className="border-green-400 bg-green-400">
+            <CheckCircle2 className="h-4 w-4 text-green-800" />
+            <AlertTitle className="text-green-800">
+              Cambios guardados
+            </AlertTitle>
+            <AlertDescription className="text-green-800">
+              La información del producto se actualizó correctamente.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div>
           <h1 className="text-3xl font-bold text-foreground">Detalles</h1>
         </div>

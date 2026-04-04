@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Eye,
   Mail,
+  Plus,
   Search,
   Truck,
   Users,
@@ -284,7 +285,7 @@ export default function ProvidersPage() {
         </Card>
       </div>
 
-      <Card className="border shadow-sm">
+      <Card className="shadow-sm">
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="text-xl">Listado de proveedores</CardTitle>
@@ -300,13 +301,14 @@ export default function ProvidersPage() {
                 value={globalFilter ?? ""}
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 placeholder="Buscar proveedor..."
-                className="h-11 pl-9 text-[15px]"
+                className="pl-9 text-[15px]"
               />
             </div>
 
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button className="h-11 px-5 text-sm font-medium">
+                <Button className="px-5 text-base">
+                  <Plus className="mr-2 h-4 w-4" />
                   Nuevo proveedor
                 </Button>
               </DialogTrigger>
