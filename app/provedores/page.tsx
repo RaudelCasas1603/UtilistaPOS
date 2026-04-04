@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import providersData from "./providers.json"
 
 import {
@@ -19,6 +20,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  Eye,
   Mail,
   Search,
   Truck,
@@ -116,33 +118,47 @@ export default function ProvidersPage() {
       {
         accessorKey: "id",
         header: "ID",
+        cell: ({ row }) => (
+          <span className="font-medium text-foreground">{row.original.id}</span>
+        ),
       },
       {
         accessorKey: "nombre",
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-sm font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Nombre
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
+        cell: ({ row }) => (
+          <span className="text-[15px] font-semibold">
+            {row.original.nombre}
+          </span>
+        ),
       },
       {
         accessorKey: "telefono",
         header: "Teléfono",
+        cell: ({ row }) => (
+          <span className="text-[15px]">{row.original.telefono}</span>
+        ),
       },
       {
         accessorKey: "correo",
         header: "Correo",
+        cell: ({ row }) => (
+          <span className="text-[15px]">{row.original.correo}</span>
+        ),
       },
       {
         accessorKey: "empresa",
         header: "Empresa",
         cell: ({ row }) => (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-[15px]">
             <Building2 className="h-4 w-4 text-muted-foreground" />
             <span>{row.original.empresa}</span>
           </div>
@@ -151,6 +167,25 @@ export default function ProvidersPage() {
       {
         accessorKey: "referencia",
         header: "Referencia",
+        cell: ({ row }) => (
+          <span className="text-[15px]">{row.original.referencia}</span>
+        ),
+      },
+      {
+        id: "ver-detalles",
+        header: () => <div className="text-center">Ver detalles</div>,
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <Button asChild variant="outline" size="sm" className="h-10 px-4">
+              <Link
+                href={`/provedores/${row.original.id}`}
+                className="flex items-center gap-2"
+              >
+                Ver detalles
+              </Link>
+            </Button>
+          </div>
+        ),
       },
     ],
     []
@@ -249,29 +284,31 @@ export default function ProvidersPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="border shadow-sm">
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle className="text-lg">Listado de proveedores</CardTitle>
+            <CardTitle className="text-xl">Listado de proveedores</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
               Busca por nombre, empresa, correo, teléfono o referencia.
             </p>
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <div className="relative w-full sm:w-[320px]">
+            <div className="relative w-full sm:w-[340px]">
               <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={globalFilter ?? ""}
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 placeholder="Buscar proveedor..."
-                className="pl-9"
+                className="h-11 pl-9 text-[15px]"
               />
             </div>
 
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button>Nuevo proveedor</Button>
+                <Button className="h-11 px-5 text-sm font-medium">
+                  Nuevo proveedor
+                </Button>
               </DialogTrigger>
 
               <DialogContent className="sm:max-w-[560px]">
@@ -356,15 +393,18 @@ export default function ProvidersPage() {
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          <div className="overflow-hidden rounded-xl border">
+        <CardContent className="space-y-5">
+          <div className="overflow-hidden rounded-2xl border">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-muted/40">
+                <TableHeader className="bg-muted/50">
                   {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
+                    <TableRow key={headerGroup.id} className="h-14">
                       {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
+                        <TableHead
+                          key={header.id}
+                          className="px-4 text-sm font-semibold text-foreground"
+                        >
                           {header.isPlaceholder
                             ? null
                             : flexRender(
@@ -380,9 +420,15 @@ export default function ProvidersPage() {
                 <TableBody>
                   {table.getRowModel().rows?.length ? (
                     table.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id}>
+                      <TableRow
+                        key={row.id}
+                        className="h-16 transition-colors hover:bg-muted/30"
+                      >
                         {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
+                          <TableCell
+                            key={cell.id}
+                            className="px-4 py-4 align-middle"
+                          >
                             {flexRender(
                               cell.column.columnDef.cell,
                               cell.getContext()
@@ -395,7 +441,7 @@ export default function ProvidersPage() {
                     <TableRow>
                       <TableCell
                         colSpan={columns.length}
-                        className="h-24 text-center text-muted-foreground"
+                        className="h-24 text-center text-base text-muted-foreground"
                       >
                         No se encontraron proveedores.
                       </TableCell>
@@ -416,13 +462,14 @@ export default function ProvidersPage() {
               <Button
                 variant="outline"
                 size="icon"
+                className="h-10 w-10"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
 
-              <div className="min-w-[120px] text-center text-sm text-muted-foreground">
+              <div className="min-w-[140px] text-center text-sm text-muted-foreground">
                 Página {table.getState().pagination.pageIndex + 1} de{" "}
                 {table.getPageCount()}
               </div>
@@ -430,6 +477,7 @@ export default function ProvidersPage() {
               <Button
                 variant="outline"
                 size="icon"
+                className="h-10 w-10"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
