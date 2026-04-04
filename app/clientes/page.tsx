@@ -27,7 +27,17 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Table,
   TableBody,
@@ -63,9 +73,56 @@ function getDiscountStyles(descuento: number) {
 }
 
 export default function ClientesPage() {
-  const data = React.useMemo<Client[]>(() => clientsData as Client[], [])
+  const [data, setData] = React.useState<Client[]>(clientsData as Client[])
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
+  const [open, setOpen] = React.useState(false)
+
+  const [newClient, setNewClient] = React.useState<Omit<Client, "id">>({
+    nombre: "",
+    telefono: "",
+    correo: "",
+    descuento: 0,
+    referencia: "",
+  })
+
+  const handleChange = (field: keyof Omit<Client, "id">, value: string) => {
+    setNewClient((prev) => ({
+      ...prev,
+      [field]: field === "descuento" ? Number(value) : value,
+    }))
+  }
+
+  const handleAddClient = () => {
+    if (
+      !newClient.nombre.trim() ||
+      !newClient.telefono.trim() ||
+      !newClient.correo.trim() ||
+      !newClient.referencia.trim()
+    ) {
+      return
+    }
+
+    const nextId =
+      data.length > 0 ? Math.max(...data.map((client) => client.id)) + 1 : 1
+
+    const clientToAdd: Client = {
+      id: nextId,
+      ...newClient,
+    }
+
+    setData((prev) => [clientToAdd, ...prev])
+
+    setNewClient({
+      nombre: "",
+      telefono: "",
+      correo: "",
+      descuento: 0,
+      referencia: "",
+    })
+
+    setOpen(false)
+  }
 
   const columns = React.useMemo<ColumnDef<Client>[]>(
     () => [
@@ -230,7 +287,9 @@ export default function ClientesPage() {
     (client) => client.descuento > 0
   ).length
   const descuentoPromedio =
-    data.reduce((acc, client) => acc + client.descuento, 0) / data.length
+    data.length > 0
+      ? data.reduce((acc, client) => acc + client.descuento, 0) / data.length
+      : 0
 
   const referenciasUnicas = new Set(data.map((client) => client.referencia))
     .size
@@ -316,9 +375,92 @@ export default function ClientesPage() {
               />
             </div>
 
-            <Button onClick={() => console.log("Nuevo cliente")}>
-              Nuevo cliente
-            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button>Nuevo cliente</Button>
+              </DialogTrigger>
+
+              <DialogContent className="sm:max-w-[560px]">
+                <DialogHeader>
+                  <DialogTitle>Agregar nuevo cliente</DialogTitle>
+                  <DialogDescription>
+                    Captura los datos del cliente según la estructura actual.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-4 py-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="nombre">Nombre</Label>
+                    <Input
+                      id="nombre"
+                      value={newClient.nombre}
+                      onChange={(e) => handleChange("nombre", e.target.value)}
+                      placeholder="Ej. Juan Pérez"
+                    />
+                  </div>
+
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="telefono">Teléfono</Label>
+                      <Input
+                        id="telefono"
+                        value={newClient.telefono}
+                        onChange={(e) =>
+                          handleChange("telefono", e.target.value)
+                        }
+                        placeholder="Ej. 8441234567"
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="correo">Correo</Label>
+                      <Input
+                        id="correo"
+                        type="email"
+                        value={newClient.correo}
+                        onChange={(e) => handleChange("correo", e.target.value)}
+                        placeholder="Ej. cliente@correo.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="descuento">Descuento (%)</Label>
+                      <Input
+                        id="descuento"
+                        type="number"
+                        min={0}
+                        value={newClient.descuento}
+                        onChange={(e) =>
+                          handleChange("descuento", e.target.value)
+                        }
+                        placeholder="0"
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="referencia">Referencia</Label>
+                      <Input
+                        id="referencia"
+                        value={newClient.referencia}
+                        onChange={(e) =>
+                          handleChange("referencia", e.target.value)
+                        }
+                        placeholder="Ej. Facebook, recomendación, volante"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleAddClient}>Guardar cliente</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
 

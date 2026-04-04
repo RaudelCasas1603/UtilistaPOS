@@ -365,10 +365,6 @@ export default function InventarioPage() {
                 className="pl-9"
               />
             </div>
-
-            <Button onClick={() => console.log("Generar reposición")}>
-              Generar reposición
-            </Button>
           </div>
         </CardHeader>
 
