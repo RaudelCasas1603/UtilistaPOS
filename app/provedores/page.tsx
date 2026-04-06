@@ -20,7 +20,6 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
-  Eye,
   Mail,
   Plus,
   Search,
@@ -231,7 +230,7 @@ export default function ProvidersPage() {
     .size
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
+    <div className="w-full space-y-6 p-6 pb-8">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold tracking-tight">Proveedores</h1>
         <p className="text-sm text-muted-foreground">
@@ -395,17 +394,17 @@ export default function ProvidersPage() {
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-5">
-          <div className="overflow-hidden rounded-2xl border">
+        <CardContent className="pb-2">
+          <div className="overflow-hidden rounded-xl border border-border/60">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-muted/50">
+                <TableHeader className="bg-muted/40">
                   {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id} className="h-14">
+                    <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
                         <TableHead
                           key={header.id}
-                          className="px-4 text-sm font-semibold text-foreground"
+                          className="text-xs whitespace-nowrap"
                         >
                           {header.isPlaceholder
                             ? null
@@ -424,12 +423,12 @@ export default function ProvidersPage() {
                     table.getRowModel().rows.map((row) => (
                       <TableRow
                         key={row.id}
-                        className="h-16 transition-colors hover:bg-muted/30"
+                        className="transition-colors hover:bg-muted/30"
                       >
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            className="px-4 py-4 align-middle"
+                            className="align-middle text-xs whitespace-nowrap"
                           >
                             {flexRender(
                               cell.column.columnDef.cell,
@@ -443,7 +442,7 @@ export default function ProvidersPage() {
                     <TableRow>
                       <TableCell
                         colSpan={columns.length}
-                        className="h-24 text-center text-base text-muted-foreground"
+                        className="h-24 text-center text-xs text-muted-foreground"
                       >
                         No se encontraron proveedores.
                       </TableCell>
@@ -454,13 +453,13 @@ export default function ProvidersPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
               Mostrando {table.getRowModel().rows.length} de{" "}
               {table.getFilteredRowModel().rows.length} proveedores filtrados.
             </p>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 self-end sm:self-auto">
               <Button
                 variant="outline"
                 size="icon"
