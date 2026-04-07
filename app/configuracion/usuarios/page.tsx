@@ -61,23 +61,23 @@ export default function AdminUsuarios() {
       {/* ================================================= */}
       {/* Perfil de usuario + contraseña con scroll */}
       {/* ================================================= */}
-      <div className="max-h-[430px] overflow-y-auto pr-2">
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="max-w-md rounded-2xl">
+      <div className="h-auto pr-2">
+        <div className="grid gap-6 md:grid-cols-2 w-full">
+          <Card className="w-full rounded-2xl">
             <CardHeader className="flex flex-row items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                <User className="h-8 w-8 text-muted-foreground" />
+                <User className="h-10 w-10 text-muted-foreground" />
               </div>
 
               <div className="flex-1">
-                <CardTitle className="text-lg">Perfil del usuario</CardTitle>
-                <CardDescription>
+                <CardTitle className="!text-2xl">Perfil del usuario</CardTitle>
+                <CardDescription className="text-lg">
                   Configuración del usuario activo
                 </CardDescription>
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 mt-5">
               <RowField
                 label="Nombre"
                 value={currentUser.name}
@@ -92,7 +92,7 @@ export default function AdminUsuarios() {
                 icon={<ShieldCheck className="h-4 w-4 text-muted-foreground" />}
               />
 
-              <div className="flex justify-end">
+              <div className="flex justify-end mt-5">
                 {!editableUser ? (
                   <Button
                     variant="outline"
@@ -113,19 +113,14 @@ export default function AdminUsuarios() {
 
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle className="text-lg">Cambiar contraseña</CardTitle>
-              <CardDescription>
+              <CardTitle className="!text-2xl">Cambiar contraseña</CardTitle>
+              <CardDescription className="text-lg">
                 Actualiza la contraseña del administrador
               </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4">
-              <PasswordField
-                label="Contraseña actual"
-                placeholder="••••••••"
-                show={showCurrent}
-                onToggle={() => setShowCurrent(!showCurrent)}
-              />
+              
 
               <PasswordField
                 label="Nueva contraseña"
@@ -142,7 +137,7 @@ export default function AdminUsuarios() {
               />
 
               <div className="flex justify-end pt-2">
-                <Button className="rounded-xl">Actualizar contraseña</Button>
+                <Button className="rounded-xl text-base">Actualizar contraseña</Button>
               </div>
             </CardContent>
           </Card>
@@ -153,7 +148,7 @@ export default function AdminUsuarios() {
       {/* Toolbar */}
       {/* ================================================= */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:max-w-sm">
+        <div className="relative w-full md:max-w-sm  !text-lg">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar usuario por nombre o rol"
@@ -161,8 +156,8 @@ export default function AdminUsuarios() {
           />
         </div>
 
-        <Button className="rounded-xl">
-          <UserPlus className="mr-2 h-4 w-4" />
+        <Button className="rounded-xl text-base mr-2">
+          <UserPlus className="mr-2 h-5 w-5" />
           Agregar usuario
         </Button>
       </div>
@@ -170,7 +165,7 @@ export default function AdminUsuarios() {
       {/* ================================================= */}
       {/* Lista de usuarios con scroll */}
       {/* ================================================= */}
-      <div className="h-[380px] space-y-2 overflow-y-auto pr-2">
+      <div className="h-[380px] space-y-2 overflow-y-auto pr-2 rounded-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth ">
         {users.map((user) => (
           <UserRow
             key={user.id}
@@ -201,16 +196,16 @@ function RowField({
 }) {
   return (
     <div className="grid grid-cols-3 items-center gap-4">
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <span className="text-lg font-medium text-muted-foreground text-center">{label}</span>
 
       <div className="col-span-2">
         {!editable ? (
-          <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+          <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-lg">
             {icon}
             <span>{value}</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 !text-lg">
             {icon}
             <Input defaultValue={value} className="h-9" />
           </div>
@@ -265,17 +260,17 @@ function PasswordField({
 }) {
   return (
     <div className="space-y-1">
-      <label className="text-sm font-medium text-muted-foreground">
+      <label className="text-lg font-medium text-muted-foreground ">
         {label}
       </label>
 
       <div className="relative">
-        <Lock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
 
         <Input
           type={show ? "text" : "password"}
           placeholder={placeholder}
-          className="pr-10 pl-9"
+          className="pr-10 pl-9 !text-base"
         />
 
         <button
@@ -283,7 +278,7 @@ function PasswordField({
           onClick={onToggle}
           className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
         >
-          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
         </button>
       </div>
     </div>
