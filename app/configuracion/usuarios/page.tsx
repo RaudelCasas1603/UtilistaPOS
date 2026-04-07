@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Pencil,
   Save,
-   Lock, Eye, EyeOff
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 
 import {
@@ -31,141 +33,120 @@ import { Input } from "@/components/ui/input"
 export default function AdminUsuarios() {
   const [editableUser, setEditableUser] = useState(false)
 
-  
-const [showCurrent, setShowCurrent] = useState(false)
+  const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
-
-  // Dummy user activo
   const currentUser = {
     name: "Juan Pérez",
     role: "Administrador",
   }
 
-  // Dummy lista usuarios
   const users = [
     { id: "1", name: "Juan Pérez", role: "Administrador" },
     { id: "2", name: "María López", role: "Cajera" },
     { id: "3", name: "Carlos Ramírez", role: "Vendedor" },
+    { id: "4", name: "Ana Torres", role: "Supervisor" },
+    { id: "5", name: "Luis Gómez", role: "Cajero" },
+    { id: "6", name: "Fernanda Ruiz", role: "Vendedor" },
+    { id: "7", name: "Diego Herrera", role: "Administrador" },
+    { id: "8", name: "Sofía Navarro", role: "Cajera" },
   ]
 
   return (
-    <div className="flex flex-col gap-8 p-6">
-      
+    <div className="flex flex-col gap-6 p-6">
       {/* Título */}
-      <h2 className="text-2xl font-semibold">
-        Administración de usuarios
-      </h2>
+      <h2 className="text-2xl font-semibold">Administración de usuarios</h2>
 
       {/* ================================================= */}
-      {/* Perfil de usuario */}
+      {/* Perfil de usuario + contraseña con scroll */}
       {/* ================================================= */}
-      <div className="grid gap-6 md:grid-cols-2">
-      <Card className="max-w-md rounded-2xl">
-        <CardHeader className="flex flex-row items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-            <User className="h-8 w-8 text-muted-foreground" />
-          </div>
+      <div className="max-h-[430px] overflow-y-auto pr-2">
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="max-w-md rounded-2xl">
+            <CardHeader className="flex flex-row items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                <User className="h-8 w-8 text-muted-foreground" />
+              </div>
 
-          <div className="flex-1">
-            <CardTitle className="text-lg">
-              Perfil del usuario
-            </CardTitle>
-            <CardDescription>
-              Configuración del usuario activo
-            </CardDescription>
-          </div>
-        </CardHeader>
+              <div className="flex-1">
+                <CardTitle className="text-lg">Perfil del usuario</CardTitle>
+                <CardDescription>
+                  Configuración del usuario activo
+                </CardDescription>
+              </div>
+            </CardHeader>
 
-        <CardContent className="space-y-4">
-          <RowField
-            label="Nombre"
-            value={currentUser.name}
-            editable={editableUser}
-            icon={<User className="h-4 w-4 text-muted-foreground" />}
-          />
+            <CardContent className="space-y-4">
+              <RowField
+                label="Nombre"
+                value={currentUser.name}
+                editable={editableUser}
+                icon={<User className="h-4 w-4 text-muted-foreground" />}
+              />
 
-          <RowField
-            label="Rol"
-            value={currentUser.role}
-            editable={editableUser}
-            icon={
-              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-            }
-          />
+              <RowField
+                label="Rol"
+                value={currentUser.role}
+                editable={editableUser}
+                icon={<ShieldCheck className="h-4 w-4 text-muted-foreground" />}
+              />
 
-          <div className="flex justify-end">
-            {!editableUser ? (
-              <Button
-                variant="outline"
-                onClick={() => setEditableUser(true)}
-              >
-                <Pencil className="mr-2 h-4 w-4" />
-                Editar
-              </Button>
-            ) : (
-              <Button onClick={() => setEditableUser(false)}>
-                <Save className="mr-2 h-4 w-4" />
-                Guardar
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-      
-<Card className="rounded-2xl">
-      <CardHeader>
-        <CardTitle className="text-lg">
-          Cambiar contraseña
-        </CardTitle>
-        <CardDescription>
-          Actualiza la contraseña del administrador
-        </CardDescription>
-      </CardHeader>
-            <div className="grid grid-cols-2">
-                <div>
-      <CardContent className="space-y-4">
-        
-        {/* Contraseña actual */}
-        <PasswordField
-          label="Contraseña actual"
-          placeholder="••••••••"
-          show={showCurrent}
-          onToggle={() => setShowCurrent(!showCurrent)}
-        />
+              <div className="flex justify-end">
+                {!editableUser ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditableUser(true)}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Editar
+                  </Button>
+                ) : (
+                  <Button onClick={() => setEditableUser(false)}>
+                    <Save className="mr-2 h-4 w-4" />
+                    Guardar
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Nueva contraseña */}
-        <PasswordField
-          label="Nueva contraseña"
-          placeholder="Mínimo 8 caracteres"
-          show={showNew}
-          onToggle={() => setShowNew(!showNew)}
-        />
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-lg">Cambiar contraseña</CardTitle>
+              <CardDescription>
+                Actualiza la contraseña del administrador
+              </CardDescription>
+            </CardHeader>
 
-        {/* Confirmar contraseña */}
-        <PasswordField
-          label="Confirmar contraseña"
-          placeholder="Repite la nueva contraseña"
-          show={showConfirm}
-          onToggle={() => setShowConfirm(!showConfirm)}
-        />
+            <CardContent className="space-y-4">
+              <PasswordField
+                label="Contraseña actual"
+                placeholder="••••••••"
+                show={showCurrent}
+                onToggle={() => setShowCurrent(!showCurrent)}
+              />
 
+              <PasswordField
+                label="Nueva contraseña"
+                placeholder="Mínimo 8 caracteres"
+                show={showNew}
+                onToggle={() => setShowNew(!showNew)}
+              />
 
-      </CardContent>
-      </div>
-      <div>
-        {/* Acción */}
-        <div className="flex justify-end pt-4">
-          <Button className="rounded-xl">
-            Actualizar contraseña
-          </Button>
+              <PasswordField
+                label="Confirmar contraseña"
+                placeholder="Repite la nueva contraseña"
+                show={showConfirm}
+                onToggle={() => setShowConfirm(!showConfirm)}
+              />
+
+              <div className="flex justify-end pt-2">
+                <Button className="rounded-xl">Actualizar contraseña</Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
-      </div>
-    </Card>
-
-
       </div>
 
       {/* ================================================= */}
@@ -173,7 +154,7 @@ const [showCurrent, setShowCurrent] = useState(false)
       {/* ================================================= */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="relative w-full md:max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar usuario por nombre o rol"
             className="pl-9"
@@ -187,9 +168,9 @@ const [showCurrent, setShowCurrent] = useState(false)
       </div>
 
       {/* ================================================= */}
-      {/* Lista de usuarios */}
+      {/* Lista de usuarios con scroll */}
       {/* ================================================= */}
-      <div className="space-y-2">
+      <div className="h-[380px] space-y-2 overflow-y-auto pr-2">
         {users.map((user) => (
           <UserRow
             key={user.id}
@@ -220,9 +201,7 @@ function RowField({
 }) {
   return (
     <div className="grid grid-cols-3 items-center gap-4">
-      <span className="text-sm font-medium text-muted-foreground">
-        {label}
-      </span>
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
 
       <div className="col-span-2">
         {!editable ? (
@@ -259,9 +238,7 @@ function UserRow({
 
         <div>
           <p className="font-medium">{name}</p>
-          <p className="text-sm text-muted-foreground">
-            {role}
-          </p>
+          <p className="text-sm text-muted-foreground">{role}</p>
         </div>
       </div>
 
@@ -293,24 +270,20 @@ function PasswordField({
       </label>
 
       <div className="relative">
-        <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Lock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
         <Input
           type={show ? "text" : "password"}
           placeholder={placeholder}
-          className="pl-9 pr-10"
+          className="pr-10 pl-9"
         />
 
         <button
           type="button"
           onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
         >
-          {show ? (
-            <EyeOff className="h-4 w-4" />
-          ) : (
-            <Eye className="h-4 w-4" />
-          )}
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
       </div>
     </div>

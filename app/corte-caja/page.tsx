@@ -126,12 +126,12 @@ export default function CorteCajaPage() {
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Corte de caja</h1>
-          <p className="text-sm text-muted-foreground">
-            Consulta el resumen del día y captura el arqueo de efectivo.
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Corte de caja</h1>
+        <p className="text-sm text-muted-foreground">
+          Consulta el resumen del día y captura el arqueo de efectivo.
+        </p>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card className="border-border/60 shadow-sm">
@@ -215,7 +215,7 @@ export default function CorteCajaPage() {
                   value={saldoInicial}
                   onChange={(e) => setSaldoInicial(e.target.value)}
                   placeholder="Saldo inicial en caja"
-                  className="h-24 !text-2xl font-semibold text-left p-4"
+                  className="h-24 p-4 text-left !text-2xl font-semibold"
                 />
               </div>
 
@@ -336,10 +336,10 @@ export default function CorteCajaPage() {
 
               <div className="rounded-xl border bg-muted/30 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-base font-medium">Diferencia</span>
+                  <span className="text-2xl font-medium">Diferencia</span>
                   <span
                     className={[
-                      "text-lg font-bold",
+                      "text-2xl font-bold",
                       diferencia > 0
                         ? "text-emerald-600"
                         : diferencia < 0
@@ -361,13 +361,16 @@ export default function CorteCajaPage() {
               </div>
             </CardContent>
           </Card>
-          
-        <div className="flex justify-center">
-        <Button onClick={generarReporte} className="gap-2 w-auto text-xl p-8">
-          <FileText className="h-4 w-4" />
-          Generar reporte del día
-        </Button>
-        </div>
+
+          <div className="flex justify-center">
+            <Button
+              onClick={generarReporte}
+              className="w-auto gap-2 p-8 text-xl"
+            >
+              <FileText className="h-4 w-4" />
+              Generar reporte del día
+            </Button>
+          </div>
         </div>
       </div>
     </div>

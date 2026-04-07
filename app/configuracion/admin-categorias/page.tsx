@@ -12,6 +12,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
   Plus,
   Pencil,
   Trash2,
@@ -37,32 +46,42 @@ const categoriasIniciales = [
     descripcion: "Botanas y frituras",
     activa: false,
   },
-   {
+  {
     id: 3,
-    nombre: "Snacks",
-    descripcion: "Botanas y frituras",
-    activa: false,
+    nombre: "Lácteos",
+    descripcion: "Leche, queso y yogurt",
+    activa: true,
   },
-   {
+  {
     id: 4,
-    nombre: "Snacks",
-    descripcion: "Botanas y frituras",
-    activa: false,
+    nombre: "Limpieza",
+    descripcion: "Productos de limpieza para el hogar",
+    activa: true,
   },
-   {
+  {
     id: 5,
-    nombre: "Snacks",
-    descripcion: "Botanas y frituras",
+    nombre: "Papelería",
+    descripcion: "Artículos escolares y de oficina",
     activa: false,
   },
 ]
 
+type Categoria = {
+  id: number
+  nombre: string
+  descripcion: string
+  activa: boolean
+}
+
+type CategoriaCardProps = {
+  categoria: Categoria
+}
+
 /* ===========================
    Card de categoría
    =========================== */
-function CategoriaCard({ categoria }) {
+function CategoriaCard({ categoria }: CategoriaCardProps) {
   const [editando, setEditando] = useState(false)
-
   const [nombre, setNombre] = useState(categoria.nombre)
   const [descripcion, setDescripcion] = useState(categoria.descripcion)
 
@@ -84,26 +103,27 @@ function CategoriaCard({ categoria }) {
   }
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex items-start justify-between gap-2">
-
-          {editando ? (
-            <Input
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="font-semibold"
-            />
-          ) : (
-            <span>{categoria.nombre}</span>
-          )}
+          <div className="flex-1">
+            {editando ? (
+              <Input
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                className="font-semibold"
+              />
+            ) : (
+              <span>{categoria.nombre}</span>
+            )}
+          </div>
 
           {categoria.activa ? (
-            <span className="text-xs font-medium text-green-600">
+            <span className="shrink-0 text-xs font-medium text-green-600">
               Activa
             </span>
           ) : (
-            <span className="text-xs font-medium text-red-600">
+            <span className="shrink-0 text-xs font-medium text-red-600">
               Inactiva
             </span>
           )}
@@ -123,8 +143,7 @@ function CategoriaCard({ categoria }) {
       </CardHeader>
 
       <CardContent>
-        <div className="flex gap-2 flex-wrap">
-
+        <div className="flex flex-wrap gap-2">
           {!editando ? (
             <>
               <Button
@@ -160,17 +179,12 @@ function CategoriaCard({ categoria }) {
                 Guardar
               </Button>
 
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={cancelarEdicion}
-              >
+              <Button size="sm" variant="outline" onClick={cancelarEdicion}>
                 <X className="mr-1 h-4 w-4" />
                 Cancelar
               </Button>
             </>
           )}
-
         </div>
       </CardContent>
     </Card>
@@ -181,16 +195,35 @@ function CategoriaCard({ categoria }) {
    Pantalla principal
    =========================== */
 export default function AdminCategorias() {
-  const [categorias] = useState(categoriasIniciales)
+  const [categorias, setCategorias] = useState<Categoria[]>(categoriasIniciales)
+
+  const [open, setOpen] = useState(false)
+  const [nuevaNombre, setNuevaNombre] = useState("")
+  const [nuevaDescripcion, setNuevaDescripcion] = useState("")
+
+  const crearCategoria = () => {
+    if (!nuevaNombre.trim()) return
+
+    const nuevaCategoria: Categoria = {
+      id: categorias.length ? Math.max(...categorias.map((c) => c.id)) + 1 : 1,
+      nombre: nuevaNombre.trim(),
+      descripcion: nuevaDescripcion.trim(),
+      activa: true,
+    }
+
+    setCategorias((prev) => [nuevaCategoria, ...prev])
+    setNuevaNombre("")
+    setNuevaDescripcion("")
+    setOpen(false)
+
+    console.log("Nueva categoría creada:", nuevaCategoria)
+  }
 
   return (
     <div className="space-y-6">
-
       {/* Encabezado */}
       <div>
-        <h2 className="text-2xl font-bold">
-          Administración de Categorías
-        </h2>
+        <h2 className="text-2xl font-bold">Administración de Categorías</h2>
         <p className="text-muted-foreground">
           Crea, edita o administra las categorías de tus productos
         </p>
@@ -198,22 +231,69 @@ export default function AdminCategorias() {
 
       {/* Botón crear */}
       <div className="flex justify-end">
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva categoría
-        </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Nueva categoría
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Crear nueva categoría</DialogTitle>
+              <DialogDescription>
+                Agrega una nueva categoría para organizar tus productos.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nombre</label>
+                <Input
+                  placeholder="Ej. Abarrotes"
+                  value={nuevaNombre}
+                  onChange={(e) => setNuevaNombre(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Descripción</label>
+                <Textarea
+                  placeholder="Describe brevemente la categoría"
+                  value={nuevaDescripcion}
+                  onChange={(e) => setNuevaDescripcion(e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setOpen(false)
+                  setNuevaNombre("")
+                  setNuevaDescripcion("")
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={crearCategoria}>
+                <Plus className="mr-2 h-4 w-4" />
+                Crear categoría
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Grid de cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {categorias.map((categoria) => (
-          <CategoriaCard
-            key={categoria.id}
-            categoria={categoria}
-          />
+          <CategoriaCard key={categoria.id} categoria={categoria} />
         ))}
       </div>
-
     </div>
   )
 }
