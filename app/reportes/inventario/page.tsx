@@ -237,13 +237,13 @@ export default function ReporteInventarioPage() {
             </div>
 
             <div className="flex flex-wrap gap-2 pt-1">
-              <span className="rounded-full border px-3 py-1 text-xs font-medium dark:border-sky-900 dark:bg-sky-500/10 dark:text-sky-300">
+              <span className="rounded-full border px-3 py-1 text-xs font-medium dark:border-sky-900 dark:bg-sky-500/10 dark:text-sky-600">
                 {tituloTipoReporte[tipoReporte]}
               </span>
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-300">
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-600">
                 {proveedorSeleccionado}
               </span>
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:border-amber-900 dark:bg-amber-500/10 dark:text-amber-300">
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:border-amber-900 dark:bg-amber-500/10 dark:text-amber-600">
                 {totalProductos} productos
               </span>
             </div>

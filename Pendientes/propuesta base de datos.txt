@@ -1,0 +1,141 @@
+tabla productos 
+    id:
+        identificador unico del producto
+    codigo de producto:
+        (este tendra la nomenclatura P-numero de id a 3 digitos de forma default ) 
+        o el usuario le asigna una clave
+    codigo de barras:
+        se escanea el codigo de barras del producto, puede ser nulo 
+    nombre
+        nombre del producto
+    precio
+        precio al cual el usuario adquiere el producto
+    precio publico
+        precio al cual el usuario vende dicho producto
+    porcentaje ganancia
+        este se calcula en automatico del precio del producto y el precio publico 
+    provedor
+        nombre del provedor o lugar donde se adquiere el producto
+    categoria
+        nombre de la categoria a la que pertenece 
+
+
+tabla inventario 
+    id:
+        identificador unico
+    codigo Producto:
+        codigo del producto al que hace referencia 
+    stock actual:
+        stock actual del producto 
+    stock minimo:
+        stock que el usuario considera como minimo, si no se selecciona nada default es 0
+    stock deseado: 
+        stock que el usuario considera como el optimo, si no se selecciona nada default es 0\
+
+tabla clientes:
+    id:
+        identificador unico 
+    nombre:
+        nombre del clientes
+    telefono:
+        telefono del clientes
+    correo:
+        correo del cliente
+    descuento:
+        descuento que se le asigna  a x cliente, 0 es el default 
+    referencia:
+        alguna caracteristica particular, puede ser 0
+
+tabla provedores:
+    id:
+        identificador unico 
+    nombre:
+        nombre del vendedor puede ser null
+    telefono:
+        telefono del provedor
+    correo del provedor:
+        correo del provedor, puede ser null 
+    empresa:
+        nombre de la empresa a la que pertenece
+    referencia:
+        alguna caracteristica particular 
+
+tabla categorias 
+    id: 
+        identificador unico 
+    nombre:
+        nombre de la categoria
+    descripcion:
+        breve descripcion de la categoria
+    estatus:
+        estatus de la categoria es activa/inactiva, default es activa 
+
+tabla usuarios :
+    id:
+        identificador unico
+    nombre del usuario:
+        nombre del usuario
+    contrasenia:
+        contrasenia del usuario
+    rolo:
+        rol del usuario puede ser admin/vendedor 
+
+tabla configuraciones de sistema
+    id: 
+        identificador unico 
+    nombre del banco:
+        nombre de la institucion financiera puede ser null
+    numero de cuenta: 
+        numero de cuenta, puede ser null
+    nombre del titular:
+        nombre del titular de la cuenta, puede ser null 
+    provedorTerminal:
+        nombre de la institucion que proporciona la terminal, puede ser null
+    comisionTerminal:
+        porcentaje que cobra la terminal por el uso del servicio 
+    habilitarImpresora:
+        bandera que indica si esta habilitada la impresora 
+    nombreImpresora:
+        nombre de la impresora 
+
+
+tabla ventasDetalles
+    id:
+        identificador unico
+    id Venta:
+        id a la venta que hace referencia
+    id producto:
+        identificador del producto de la tabla de productos
+    cantidad:
+        total de piezas selccionadas
+
+tabla Ventas:
+    id:
+        identificador unico 
+    fecha:  
+        fecha en la cual se realizo la venta 
+    cliente:
+        id del cliente al cual se registro la venta 
+    subtotal:
+        la suma de todos los productos por la cantidad de piezas 
+    descuento:
+        descuento que se  le aplico a la venta
+    metodo de pago:
+        se asigna el metodo de pago puede ser : efectivo, transferencia, tarjeta
+    total de la venta:
+        se regstra el monto total despues de restar descuentos 
+    total de articulos:
+        se registra la suma de la cantidad de los productos
+    estuts de la venta:
+        se registra estatus de la venta, puede ser pendiente, finalizada, cancelada 
+
+corte de caja:
+    ***** pendiente de definir *****
+    
+    
+    
+
+
+
+
+    

@@ -286,6 +286,7 @@ export default function ConfiguracionPage() {
             <span className="text-xl font-semibold">Administrar Usuarios</span>
           </span>
         </Link>
+        
       </div>
     </div>
   )
