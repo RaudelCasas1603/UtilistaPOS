@@ -3,9 +3,6 @@
 import { useState } from "react"
 
 import {
-  Users,
-  ShieldCheck,
-  KeyRound,
   Save,
   Hash,
   UserRoundCog,
@@ -17,7 +14,11 @@ import {
   ChevronRight,
   BanknoteArrowUp,
   CreditCard,
+  LayoutGrid,
+  Printer,
 } from "lucide-react"
+
+import { Switch } from "@/components/ui/switch"
 
 import {
   Card,
@@ -28,6 +29,15 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
 import Link from "next/link"
 
 export default function ConfiguracionPage() {
@@ -35,6 +45,12 @@ export default function ConfiguracionPage() {
   const [editable, setEditable] = useState(false)
   //Controla el estado del modo edicion de los datos de Terminal
   const [editableTerminal, setEditableTerminal] = useState(false)
+
+  //Controla el uso de la impresora
+  const [habilitarImpresora, setHabilitarImpresora] = useState(false)
+  const [impresoraSeleccionada, setImpresoraSeleccionada] = useState("")
+
+  const impresoras = ["HP LaserJet", "EPSON TM-T20", "Brother HL-L2350"]
 
   //Data Dummy
   const data = {
@@ -51,57 +67,9 @@ export default function ConfiguracionPage() {
   return (
     <div className="flex min-h-screen w-full flex-col gap-6 bg-background p-6">
       <h2 className="text-2xl font-medium">Administración del sistema</h2>
-      {/* Usuarios y roles */}
-      <Card className="rounded-2xl border shadow-sm">
-        <CardHeader className="pb-4">
-          <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-primary/10 p-3">
-              <Users className="h-6 w-6" />
-            </div>
 
-            <div>
-              <CardTitle className="text-2xl">Usuarios y roles</CardTitle>
-              <CardDescription className="mt-1 text-base">
-                Crea usuarios, asigna permisos y controla el acceso al sistema.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {/* métricas */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <InfoCard
-              title="Usuarios activos"
-              value="12"
-              subtitle="2 administradores, 4 cajeros, 6 vendedores"
-              icon={<Users className="h-4 w-4 text-muted-foreground" />}
-            />
-
-            <InfoCard
-              title="Roles creados"
-              value="4"
-              subtitle="Admin, Cajero y Vendedor"
-              icon={<ShieldCheck className="h-4 w-4 text-muted-foreground" />}
-            />
-
-            <InfoCard
-              title="Permisos críticos"
-              value="8"
-              subtitle="Corte, devoluciones, descuentos, eliminación, etc."
-              icon={<KeyRound className="h-4 w-4 text-muted-foreground" />}
-            />
-          </div>
-          <Link href="/configuracion/usuarios" className="flex justify-end">
-            <Button className="h-12 w-auto px-4 hover:cursor-pointer hover:bg-primary">
-              <UserRoundCog /> Administrar Usuarios
-              <ChevronRight className="ml-2" />
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-      {/* Contenedor para dos columnas  */}
-      <div className="grid grid-cols-2 space-x-6">
+      {/* Contenedor para 3 columnas  */}
+      <div className="grid grid-cols-3 space-x-6">
         {/* Número de transferencia */}
         <Card className="rounded-2xl border shadow-sm">
           <CardHeader>
@@ -206,7 +174,7 @@ export default function ConfiguracionPage() {
                 {!editableTerminal ? (
                   <Button
                     variant="outline"
-                    className="rounded-xl"
+                    className="mt-10 rounded-xl"
                     onClick={() => setEditableTerminal(true)}
                   >
                     <Pencil className="mr-2 h-4 w-4" />
@@ -214,7 +182,7 @@ export default function ConfiguracionPage() {
                   </Button>
                 ) : (
                   <Button
-                    className="rounded-xl"
+                    className="mt-10 rounded-xl"
                     onClick={() => setEditableTerminal(false)}
                   >
                     <Save className="mr-2 h-4 w-4" />
@@ -225,39 +193,100 @@ export default function ConfiguracionPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/** Configurar el uso de impresiones */}
+
+        <Card className="border shadow-sm">
+          <CardHeader>
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-primary/10 p-3">
+                <Printer className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">
+                  Habilitar Impresión de ticket
+                </CardTitle>
+                <CardDescription>
+                  Habilita o deshabilita el uso de impresión de tickets
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {/* Switch */}
+            <div className="flex items-center justify-between">
+              <span className="ml-8 text-lg font-semibold">
+                Habilitar Impresora
+              </span>
+              <Switch
+                checked={habilitarImpresora}
+                onCheckedChange={setHabilitarImpresora}
+                className="mr-16"
+              />
+            </div>
+
+            {/* Dropdown de impresoras */}
+            <div className="ml-8 max-w-md space-y-2">
+              <label className="text-lg font-medium">
+                Seleccione una impresora
+              </label>
+
+              <Select
+                disabled={!habilitarImpresora}
+                value={impresoraSeleccionada}
+                onValueChange={setImpresoraSeleccionada}
+              >
+                <SelectTrigger className="w-3/6">
+                  <SelectValue placeholder="Seleccione impresora..." />
+                </SelectTrigger>
+
+                <SelectContent
+                  className="rounded-lg border border-border bg-background shadow-lg"
+                  position="popper"
+                >
+                  {impresoras.map((impresora) => (
+                    <SelectItem key={impresora} value={impresora}>
+                      {impresora}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Botón Guardar */}
+            <div className="flex justify-end pt-6">
+              <Button disabled={habilitarImpresora && !impresoraSeleccionada}>
+                <Save />
+                Guardar cambios
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-      <div>
-        <Link href="/configuracion/admin-categorias">
-          <Button className="flex items-center p-8 text-xl font-semibold">
-            Administracion de Categorias
-            <ChevronRight className="h-8 w-8 font-bold" />
-          </Button>
+      <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
+        <Link
+          href="/configuracion/admin-categorias"
+          className="flex w-full justify-center"
+        >
+          <span className="flex h-24 w-1/2 flex-col items-center justify-center gap-4 rounded-xl border py-2 text-center transition-all duration-400 hover:bg-primary/90">
+            <LayoutGrid className="h-12 w-12" />
+            <span className="text-xl font-semibold">
+              Administración de Categorías
+            </span>
+          </span>
+        </Link>
+
+        <Link
+          href="/configuracion/usuarios"
+          className="flex w-full justify-center"
+        >
+          <span className="flex h-24 w-1/2 flex-col items-center justify-center gap-4 rounded-xl border text-center transition-all duration-400 hover:bg-primary/90">
+            <UserRoundCog className="h-12 w-12" />
+            <span className="text-xl font-semibold">Administrar Usuarios</span>
+          </span>
         </Link>
       </div>
-    </div>
-  )
-}
-
-function InfoCard({
-  title,
-  value,
-  subtitle,
-  icon,
-}: {
-  title: string
-  value: string
-  subtitle: string
-  icon: React.ReactNode
-}) {
-  return (
-    <div className="rounded-2xl border p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">{title}</span>
-        {icon}
-      </div>
-
-      <p className="text-3xl font-bold">{value}</p>
-      <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
     </div>
   )
 }
