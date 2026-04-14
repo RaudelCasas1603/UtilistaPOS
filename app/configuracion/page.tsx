@@ -276,7 +276,6 @@ export default function ConfiguracionPage() {
             </span>
           </span>
         </Link>
-
         <Link
           href="/configuracion/usuarios"
           className="flex w-full justify-center"
@@ -286,7 +285,7 @@ export default function ConfiguracionPage() {
             <span className="text-xl font-semibold">Administrar Usuarios</span>
           </span>
         </Link>
-        
+        agregar ventana de cancelar venta
       </div>
     </div>
   )
