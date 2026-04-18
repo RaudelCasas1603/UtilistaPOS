@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import Link from "next/link"
-import productsData from "./products.json"
 
 import {
   ColumnDef,
@@ -47,6 +46,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 type Product = {
   id: number
@@ -57,7 +63,34 @@ type Product = {
   costo: number
   precioPublico: number
   stock: number
+  idProveedor?: number | null
+  idCategoria?: number | null
 }
+
+type ApiProducto = {
+  id: number
+  codigo_producto: string | null
+  codigo_barras: string | null
+  nombre: string
+  precio_compra: number | string | null
+  precio_venta: number | string | null
+  porcentaje_ganancia: number | string | null
+  id_proveedor: number | null
+  id_categoria: number | null
+  stock: number | null
+}
+
+type ApiProveedor = {
+  id: number
+  empresa: string
+}
+
+type ApiCategoria = {
+  id: number
+  nombre: string
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -71,22 +104,56 @@ function getProfitPercentage(costo: number, precio: number) {
   return ((precio - costo) / costo) * 100
 }
 
+function mapApiProductoToProduct(item: ApiProducto): Product {
+  const costo = Number(item.precio_compra ?? 0)
+  const precio = Number(item.precio_venta ?? 0)
+
+  return {
+    id: item.id,
+    codigoProducto: item.codigo_producto ?? "",
+    codigoBarras: item.codigo_barras ?? "",
+    nombre: item.nombre,
+    precio,
+    costo,
+    precioPublico: precio,
+    stock: Number(item.stock ?? 0),
+    idProveedor: item.id_proveedor,
+    idCategoria: item.id_categoria,
+  }
+}
+
+type ProductDialogPayload = {
+  codigoProducto: string
+  codigoBarras: string
+  nombre: string
+  precioCompra: number
+  precioVenta: number
+  stock: number
+  idProveedor: number | null
+  idCategoria: number | null
+}
+
 type ProductDialogProps = {
-  onAddProduct: (product: Product) => void
+  onAddProduct: (product: ProductDialogPayload) => Promise<void>
 }
 
 function ProductDialog({ onAddProduct }: ProductDialogProps) {
   const [open, setOpen] = React.useState(false)
+  const [saving, setSaving] = React.useState(false)
+  const [loadingCatalogs, setLoadingCatalogs] = React.useState(false)
+
+  const [proveedores, setProveedores] = React.useState<ApiProveedor[]>([])
+  const [categorias, setCategorias] = React.useState<ApiCategoria[]>([])
 
   const [form, setForm] = React.useState({
-    id: "",
     codigoProducto: "",
     codigoBarras: "",
     nombre: "",
-    precio: "",
-    costo: "",
-    precioPublico: "",
+    precioCompra: "",
+    precioVenta: "",
     stock: "",
+    idProveedor: "",
+    idCategoria: "",
   })
 
   const [errors, setErrors] = React.useState<Record<string, string>>({})
@@ -105,51 +172,114 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
 
   const resetForm = () => {
     setForm({
-      id: "",
       codigoProducto: "",
       codigoBarras: "",
       nombre: "",
-      precio: "",
-      costo: "",
-      precioPublico: "",
+      precioCompra: "",
+      precioVenta: "",
       stock: "",
+      idProveedor: "",
+      idCategoria: "",
     })
     setErrors({})
   }
 
+  const fetchCatalogs = React.useCallback(async () => {
+    try {
+      setLoadingCatalogs(true)
+
+      const [proveedoresRes, categoriasRes] = await Promise.all([
+        fetch(`${API_URL}/proveedores`, { cache: "no-store" }),
+        fetch(`${API_URL}/categorias`, { cache: "no-store" }),
+      ])
+
+      if (!proveedoresRes.ok) {
+        throw new Error("No se pudieron cargar los proveedores")
+      }
+
+      if (!categoriasRes.ok) {
+        throw new Error("No se pudieron cargar las categorías")
+      }
+
+      const proveedoresData: ApiProveedor[] = await proveedoresRes.json()
+      const categoriasData: ApiCategoria[] = await categoriasRes.json()
+
+      setProveedores(proveedoresData)
+      setCategorias(categoriasData)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoadingCatalogs(false)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    if (open) {
+      fetchCatalogs()
+    }
+  }, [open, fetchCatalogs])
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!form.id.trim()) newErrors.id = "El ID es obligatorio"
-    if (!form.codigoProducto.trim())
-      newErrors.codigoProducto = "El código de producto es obligatorio"
-    if (!form.codigoBarras.trim())
-      newErrors.codigoBarras = "El código de barras es obligatorio"
-    if (!form.nombre.trim()) newErrors.nombre = "El nombre es obligatorio"
-    if (!form.precio.trim()) newErrors.precio = "El precio es obligatorio"
-    if (!form.costo.trim()) newErrors.costo = "El costo es obligatorio"
-    if (!form.precioPublico.trim())
-      newErrors.precioPublico = "El precio público es obligatorio"
-    if (!form.stock.trim()) newErrors.stock = "El stock es obligatorio"
-
-    if (form.id && Number.isNaN(Number(form.id))) {
-      newErrors.id = "El ID debe ser numérico"
+    if (!form.nombre.trim()) {
+      newErrors.nombre = "El nombre es obligatorio"
     }
 
-    if (form.precio && Number.isNaN(Number(form.precio))) {
-      newErrors.precio = "El precio debe ser numérico"
+    if (!form.precioCompra.trim()) {
+      newErrors.precioCompra = "El precio de compra es obligatorio"
     }
 
-    if (form.costo && Number.isNaN(Number(form.costo))) {
-      newErrors.costo = "El costo debe ser numérico"
+    if (!form.precioVenta.trim()) {
+      newErrors.precioVenta = "El precio de venta es obligatorio"
     }
 
-    if (form.precioPublico && Number.isNaN(Number(form.precioPublico))) {
-      newErrors.precioPublico = "El precio público debe ser numérico"
+    if (!form.stock.trim()) {
+      newErrors.stock = "El stock inicial es obligatorio"
+    }
+
+    if (!form.idProveedor) {
+      newErrors.idProveedor = "Selecciona un proveedor"
+    }
+
+    if (!form.idCategoria) {
+      newErrors.idCategoria = "Selecciona una categoría"
+    }
+
+    if (form.precioCompra && Number.isNaN(Number(form.precioCompra))) {
+      newErrors.precioCompra = "El precio de compra debe ser numérico"
+    }
+
+    if (form.precioVenta && Number.isNaN(Number(form.precioVenta))) {
+      newErrors.precioVenta = "El precio de venta debe ser numérico"
     }
 
     if (form.stock && Number.isNaN(Number(form.stock))) {
-      newErrors.stock = "El stock debe ser numérico"
+      newErrors.stock = "El stock inicial debe ser numérico"
+    }
+
+    if (
+      form.precioCompra &&
+      !Number.isNaN(Number(form.precioCompra)) &&
+      Number(form.precioCompra) < 0
+    ) {
+      newErrors.precioCompra = "El precio de compra no puede ser negativo"
+    }
+
+    if (
+      form.precioVenta &&
+      !Number.isNaN(Number(form.precioVenta)) &&
+      Number(form.precioVenta) < 0
+    ) {
+      newErrors.precioVenta = "El precio de venta no puede ser negativo"
+    }
+
+    if (
+      form.stock &&
+      !Number.isNaN(Number(form.stock)) &&
+      Number(form.stock) < 0
+    ) {
+      newErrors.stock = "El stock inicial no puede ser negativo"
     }
 
     setErrors(newErrors)
@@ -157,23 +287,30 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) return
 
-    const newProduct: Product = {
-      id: Number(form.id),
-      codigoProducto: form.codigoProducto.trim(),
-      codigoBarras: form.codigoBarras.trim(),
-      nombre: form.nombre.trim(),
-      precio: Number(form.precio),
-      costo: Number(form.costo),
-      precioPublico: Number(form.precioPublico),
-      stock: Number(form.stock),
-    }
+    try {
+      setSaving(true)
 
-    onAddProduct(newProduct)
-    resetForm()
-    setOpen(false)
+      await onAddProduct({
+        codigoProducto: form.codigoProducto.trim(),
+        codigoBarras: form.codigoBarras.trim(),
+        nombre: form.nombre.trim(),
+        precioCompra: Number(form.precioCompra),
+        precioVenta: Number(form.precioVenta),
+        stock: Number(form.stock),
+        idProveedor: form.idProveedor ? Number(form.idProveedor) : null,
+        idCategoria: form.idCategoria ? Number(form.idCategoria) : null,
+      })
+
+      resetForm()
+      setOpen(false)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -195,23 +332,11 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
         <DialogHeader>
           <DialogTitle>Agregar producto</DialogTitle>
           <DialogDescription>
-            Captura la información del producto
+            Captura la información del producto para darlo de alta.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-2 md:grid-cols-2">
-          <div className="grid gap-2">
-            <Label htmlFor="id">ID</Label>
-            <Input
-              id="id"
-              type="number"
-              placeholder="Ej. 21"
-              value={form.id}
-              onChange={(e) => handleChange("id", e.target.value)}
-            />
-            {errors.id && <p className="text-xs text-red-500">{errors.id}</p>}
-          </div>
-
           <div className="grid gap-2">
             <Label htmlFor="codigoProducto">Código producto</Label>
             <Input
@@ -238,7 +363,7 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
             )}
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid gap-2 md:col-span-2">
             <Label htmlFor="nombre">Nombre</Label>
             <Input
               id="nombre"
@@ -252,52 +377,99 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="precio">Precio</Label>
+            <Label htmlFor="precioCompra">Precio compra</Label>
             <Input
-              id="precio"
-              type="number"
-              step="0.01"
-              placeholder="Ej. 45.5"
-              value={form.precio}
-              onChange={(e) => handleChange("precio", e.target.value)}
-            />
-            {errors.precio && (
-              <p className="text-xs text-red-500">{errors.precio}</p>
-            )}
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="costo">Costo</Label>
-            <Input
-              id="costo"
+              id="precioCompra"
               type="number"
               step="0.01"
               placeholder="Ej. 30"
-              value={form.costo}
-              onChange={(e) => handleChange("costo", e.target.value)}
+              value={form.precioCompra}
+              onChange={(e) => handleChange("precioCompra", e.target.value)}
             />
-            {errors.costo && (
-              <p className="text-xs text-red-500">{errors.costo}</p>
+            {errors.precioCompra && (
+              <p className="text-xs text-red-500">{errors.precioCompra}</p>
             )}
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="precioPublico">Precio público</Label>
+            <Label htmlFor="precioVenta">Precio venta</Label>
             <Input
-              id="precioPublico"
+              id="precioVenta"
               type="number"
               step="0.01"
-              placeholder="Ej. 49.9"
-              value={form.precioPublico}
-              onChange={(e) => handleChange("precioPublico", e.target.value)}
+              placeholder="Ej. 45"
+              value={form.precioVenta}
+              onChange={(e) => handleChange("precioVenta", e.target.value)}
             />
-            {errors.precioPublico && (
-              <p className="text-xs text-red-500">{errors.precioPublico}</p>
+            {errors.precioVenta && (
+              <p className="text-xs text-red-500">{errors.precioVenta}</p>
             )}
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="stock">Stock</Label>
+            <Label>Proveedor</Label>
+            <Select
+              value={form.idProveedor}
+              onValueChange={(value) => handleChange("idProveedor", value)}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    loadingCatalogs
+                      ? "Cargando proveedores..."
+                      : "Selecciona un proveedor"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent
+                className="max-h-40 rounded-lg border border-border bg-background shadow-lg"
+                position="popper"
+              >
+                {proveedores.map((proveedor) => (
+                  <SelectItem key={proveedor.id} value={String(proveedor.id)}>
+                    {proveedor.empresa}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.idProveedor && (
+              <p className="text-xs text-red-500">{errors.idProveedor}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Categoría</Label>
+            <Select
+              value={form.idCategoria}
+              onValueChange={(value) => handleChange("idCategoria", value)}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    loadingCatalogs
+                      ? "Cargando categorías..."
+                      : "Selecciona una categoría"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent
+                className="max-h-40 rounded-lg border border-border bg-background shadow-lg"
+                position="popper"
+              >
+                {categorias.map((categoria) => (
+                  <SelectItem key={categoria.id} value={String(categoria.id)}>
+                    {categoria.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.idCategoria && (
+              <p className="text-xs text-red-500">{errors.idCategoria}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="stock">Stock inicial</Label>
             <Input
               id="stock"
               type="number"
@@ -315,7 +487,9 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleSave}>Guardar producto</Button>
+          <Button onClick={handleSave} disabled={saving || loadingCatalogs}>
+            {saving ? "Guardando..." : "Guardar producto"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -323,17 +497,86 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
 }
 
 export default function ProductosPage() {
-  const initialData = React.useMemo<Product[]>(
-    () => productsData as Product[],
-    []
-  )
-
-  const [data, setData] = React.useState<Product[]>(initialData)
+  const [data, setData] = React.useState<Product[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState("")
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
 
-  const handleAddProduct = (product: Product) => {
-    setData((prev) => [product, ...prev])
+  const fetchProductos = React.useCallback(async () => {
+    try {
+      setLoading(true)
+      setError("")
+
+      const response = await fetch(`${API_URL}/productos`, {
+        cache: "no-store",
+      })
+
+      if (!response.ok) {
+        throw new Error("No se pudieron cargar los productos")
+      }
+
+      const result: ApiProducto[] = await response.json()
+      setData(result.map(mapApiProductoToProduct))
+    } catch (err) {
+      console.error(err)
+      setError("Ocurrió un error al cargar los productos")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    fetchProductos()
+  }, [fetchProductos])
+
+  const handleAddProduct = async (product: ProductDialogPayload) => {
+    const payload = {
+      codigo_producto: product.codigoProducto,
+      codigo_barras: product.codigoBarras,
+      nombre: product.nombre,
+      precio_compra: product.precioCompra,
+      precio_venta: product.precioVenta,
+      id_proveedor: product.idProveedor,
+      id_categoria: product.idCategoria,
+    }
+
+    const response = await fetch(`${API_URL}/productos`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result?.message || "No se pudo guardar el producto")
+    }
+
+    const nuevoProducto = mapApiProductoToProduct(result)
+
+    setData((prev) => [nuevoProducto, ...prev])
+
+    if (product.stock > 0) {
+      try {
+        await fetch(`${API_URL}/inventario`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id_producto: nuevoProducto.id,
+            stock_actual: product.stock,
+            stock_minimo: 0,
+            stock_deseado: product.stock,
+          }),
+        })
+      } catch (inventoryError) {
+        console.error("Error al crear inventario inicial:", inventoryError)
+      }
+    }
   }
 
   const columns = React.useMemo<ColumnDef<Product>[]>(
@@ -347,20 +590,16 @@ export default function ProductosPage() {
       },
       {
         accessorKey: "codigoProducto",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              className="h-auto p-0 font-semibold"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Código producto
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          )
-        },
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            className="h-auto p-0 font-semibold"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Código producto
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
       },
       {
         accessorKey: "codigoBarras",
@@ -373,20 +612,16 @@ export default function ProductosPage() {
       },
       {
         accessorKey: "nombre",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              className="h-auto p-0 font-semibold"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Nombre
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          )
-        },
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            className="h-auto p-0 font-semibold"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Nombre
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
         cell: ({ row }) => (
           <div className="min-w-[220px]">
             <p className="truncate font-semibold text-foreground">
@@ -400,20 +635,16 @@ export default function ProductosPage() {
       },
       {
         accessorKey: "precio",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              className="h-auto p-0 font-semibold"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Precio
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          )
-        },
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            className="h-auto p-0 font-semibold"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Precio
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
         cell: ({ row }) => (
           <span className="font-medium">
             {formatCurrency(row.original.precio)}
@@ -422,20 +653,16 @@ export default function ProductosPage() {
       },
       {
         accessorKey: "costo",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              className="h-auto p-0 font-semibold"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Costo
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          )
-        },
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            className="h-auto p-0 font-semibold"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Costo
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
             {formatCurrency(row.original.costo)}
@@ -444,20 +671,16 @@ export default function ProductosPage() {
       },
       {
         id: "porcentajeGanancia",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              className="h-auto p-0 font-semibold"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              % ganancia
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          )
-        },
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            className="h-auto p-0 font-semibold"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            % ganancia
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
         accessorFn: (row) => getProfitPercentage(row.costo, row.precio),
         cell: ({ row }) => {
           const profit = getProfitPercentage(
@@ -483,20 +706,16 @@ export default function ProductosPage() {
       },
       {
         accessorKey: "precioPublico",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              className="h-auto p-0 font-semibold"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Precio público
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          )
-        },
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            className="h-auto p-0 font-semibold"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Precio público
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
         cell: ({ row }) => (
           <span className="font-semibold text-primary">
             {formatCurrency(row.original.precioPublico)}
@@ -505,20 +724,16 @@ export default function ProductosPage() {
       },
       {
         accessorKey: "stock",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              className="h-auto p-0 font-semibold"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Stock
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          )
-        },
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            className="h-auto p-0 font-semibold"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Stock
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
         cell: ({ row }) => (
           <span className="font-medium">{row.original.stock}</span>
         ),
@@ -653,7 +868,7 @@ export default function ProductosPage() {
         </Card>
       </div>
 
-      <Card className="border-border/60 shadow-sm">
+      <Card className="mt-10 border-border/60 shadow-sm">
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="text-lg">Listado de productos</CardTitle>
@@ -678,95 +893,107 @@ export default function ProductosPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="overflow-hidden rounded-xl border border-border/60">
-            <div className="overflow-x-auto">
-              <Table className="text-base">
-                <TableHeader className="bg-muted/40">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead
-                          key={header.id}
-                          className="whitespace-nowrap"
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        className="transition-colors hover:bg-muted/30"
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            className="align-middle whitespace-nowrap"
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={columns.length}
-                        className="h-24 text-center text-muted-foreground"
-                      >
-                        No se encontraron productos.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+          {loading ? (
+            <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+              Cargando productos...
             </div>
-          </div>
+          ) : error ? (
+            <div className="flex h-40 items-center justify-center text-sm text-red-500">
+              {error}
+            </div>
+          ) : (
+            <>
+              <div className="overflow-hidden rounded-xl border border-border/60">
+                <div className="overflow-x-auto">
+                  <Table className="text-base">
+                    <TableHeader className="bg-muted/40">
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <TableHead
+                              key={header.id}
+                              className="whitespace-nowrap"
+                            >
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext()
+                                  )}
+                            </TableHead>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableHeader>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Mostrando {table.getRowModel().rows.length} de{" "}
-              {table.getFilteredRowModel().rows.length} productos filtrados.
-            </p>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-
-              <div className="min-w-[120px] text-center text-sm text-muted-foreground">
-                Página {table.getState().pagination.pageIndex + 1} de{" "}
-                {table.getPageCount()}
+                    <TableBody>
+                      {table.getRowModel().rows?.length ? (
+                        table.getRowModel().rows.map((row) => (
+                          <TableRow
+                            key={row.id}
+                            className="transition-colors hover:bg-muted/30"
+                          >
+                            {row.getVisibleCells().map((cell) => (
+                              <TableCell
+                                key={cell.id}
+                                className="align-middle whitespace-nowrap"
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={columns.length}
+                            className="h-24 text-center text-muted-foreground"
+                          >
+                            No se encontraron productos.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
 
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Mostrando {table.getRowModel().rows.length} de{" "}
+                  {table.getFilteredRowModel().rows.length} productos filtrados.
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  <div className="min-w-[120px] text-center text-sm text-muted-foreground">
+                    Página {table.getState().pagination.pageIndex + 1} de{" "}
+                    {table.getPageCount()}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

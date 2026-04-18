@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,27 +17,161 @@ import {
   Barcode,
   ChartColumn,
   CheckCircle2,
+  XCircle,
 } from "lucide-react"
 
+type InventarioProducto = {
+  id: number
+  id_producto: number
+  stock_actual: number
+  stock_minimo: number
+  stock_deseado: number
+  codigo_producto: string
+  codigo_barras: string
+  nombre: string
+  precio?: number
+  costo?: number
+  precio_publico?: number
+  categoria?: string
+  ventasHoy?: number
+  ventasSemana?: number
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
+
 export default function InventarioProductoPage() {
-  const producto = {
-    nombre: "Cuaderno Profesional Raya",
-    sku: "CUA-001",
-    categoria: "Papelería",
-    precio: 45,
-    codigoBarras: "7501234567890",
-    stockActual: 18,
-    stockMinimo: 10,
-    stockDeseado: 30,
-    ventasHoy: 4,
-    ventasSemana: 21,
+  const params = useParams()
+  const id = params?.id as string
+
+  const [producto, setProducto] = useState<InventarioProducto | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [editMode, setEditMode] = useState(false)
+
+  const [stockActual, setStockActual] = useState(0)
+  const [stockMinimo, setStockMinimo] = useState(0)
+  const [stockDeseado, setStockDeseado] = useState(0)
+
+  const [alertSuccess, setAlertSuccess] = useState(false)
+  const [alertError, setAlertError] = useState("")
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    const fetchProducto = async () => {
+      try {
+        setLoading(true)
+        setAlertError("")
+
+        const res = await fetch(`${API_URL}/inventario/${id}`, {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+
+        if (!res.ok) {
+          throw new Error("No se pudo obtener el producto de inventario")
+        }
+
+        const data: InventarioProducto = await res.json()
+
+        setProducto(data)
+        setStockActual(Number(data.stock_actual ?? 0))
+        setStockMinimo(Number(data.stock_minimo ?? 0))
+        setStockDeseado(Number(data.stock_deseado ?? 0))
+      } catch (error) {
+        console.error(error)
+        setAlertError("No se pudo cargar la información del inventario.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (id) {
+      fetchProducto()
+    }
+  }, [id])
+
+  const handleGuardar = async () => {
+    if (!producto) return
+
+    try {
+      setSaving(true)
+      setAlertError("")
+      setAlertSuccess(false)
+
+      const res = await fetch(`${API_URL}/inventario/${producto.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id_producto: producto.id_producto,
+          stock_actual: Number(stockActual),
+          stock_minimo: Number(stockMinimo),
+          stock_deseado: Number(stockDeseado),
+        }),
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null)
+        throw new Error(
+          errorData?.message || "No se pudo actualizar el inventario"
+        )
+      }
+
+      const data = await res.json()
+
+      setProducto(data)
+      setStockActual(Number(data.stock_actual ?? 0))
+      setStockMinimo(Number(data.stock_minimo ?? 0))
+      setStockDeseado(Number(data.stock_deseado ?? 0))
+
+      setEditMode(false)
+      setAlertSuccess(true)
+
+      setTimeout(() => {
+        setAlertSuccess(false)
+      }, 3000)
+    } catch (error: any) {
+      console.error(error)
+      setAlertError(error.message || "Ocurrió un error al guardar los cambios.")
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const [editMode, setEditMode] = useState(false)
-  const [showAlert, setShowAlert] = useState(false)
-  const [stockActual, setStockActual] = useState(producto.stockActual)
-  const [stockMinimo, setStockMinimo] = useState(producto.stockMinimo)
-  const [stockDeseado, setStockDeseado] = useState(producto.stockDeseado)
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <p className="text-sm text-muted-foreground">Cargando inventario...</p>
+      </div>
+    )
+  }
+
+  if (!producto) {
+    return (
+      <div className="flex h-full flex-col gap-4 p-6">
+        {alertError && (
+          <Alert className="border-red-400 bg-red-400">
+            <XCircle className="h-4 w-4 text-red-800" />
+            <AlertTitle className="text-red-800">Error</AlertTitle>
+            <AlertDescription className="text-red-800">
+              {alertError}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-muted-foreground">
+              No se encontró el producto de inventario.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const estado =
     stockActual === 0
@@ -62,23 +197,24 @@ export default function InventarioProductoPage() {
       </Badge>
     )
 
-  const handleGuardar = () => {
-    setEditMode(false)
-    setShowAlert(true)
-
-    setTimeout(() => {
-      setShowAlert(false)
-    }, 3000)
-  }
-
   return (
     <div className="flex h-full flex-col gap-4 overflow-hidden">
-      {showAlert && (
+      {alertSuccess && (
         <Alert className="border-green-400 bg-green-400">
           <CheckCircle2 className="h-4 w-4 text-green-800" />
           <AlertTitle className="text-green-800">Cambios guardados</AlertTitle>
           <AlertDescription className="text-green-800">
             El stock del producto se actualizó correctamente.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {alertError && (
+        <Alert className="border-red-400 bg-red-400">
+          <XCircle className="h-4 w-4 text-red-800" />
+          <AlertTitle className="text-red-800">Error</AlertTitle>
+          <AlertDescription className="text-red-800">
+            {alertError}
           </AlertDescription>
         </Alert>
       )}
@@ -102,7 +238,7 @@ export default function InventarioProductoPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   {badgeEstado}
                   <Badge variant="outline" className="px-3 py-1">
-                    {producto.categoria}
+                    {producto.categoria || "Sin categoría"}
                   </Badge>
                 </div>
               </div>
@@ -114,7 +250,7 @@ export default function InventarioProductoPage() {
                   <Tag className="h-4 w-4" />
                   <span className="text-xs">SKU</span>
                 </div>
-                <p className="font-semibold">{producto.sku}</p>
+                <p className="font-semibold">{producto.codigo_producto}</p>
               </div>
 
               <div className="rounded-xl border bg-muted/30 p-3">
@@ -122,12 +258,14 @@ export default function InventarioProductoPage() {
                   <Barcode className="h-4 w-4" />
                   <span className="text-xs">Código de barras</span>
                 </div>
-                <p className="font-semibold">{producto.codigoBarras}</p>
+                <p className="font-semibold">{producto.codigo_barras}</p>
               </div>
 
               <div className="rounded-xl border bg-muted/30 p-3 sm:col-span-2">
                 <p className="text-xs text-muted-foreground">Precio de venta</p>
-                <p className="text-xl font-bold">${producto.precio}</p>
+                <p className="text-xl font-bold">
+                  ${Number(producto.precio_venta ?? 0)}
+                </p>
               </div>
             </div>
           </div>
@@ -247,10 +385,11 @@ export default function InventarioProductoPage() {
               ) : (
                 <Button
                   onClick={handleGuardar}
+                  disabled={saving}
                   className="h-14 w-full gap-3 rounded-xl text-lg font-semibold"
                 >
                   <Save className="h-6 w-6" />
-                  Guardar
+                  {saving ? "Guardando..." : "Guardar"}
                 </Button>
               )}
             </div>
@@ -264,15 +403,13 @@ export default function InventarioProductoPage() {
 
           <CardContent className="space-y-4">
             <div className="rounded-xl border p-4">
-              <p className="text-sm text-muted-foreground">Ventas hoy</p>
-              <p className="text-2xl font-bold">{producto.ventasHoy}</p>
+              <p className="text-sm text-muted-foreground">Estado actual</p>
+              <p className="text-2xl font-bold">{estado}</p>
             </div>
 
             <div className="rounded-xl border p-4">
-              <p className="text-sm text-muted-foreground">
-                Ventas últimos 7 días
-              </p>
-              <p className="text-2xl font-bold">{producto.ventasSemana}</p>
+              <p className="text-sm text-muted-foreground">Stock faltante</p>
+              <p className="text-2xl font-bold">{faltante}</p>
             </div>
 
             <div className="rounded-xl border p-4">

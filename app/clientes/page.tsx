@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import Link from "next/link"
-import clientsData from "./clientes.json"
 
 import {
   ColumnDef,
@@ -24,6 +23,7 @@ import {
   Mail,
   BadgePercent,
   Plus,
+  Loader2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -48,6 +48,20 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+type EstatusCliente = "activo" | "inactivo"
+
+type ClientApi = {
+  id: number
+  nombre: string
+  telefono: string
+  correo: string
+  descuento: number | string
+  referencia: string
+  estatus: EstatusCliente | string
+  created_at?: string
+  updated_at?: string
+}
+
 type Client = {
   id: number
   nombre: string
@@ -55,6 +69,69 @@ type Client = {
   correo: string
   descuento: number
   referencia: string
+  estatus: EstatusCliente
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+const ENDPOINTS = {
+  list: `${API_BASE}/api/clientes`,
+  create: `${API_BASE}/api/clientes`,
+  update: (id: number) => `${API_BASE}/api/clientes/${id}`,
+  updateEstatus: (id: number) => `${API_BASE}/api/clientes/${id}/estatus`,
+  remove: (id: number) => `${API_BASE}/api/clientes/${id}`,
+}
+
+function normalizeEstatus(value: unknown): EstatusCliente {
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === "activo" || normalized === "inactivo") {
+      return normalized
+    }
+  }
+  return "activo"
+}
+
+function normalizeClient(item: ClientApi): Client {
+  return {
+    id: Number(item.id),
+    nombre: item.nombre ?? "",
+    telefono: item.telefono ?? "",
+    correo: item.correo ?? "",
+    descuento: Number(item.descuento ?? 0),
+    referencia: item.referencia ?? "",
+    estatus: normalizeEstatus(item.estatus),
+  }
+}
+
+async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.headers ?? {}),
+    },
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    let message = `Error ${response.status} en ${url}`
+
+    try {
+      const errorData = await response.json()
+      message =
+        errorData?.message || errorData?.error || errorData?.detalle || message
+    } catch {
+      try {
+        const text = await response.text()
+        if (text) message = `${message} - ${text}`
+      } catch {}
+    }
+
+    throw new Error(message)
+  }
+
+  return response.json()
 }
 
 function getDiscountStyles(descuento: number) {
@@ -74,12 +151,18 @@ function getDiscountStyles(descuento: number) {
 }
 
 export default function ClientesPage() {
-  const [data, setData] = React.useState<Client[]>(clientsData as Client[])
+  const [data, setData] = React.useState<Client[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState("")
+
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [open, setOpen] = React.useState(false)
+  const [creating, setCreating] = React.useState(false)
 
-  const [newClient, setNewClient] = React.useState<Omit<Client, "id">>({
+  const [newClient, setNewClient] = React.useState<
+    Omit<Client, "id" | "estatus">
+  >({
     nombre: "",
     telefono: "",
     correo: "",
@@ -87,14 +170,43 @@ export default function ClientesPage() {
     referencia: "",
   })
 
-  const handleChange = (field: keyof Omit<Client, "id">, value: string) => {
+  const cargarClientes = React.useCallback(async () => {
+    try {
+      setLoading(true)
+      setError("")
+
+      const response = await fetchJson<ClientApi[]>(ENDPOINTS.list)
+      const clientesNormalizados = response.map(normalizeClient)
+
+      setData(clientesNormalizados)
+    } catch (error) {
+      console.error("Error al obtener clientes:", error)
+      setError(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron cargar los clientes."
+      )
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    cargarClientes()
+  }, [cargarClientes])
+
+  const handleChange = (
+    field: keyof Omit<Client, "id" | "estatus">,
+    value: string
+  ) => {
     setNewClient((prev) => ({
       ...prev,
-      [field]: field === "descuento" ? Number(value) : value,
+      [field]:
+        field === "descuento" ? (value === "" ? 0 : Number(value)) : value,
     }))
   }
 
-  const handleAddClient = () => {
+  const handleAddClient = async () => {
     if (
       !newClient.nombre.trim() ||
       !newClient.telefono.trim() ||
@@ -104,25 +216,44 @@ export default function ClientesPage() {
       return
     }
 
-    const nextId =
-      data.length > 0 ? Math.max(...data.map((client) => client.id)) + 1 : 1
+    try {
+      setCreating(true)
 
-    const clientToAdd: Client = {
-      id: nextId,
-      ...newClient,
+      const payload = {
+        nombre: newClient.nombre.trim(),
+        telefono: newClient.telefono.trim(),
+        correo: newClient.correo.trim(),
+        descuento: Number(newClient.descuento) || 0,
+        referencia: newClient.referencia.trim(),
+        estatus: "activo" as EstatusCliente,
+      }
+
+      const response = await fetchJson<ClientApi>(ENDPOINTS.create, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      })
+
+      const clientToAdd = normalizeClient(response)
+
+      setData((prev) => [clientToAdd, ...prev])
+
+      setNewClient({
+        nombre: "",
+        telefono: "",
+        correo: "",
+        descuento: 0,
+        referencia: "",
+      })
+
+      setOpen(false)
+    } catch (error) {
+      console.error("Error al crear cliente:", error)
+      alert(
+        error instanceof Error ? error.message : "No se pudo crear el cliente."
+      )
+    } finally {
+      setCreating(false)
     }
-
-    setData((prev) => [clientToAdd, ...prev])
-
-    setNewClient({
-      nombre: "",
-      telefono: "",
-      correo: "",
-      descuento: 0,
-      referencia: "",
-    })
-
-    setOpen(false)
   }
 
   const columns = React.useMemo<ColumnDef<Client>[]>(
@@ -151,9 +282,21 @@ export default function ClientesPage() {
             <p className="font-semibold text-foreground">
               {row.original.nombre}
             </p>
-            <p className="text-xs text-muted-foreground">
-              Ref: {row.original.referencia}
-            </p>
+            <div className="mt-1 flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">
+                Ref: {row.original.referencia}
+              </p>
+
+              {row.original.estatus === "activo" ? (
+                <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[11px] font-semibold text-green-600 dark:text-green-400">
+                  Activo
+                </span>
+              ) : (
+                <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-600 dark:text-red-400">
+                  Inactivo
+                </span>
+              )}
+            </div>
           </div>
         ),
       },
@@ -269,7 +412,8 @@ export default function ClientesPage() {
         row.original.telefono.toLowerCase().includes(search) ||
         row.original.correo.toLowerCase().includes(search) ||
         row.original.referencia.toLowerCase().includes(search) ||
-        String(row.original.descuento).toLowerCase().includes(search)
+        String(row.original.descuento).toLowerCase().includes(search) ||
+        row.original.estatus.toLowerCase().includes(search)
       )
     },
     getCoreRowModel: getCoreRowModel(),
@@ -458,10 +602,31 @@ export default function ClientesPage() {
                 </div>
 
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setOpen(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setOpen(false)
+                      setNewClient({
+                        nombre: "",
+                        telefono: "",
+                        correo: "",
+                        descuento: 0,
+                        referencia: "",
+                      })
+                    }}
+                    disabled={creating}
+                  >
                     Cancelar
                   </Button>
-                  <Button onClick={handleAddClient}>Guardar cliente</Button>
+
+                  <Button onClick={handleAddClient} disabled={creating}>
+                    {creating ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="mr-2 h-4 w-4" />
+                    )}
+                    Guardar cliente
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -469,95 +634,110 @@ export default function ClientesPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="overflow-hidden rounded-xl border border-border/60">
-            <div className="overflow-x-auto">
-              <Table className="text-base">
-                <TableHeader className="bg-muted/40">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead
-                          key={header.id}
-                          className="whitespace-nowrap"
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        className="transition-colors hover:bg-muted/30"
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            className="align-middle whitespace-nowrap"
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={columns.length}
-                        className="h-24 text-center text-muted-foreground"
-                      >
-                        No se encontraron clientes.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+          {loading ? (
+            <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-dashed">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cargando clientes...
+              </div>
             </div>
-          </div>
+          ) : error ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-950 dark:bg-red-950/30 dark:text-red-300">
+              {error}
+            </div>
+          ) : (
+            <>
+              <div className="overflow-hidden rounded-xl border border-border/60">
+                <div className="overflow-x-auto">
+                  <Table className="text-base">
+                    <TableHeader className="bg-muted/40">
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <TableHead
+                              key={header.id}
+                              className="whitespace-nowrap"
+                            >
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext()
+                                  )}
+                            </TableHead>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableHeader>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Mostrando {table.getRowModel().rows.length} de{" "}
-              {table.getFilteredRowModel().rows.length} clientes filtrados.
-            </p>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-
-              <div className="min-w-[120px] text-center text-sm text-muted-foreground">
-                Página {table.getState().pagination.pageIndex + 1} de{" "}
-                {table.getPageCount()}
+                    <TableBody>
+                      {table.getRowModel().rows?.length ? (
+                        table.getRowModel().rows.map((row) => (
+                          <TableRow
+                            key={row.id}
+                            className="transition-colors hover:bg-muted/30"
+                          >
+                            {row.getVisibleCells().map((cell) => (
+                              <TableCell
+                                key={cell.id}
+                                className="align-middle whitespace-nowrap"
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={columns.length}
+                            className="h-24 text-center text-muted-foreground"
+                          >
+                            No se encontraron clientes.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
 
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Mostrando {table.getRowModel().rows.length} de{" "}
+                  {table.getFilteredRowModel().rows.length} clientes filtrados.
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  <div className="min-w-[120px] text-center text-sm text-muted-foreground">
+                    Página {table.getState().pagination.pageIndex + 1} de{" "}
+                    {table.getPageCount()}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

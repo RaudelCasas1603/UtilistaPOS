@@ -1,7 +1,6 @@
 "use client"
 
-import { use, useMemo, useState } from "react"
-import providersData from "../providers.json"
+import { use, useEffect, useMemo, useState } from "react"
 import {
   Activity,
   BadgePercent,
@@ -16,6 +15,7 @@ import {
   TrendingUp,
   Truck,
   User2,
+  Loader2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -25,9 +25,22 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
-
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle2 } from "lucide-react"
+
+type EstatusProveedor = "activo" | "inactivo"
+
+type ProviderApi = {
+  id: number
+  nombre: string
+  telefono: string
+  correo: string
+  empresa: string
+  referencia: string
+  estatus: EstatusProveedor | string
+  created_at?: string
+  updated_at?: string
+}
 
 type Provider = {
   id: number
@@ -36,6 +49,7 @@ type Provider = {
   correo: string
   empresa: string
   referencia: string
+  estatus: EstatusProveedor
 }
 
 type Props = {
@@ -44,23 +58,97 @@ type Props = {
   }>
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+const ENDPOINTS = {
+  getById: (id: string | number) => `${API_BASE}/api/proveedores/${id}`,
+  update: (id: string | number) => `${API_BASE}/api/proveedores/${id}`,
+}
+
+function normalizeEstatus(value: unknown): EstatusProveedor {
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === "activo" || normalized === "inactivo") {
+      return normalized
+    }
+  }
+  return "activo"
+}
+
+function normalizeProvider(item: ProviderApi): Provider {
+  return {
+    id: Number(item.id),
+    nombre: item.nombre ?? "",
+    telefono: item.telefono ?? "",
+    correo: item.correo ?? "",
+    empresa: item.empresa ?? "",
+    referencia: item.referencia ?? "",
+    estatus: normalizeEstatus(item.estatus),
+  }
+}
+
+async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.headers ?? {}),
+    },
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    let message = `Error ${response.status} en ${url}`
+
+    try {
+      const errorData = await response.json()
+      message =
+        errorData?.message || errorData?.error || errorData?.detalle || message
+    } catch {
+      try {
+        const text = await response.text()
+        if (text) message = `${message} - ${text}`
+      } catch {}
+    }
+
+    throw new Error(message)
+  }
+
+  return response.json()
+}
+
 export default function ProveedorDetallePage({ params }: Props) {
   const { id } = use(params)
 
-  const proveedorInicial = (providersData as Provider[]).find(
-    (p) => String(p.id) === id
-  )
-
   const [editMode, setEditMode] = useState(false)
-  const [proveedor, setProveedor] = useState<Provider | null>(
-    proveedorInicial ?? null
-  )
+  const [proveedor, setProveedor] = useState<Provider | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+  const [showAlert, setShowAlert] = useState(false)
 
-  if (!proveedor) {
-    return (
-      <div className="p-6 text-base font-medium">Proveedor no encontrado</div>
-    )
-  }
+  useEffect(() => {
+    const cargarProveedor = async () => {
+      try {
+        setLoading(true)
+        setError("")
+
+        const response = await fetchJson<ProviderApi>(ENDPOINTS.getById(id))
+        setProveedor(normalizeProvider(response))
+      } catch (error) {
+        console.error("Error al obtener proveedor:", error)
+        setError(
+          error instanceof Error
+            ? error.message
+            : "No se pudo cargar el proveedor."
+        )
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    cargarProveedor()
+  }, [id])
 
   const handleChange = (field: keyof Provider, value: string) => {
     setProveedor((prev) =>
@@ -74,7 +162,7 @@ export default function ProveedorDetallePage({ params }: Props) {
   }
 
   const metricasProveedor = useMemo(() => {
-    const base = proveedor.id || 1
+    const base = proveedor?.id || 1
 
     const productosRegistrados = 12 + (base % 18)
     const rotacion = ["Baja", "Media", "Alta"][base % 3]
@@ -90,32 +178,84 @@ export default function ProveedorDetallePage({ params }: Props) {
       surtidoMensual,
       participacionInventario,
     }
-  }, [proveedor.id])
+  }, [proveedor?.id])
 
   const infoResumen = useMemo(() => {
     return {
-      tieneCorreo: proveedor.correo ? "Sí" : "No",
-      tieneTelefono: proveedor.telefono ? "Sí" : "No",
-      empresa: proveedor.empresa || "Sin empresa",
-      referencia: proveedor.referencia || "Sin referencia",
+      tieneCorreo: proveedor?.correo ? "Sí" : "No",
+      tieneTelefono: proveedor?.telefono ? "Sí" : "No",
+      empresa: proveedor?.empresa || "Sin empresa",
+      referencia: proveedor?.referencia || "Sin referencia",
     }
   }, [proveedor])
 
-  const [showAlert, setShowAlert] = useState(false)
+  const handleGuardar = async () => {
+    if (!proveedor) return
 
-  const handleGuardar = () => {
-    setEditMode(false)
+    try {
+      setSaving(true)
 
-    // Simula guardado
-    console.log("Proveedor actualizado:", proveedor)
+      const payload = {
+        nombre: proveedor.nombre.trim(),
+        telefono: proveedor.telefono.trim(),
+        correo: proveedor.correo.trim(),
+        empresa: proveedor.empresa.trim(),
+        referencia: proveedor.referencia.trim(),
+        estatus: proveedor.estatus,
+      }
 
-    // Mostrar alerta
-    setShowAlert(true)
+      const response = await fetchJson<ProviderApi>(
+        ENDPOINTS.update(proveedor.id),
+        {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        }
+      )
 
-    // Ocultar después de 3 segundos
-    setTimeout(() => {
-      setShowAlert(false)
-    }, 2000)
+      setProveedor(normalizeProvider(response))
+      setEditMode(false)
+      setShowAlert(true)
+
+      setTimeout(() => {
+        setShowAlert(false)
+      }, 2000)
+    } catch (error) {
+      console.error("Error al actualizar proveedor:", error)
+      alert(
+        error instanceof Error
+          ? error.message
+          : "No se pudo actualizar el proveedor."
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[300px] items-center justify-center p-6">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Cargando proveedor...
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-950 dark:bg-red-950/30 dark:text-red-300">
+          {error}
+        </div>
+      </div>
+    )
+  }
+
+  if (!proveedor) {
+    return (
+      <div className="p-6 text-base font-medium">Proveedor no encontrado</div>
+    )
   }
 
   return (
@@ -129,6 +269,7 @@ export default function ProveedorDetallePage({ params }: Props) {
           </AlertDescription>
         </Alert>
       )}
+
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Detalle</h1>
@@ -148,9 +289,14 @@ export default function ProveedorDetallePage({ params }: Props) {
         ) : (
           <Button
             onClick={handleGuardar}
+            disabled={saving}
             className="h-12 min-w-[170px] gap-2 text-base"
           >
-            <Save className="h-5 w-5" />
+            {saving ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Save className="h-5 w-5" />
+            )}
             Guardar
           </Button>
         )}
@@ -173,12 +319,24 @@ export default function ProveedorDetallePage({ params }: Props) {
                   </div>
                 </div>
 
-                <Badge
-                  variant="secondary"
-                  className="w-fit px-4 py-1.5 text-sm"
-                >
-                  ID #{proveedor.id}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="secondary"
+                    className="w-fit px-4 py-1.5 text-sm"
+                  >
+                    ID #{proveedor.id}
+                  </Badge>
+
+                  {proveedor.estatus === "activo" ? (
+                    <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/10 dark:text-green-400">
+                      Activo
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-red-500/10 text-red-600 hover:bg-red-500/10 dark:text-red-400">
+                      Inactivo
+                    </Badge>
+                  )}
+                </div>
               </div>
             </CardHeader>
 

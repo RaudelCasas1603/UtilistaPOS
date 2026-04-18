@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import Link from "next/link"
-import productsData from "./products.json"
 
 import {
   ColumnDef,
@@ -40,19 +39,20 @@ import {
 
 type ProductInventory = {
   id: number
-  codigoProducto: string
-  codigoBarras: string
+  id_producto: number
+  codigo_producto: string
+  codigo_barras: string
   nombre: string
   precio: number
   costo: number
-  precioPublico: number
-  stockActual: number
-  stockMinimo: number
-  stockDeseado: number
+  precio_publico: number
+  stock_actual: number
+  stock_minimo: number
+  stock_deseado: number
 }
 
 function getInventoryStatus(product: ProductInventory) {
-  if (product.stockActual === 0) {
+  if (product.stock_actual === 0) {
     return {
       label: "Agotado",
       className: "bg-red-500/10 text-red-600 dark:text-red-400",
@@ -60,7 +60,7 @@ function getInventoryStatus(product: ProductInventory) {
     }
   }
 
-  if (product.stockActual < product.stockMinimo) {
+  if (product.stock_actual < product.stock_minimo) {
     return {
       label: "Stock bajo",
       className: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
@@ -76,13 +76,42 @@ function getInventoryStatus(product: ProductInventory) {
 }
 
 export default function InventarioPage() {
-  const data = React.useMemo<ProductInventory[]>(
-    () => productsData as ProductInventory[],
-    []
-  )
-
+  const [data, setData] = React.useState<ProductInventory[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState("")
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
+
+  React.useEffect(() => {
+    const fetchInventario = async () => {
+      try {
+        setLoading(true)
+        setError("")
+
+        const res = await fetch("http://localhost:3001/api/inventario", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        })
+
+        if (!res.ok) {
+          throw new Error("No se pudo obtener el inventario")
+        }
+
+        const result = await res.json()
+        setData(result)
+      } catch (err) {
+        console.error(err)
+        setError("Ocurrió un error al cargar el inventario.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchInventario()
+  }, [])
 
   const columns = React.useMemo<ColumnDef<ProductInventory>[]>(
     () => [
@@ -94,7 +123,7 @@ export default function InventarioPage() {
         ),
       },
       {
-        accessorKey: "codigoProducto",
+        accessorKey: "codigo_producto",
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -124,13 +153,13 @@ export default function InventarioPage() {
               {row.original.nombre}
             </p>
             <p className="text-xs text-muted-foreground">
-              {row.original.codigoBarras}
+              {row.original.codigo_barras}
             </p>
           </div>
         ),
       },
       {
-        accessorKey: "stockActual",
+        accessorKey: "stock_actual",
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -142,7 +171,7 @@ export default function InventarioPage() {
           </Button>
         ),
         cell: ({ row }) => {
-          const stock = row.original.stockActual
+          const stock = row.original.stock_actual
           const status = getInventoryStatus(row.original)
 
           return (
@@ -158,7 +187,7 @@ export default function InventarioPage() {
         },
       },
       {
-        accessorKey: "stockMinimo",
+        accessorKey: "stock_minimo",
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -171,12 +200,12 @@ export default function InventarioPage() {
         ),
         cell: ({ row }) => (
           <span className="font-medium text-muted-foreground">
-            {row.original.stockMinimo} pzs
+            {row.original.stock_minimo} pzs
           </span>
         ),
       },
       {
-        accessorKey: "stockDeseado",
+        accessorKey: "stock_deseado",
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -189,7 +218,7 @@ export default function InventarioPage() {
         ),
         cell: ({ row }) => (
           <span className="font-medium text-foreground">
-            {row.original.stockDeseado} pzs
+            {row.original.stock_deseado} pzs
           </span>
         ),
       },
@@ -201,14 +230,14 @@ export default function InventarioPage() {
             className="h-auto p-0 font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Reponer
+            Por reponer
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        accessorFn: (row) => Math.max(row.stockDeseado - row.stockActual, 0),
+        accessorFn: (row) => Math.max(row.stock_deseado - row.stock_actual, 0),
         cell: ({ row }) => {
           const faltante = Math.max(
-            row.original.stockDeseado - row.original.stockActual,
+            row.original.stock_deseado - row.original.stock_actual,
             0
           )
 
@@ -266,12 +295,12 @@ export default function InventarioPage() {
 
       return (
         String(row.original.id).toLowerCase().includes(search) ||
-        row.original.codigoProducto.toLowerCase().includes(search) ||
-        row.original.codigoBarras.toLowerCase().includes(search) ||
+        row.original.codigo_producto.toLowerCase().includes(search) ||
+        row.original.codigo_barras.toLowerCase().includes(search) ||
         row.original.nombre.toLowerCase().includes(search) ||
-        String(row.original.stockActual).toLowerCase().includes(search) ||
-        String(row.original.stockMinimo).toLowerCase().includes(search) ||
-        String(row.original.stockDeseado).toLowerCase().includes(search)
+        String(row.original.stock_actual).toLowerCase().includes(search) ||
+        String(row.original.stock_minimo).toLowerCase().includes(search) ||
+        String(row.original.stock_deseado).toLowerCase().includes(search)
       )
     },
     getCoreRowModel: getCoreRowModel(),
@@ -286,10 +315,10 @@ export default function InventarioPage() {
   })
 
   const totalProductos = data.length
-  const stockTotal = data.reduce((acc, item) => acc + item.stockActual, 0)
-  const agotados = data.filter((item) => item.stockActual === 0).length
+  const stockTotal = data.reduce((acc, item) => acc + item.stock_actual, 0)
+  const agotados = data.filter((item) => item.stock_actual === 0).length
   const bajoMinimo = data.filter(
-    (item) => item.stockActual > 0 && item.stockActual < item.stockMinimo
+    (item) => item.stock_actual > 0 && item.stock_actual < item.stock_minimo
   ).length
 
   return (
@@ -369,99 +398,109 @@ export default function InventarioPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="overflow-hidden rounded-xl border border-border/60">
-            <div className="overflow-x-auto">
-              <Table className="text-base">
-                <TableHeader className="bg-muted/40">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead
-                          key={header.id}
-                          className="whitespace-nowrap"
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => {
-                      const status = getInventoryStatus(row.original)
-
-                      return (
-                        <TableRow
-                          key={row.id}
-                          className={`transition-colors hover:bg-muted/30 ${status.rowClassName}`}
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell
-                              key={cell.id}
-                              className="align-middle whitespace-nowrap"
+          {loading ? (
+            <div className="py-10 text-center text-muted-foreground">
+              Cargando inventario...
+            </div>
+          ) : error ? (
+            <div className="py-10 text-center text-red-500">{error}</div>
+          ) : (
+            <>
+              <div className="overflow-hidden rounded-xl border border-border/60">
+                <div className="overflow-x-auto">
+                  <Table className="text-base">
+                    <TableHeader className="bg-muted/40">
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <TableHead
+                              key={header.id}
+                              className="whitespace-nowrap"
                             >
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )}
-                            </TableCell>
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext()
+                                  )}
+                            </TableHead>
                           ))}
                         </TableRow>
-                      )
-                    })
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={columns.length}
-                        className="h-24 text-center text-muted-foreground"
-                      >
-                        No se encontraron productos en inventario.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+                      ))}
+                    </TableHeader>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Mostrando {table.getRowModel().rows.length} de{" "}
-              {table.getFilteredRowModel().rows.length} productos filtrados.
-            </p>
+                    <TableBody>
+                      {table.getRowModel().rows?.length ? (
+                        table.getRowModel().rows.map((row) => {
+                          const status = getInventoryStatus(row.original)
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-
-              <div className="min-w-[120px] text-center text-sm text-muted-foreground">
-                Página {table.getState().pagination.pageIndex + 1} de{" "}
-                {table.getPageCount()}
+                          return (
+                            <TableRow
+                              key={row.id}
+                              className={`transition-colors hover:bg-muted/30 ${status.rowClassName}`}
+                            >
+                              {row.getVisibleCells().map((cell) => (
+                                <TableCell
+                                  key={cell.id}
+                                  className="align-middle whitespace-nowrap"
+                                >
+                                  {flexRender(
+                                    cell.column.columnDef.cell,
+                                    cell.getContext()
+                                  )}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          )
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={columns.length}
+                            className="h-24 text-center text-muted-foreground"
+                          >
+                            No se encontraron productos en inventario.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
 
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Mostrando {table.getRowModel().rows.length} de{" "}
+                  {table.getFilteredRowModel().rows.length} productos filtrados.
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  <div className="min-w-[120px] text-center text-sm text-muted-foreground">
+                    Página {table.getState().pagination.pageIndex + 1} de{" "}
+                    {table.getPageCount()}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

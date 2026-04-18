@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import Link from "next/link"
-import providersData from "./providers.json"
 
 import {
   ColumnDef,
@@ -25,6 +24,7 @@ import {
   Search,
   Truck,
   Users,
+  Loader2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -49,6 +49,20 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+type EstatusProveedor = "activo" | "inactivo"
+
+type ProviderApi = {
+  id: number
+  nombre: string
+  telefono: string
+  correo: string
+  empresa: string
+  referencia: string
+  estatus: EstatusProveedor | string
+  created_at?: string
+  updated_at?: string
+}
+
 type Provider = {
   id: number
   nombre: string
@@ -56,17 +70,84 @@ type Provider = {
   correo: string
   empresa: string
   referencia: string
+  estatus: EstatusProveedor
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+const ENDPOINTS = {
+  list: `${API_BASE}/api/proveedores`,
+  create: `${API_BASE}/api/proveedores`,
+  update: (id: number) => `${API_BASE}/api/proveedores/${id}`,
+  updateEstatus: (id: number) => `${API_BASE}/api/proveedores/${id}/estatus`,
+  remove: (id: number) => `${API_BASE}/api/proveedores/${id}`,
+}
+
+function normalizeEstatus(value: unknown): EstatusProveedor {
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === "activo" || normalized === "inactivo") {
+      return normalized
+    }
+  }
+  return "activo"
+}
+
+function normalizeProvider(item: ProviderApi): Provider {
+  return {
+    id: Number(item.id),
+    nombre: item.nombre ?? "",
+    telefono: item.telefono ?? "",
+    correo: item.correo ?? "",
+    empresa: item.empresa ?? "",
+    referencia: item.referencia ?? "",
+    estatus: normalizeEstatus(item.estatus),
+  }
+}
+
+async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.headers ?? {}),
+    },
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    let message = `Error ${response.status} en ${url}`
+
+    try {
+      const errorData = await response.json()
+      message =
+        errorData?.message || errorData?.error || errorData?.detalle || message
+    } catch {
+      try {
+        const text = await response.text()
+        if (text) message = `${message} - ${text}`
+      } catch {}
+    }
+
+    throw new Error(message)
+  }
+
+  return response.json()
 }
 
 export default function ProvidersPage() {
-  const [data, setData] = React.useState<Provider[]>(
-    providersData as Provider[]
-  )
+  const [data, setData] = React.useState<Provider[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState("")
+
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [open, setOpen] = React.useState(false)
+  const [creating, setCreating] = React.useState(false)
 
-  const [newProvider, setNewProvider] = React.useState<Omit<Provider, "id">>({
+  const [newProvider, setNewProvider] = React.useState<
+    Omit<Provider, "id" | "estatus">
+  >({
     nombre: "",
     telefono: "",
     correo: "",
@@ -74,14 +155,42 @@ export default function ProvidersPage() {
     referencia: "",
   })
 
-  const handleChange = (field: keyof Omit<Provider, "id">, value: string) => {
+  const cargarProveedores = React.useCallback(async () => {
+    try {
+      setLoading(true)
+      setError("")
+
+      const response = await fetchJson<ProviderApi[]>(ENDPOINTS.list)
+      const proveedoresNormalizados = response.map(normalizeProvider)
+
+      setData(proveedoresNormalizados)
+    } catch (error) {
+      console.error("Error al obtener proveedores:", error)
+      setError(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron cargar los proveedores."
+      )
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    cargarProveedores()
+  }, [cargarProveedores])
+
+  const handleChange = (
+    field: keyof Omit<Provider, "id" | "estatus">,
+    value: string
+  ) => {
     setNewProvider((prev) => ({
       ...prev,
       [field]: value,
     }))
   }
 
-  const handleAddProvider = () => {
+  const handleAddProvider = async () => {
     if (
       !newProvider.nombre.trim() ||
       !newProvider.telefono.trim() ||
@@ -92,25 +201,46 @@ export default function ProvidersPage() {
       return
     }
 
-    const nextId =
-      data.length > 0 ? Math.max(...data.map((provider) => provider.id)) + 1 : 1
+    try {
+      setCreating(true)
 
-    const providerToAdd: Provider = {
-      id: nextId,
-      ...newProvider,
+      const payload = {
+        nombre: newProvider.nombre.trim(),
+        telefono: newProvider.telefono.trim(),
+        correo: newProvider.correo.trim(),
+        empresa: newProvider.empresa.trim(),
+        referencia: newProvider.referencia.trim(),
+        estatus: "activo" as EstatusProveedor,
+      }
+
+      const response = await fetchJson<ProviderApi>(ENDPOINTS.create, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      })
+
+      const providerToAdd = normalizeProvider(response)
+
+      setData((prev) => [providerToAdd, ...prev])
+
+      setNewProvider({
+        nombre: "",
+        telefono: "",
+        correo: "",
+        empresa: "",
+        referencia: "",
+      })
+
+      setOpen(false)
+    } catch (error) {
+      console.error("Error al crear proveedor:", error)
+      alert(
+        error instanceof Error
+          ? error.message
+          : "No se pudo crear el proveedor."
+      )
+    } finally {
+      setCreating(false)
     }
-
-    setData((prev) => [providerToAdd, ...prev])
-
-    setNewProvider({
-      nombre: "",
-      telefono: "",
-      correo: "",
-      empresa: "",
-      referencia: "",
-    })
-
-    setOpen(false)
   }
 
   const columns = React.useMemo<ColumnDef<Provider>[]>(
@@ -135,9 +265,24 @@ export default function ProvidersPage() {
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-[15px] font-semibold">
-            {row.original.nombre}
-          </span>
+          <div className="min-w-[220px]">
+            <p className="text-[15px] font-semibold">{row.original.nombre}</p>
+            <div className="mt-1 flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">
+                Ref: {row.original.referencia}
+              </p>
+
+              {row.original.estatus === "activo" ? (
+                <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[11px] font-semibold text-green-600 dark:text-green-400">
+                  Activo
+                </span>
+              ) : (
+                <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-600 dark:text-red-400">
+                  Inactivo
+                </span>
+              )}
+            </div>
+          </div>
         ),
       },
       {
@@ -209,7 +354,8 @@ export default function ProvidersPage() {
         row.original.telefono.toLowerCase().includes(search) ||
         row.original.correo.toLowerCase().includes(search) ||
         row.original.empresa.toLowerCase().includes(search) ||
-        row.original.referencia.toLowerCase().includes(search)
+        row.original.referencia.toLowerCase().includes(search) ||
+        row.original.estatus.toLowerCase().includes(search)
       )
     },
     getCoreRowModel: getCoreRowModel(),
@@ -384,10 +530,31 @@ export default function ProvidersPage() {
                 </div>
 
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setOpen(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setOpen(false)
+                      setNewProvider({
+                        nombre: "",
+                        telefono: "",
+                        correo: "",
+                        empresa: "",
+                        referencia: "",
+                      })
+                    }}
+                    disabled={creating}
+                  >
                     Cancelar
                   </Button>
-                  <Button onClick={handleAddProvider}>Guardar proveedor</Button>
+
+                  <Button onClick={handleAddProvider} disabled={creating}>
+                    {creating ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="mr-2 h-4 w-4" />
+                    )}
+                    Guardar proveedor
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -395,97 +562,113 @@ export default function ProvidersPage() {
         </CardHeader>
 
         <CardContent className="pb-2">
-          <div className="overflow-hidden rounded-xl border border-border/60">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-muted/40">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead
-                          key={header.id}
-                          className="text-xs whitespace-nowrap"
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        className="transition-colors hover:bg-muted/30"
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            className="align-middle text-xs whitespace-nowrap"
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={columns.length}
-                        className="h-24 text-center text-xs text-muted-foreground"
-                      >
-                        No se encontraron proveedores.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+          {loading ? (
+            <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-dashed">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cargando proveedores...
+              </div>
             </div>
-          </div>
+          ) : error ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-950 dark:bg-red-950/30 dark:text-red-300">
+              {error}
+            </div>
+          ) : (
+            <>
+              <div className="overflow-hidden rounded-xl border border-border/60">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/40">
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <TableHead
+                              key={header.id}
+                              className="text-xs whitespace-nowrap"
+                            >
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext()
+                                  )}
+                            </TableHead>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableHeader>
 
-          <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Mostrando {table.getRowModel().rows.length} de{" "}
-              {table.getFilteredRowModel().rows.length} proveedores filtrados.
-            </p>
-
-            <div className="flex items-center gap-3 self-end sm:self-auto">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-
-              <div className="min-w-[140px] text-center text-sm text-muted-foreground">
-                Página {table.getState().pagination.pageIndex + 1} de{" "}
-                {table.getPageCount()}
+                    <TableBody>
+                      {table.getRowModel().rows?.length ? (
+                        table.getRowModel().rows.map((row) => (
+                          <TableRow
+                            key={row.id}
+                            className="transition-colors hover:bg-muted/30"
+                          >
+                            {row.getVisibleCells().map((cell) => (
+                              <TableCell
+                                key={cell.id}
+                                className="align-middle text-xs whitespace-nowrap"
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={columns.length}
+                            className="h-24 text-center text-xs text-muted-foreground"
+                          >
+                            No se encontraron proveedores.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
 
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+              <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Mostrando {table.getRowModel().rows.length} de{" "}
+                  {table.getFilteredRowModel().rows.length} proveedores
+                  filtrados.
+                </p>
+
+                <div className="flex items-center gap-3 self-end sm:self-auto">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  <div className="min-w-[140px] text-center text-sm text-muted-foreground">
+                    Página {table.getState().pagination.pageIndex + 1} de{" "}
+                    {table.getPageCount()}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

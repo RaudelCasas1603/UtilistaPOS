@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import clientsData from "../clientes.json"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,14 +27,26 @@ import {
   Save,
   CheckCircle2,
   UserRound,
-  Phone,
-  Mail,
-  Ticket,
   ShoppingCart,
   Wallet,
   Percent,
   Clock3,
+  Loader2,
 } from "lucide-react"
+
+type EstatusCliente = "activo" | "inactivo"
+
+type ClientApi = {
+  id: number
+  nombre: string
+  telefono: string
+  correo: string
+  descuento: number | string
+  referencia: string
+  estatus?: EstatusCliente | string
+  created_at?: string
+  updated_at?: string
+}
 
 type Client = {
   id: number
@@ -44,6 +55,7 @@ type Client = {
   correo: string
   descuento: number
   referencia: string
+  estatus: EstatusCliente
 }
 
 type Purchase = {
@@ -57,6 +69,65 @@ type Props = {
   params: Promise<{
     id: string
   }>
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+const ENDPOINTS = {
+  getById: (id: string | number) => `${API_BASE}/api/clientes/${id}`,
+  update: (id: string | number) => `${API_BASE}/api/clientes/${id}`,
+}
+
+function normalizeEstatus(value: unknown): EstatusCliente {
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === "activo" || normalized === "inactivo") {
+      return normalized
+    }
+  }
+  return "activo"
+}
+
+function normalizeClient(item: ClientApi): Client {
+  return {
+    id: Number(item.id),
+    nombre: item.nombre ?? "",
+    telefono: item.telefono ?? "",
+    correo: item.correo ?? "",
+    descuento: Number(item.descuento ?? 0),
+    referencia: item.referencia ?? "",
+    estatus: normalizeEstatus(item.estatus),
+  }
+}
+
+async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.headers ?? {}),
+    },
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    let message = `Error ${response.status} en ${url}`
+
+    try {
+      const errorData = await response.json()
+      message =
+        errorData?.message || errorData?.error || errorData?.detalle || message
+    } catch {
+      try {
+        const text = await response.text()
+        if (text) message = `${message} - ${text}`
+      } catch {}
+    }
+
+    throw new Error(message)
+  }
+
+  return response.json()
 }
 
 function getMockPurchases(clientId: number): Purchase[] {
@@ -95,10 +166,40 @@ function formatDate(date: string) {
 export default function ClienteDetallePage({ params }: Props) {
   const { id } = React.use(params)
 
-  const cliente = (clientsData as Client[]).find((c) => String(c.id) === id)
+  const [cliente, setCliente] = React.useState<Client | null>(null)
+  const [formData, setFormData] = React.useState<Client | null>(null)
 
+  const [loading, setLoading] = React.useState(true)
+  const [saving, setSaving] = React.useState(false)
+  const [error, setError] = React.useState("")
   const [editMode, setEditMode] = React.useState(false)
   const [showAlert, setShowAlert] = React.useState(false)
+
+  React.useEffect(() => {
+    const cargarCliente = async () => {
+      try {
+        setLoading(true)
+        setError("")
+
+        const response = await fetchJson<ClientApi>(ENDPOINTS.getById(id))
+        const clienteNormalizado = normalizeClient(response)
+
+        setCliente(clienteNormalizado)
+        setFormData(clienteNormalizado)
+      } catch (error) {
+        console.error("Error al obtener cliente:", error)
+        setError(
+          error instanceof Error
+            ? error.message
+            : "No se pudo cargar el cliente."
+        )
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    cargarCliente()
+  }, [id])
 
   React.useEffect(() => {
     if (!showAlert) return
@@ -110,11 +211,84 @@ export default function ClienteDetallePage({ params }: Props) {
     return () => clearTimeout(timer)
   }, [showAlert])
 
-  if (!cliente) {
-    return <div className="p-6">Cliente no encontrado</div>
+  const handleChange = (field: keyof Client, value: string | number) => {
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            [field]: value,
+          }
+        : prev
+    )
   }
 
-  const [formData, setFormData] = React.useState<Client>(cliente)
+  const handleSave = async () => {
+    if (!formData) return
+
+    try {
+      setSaving(true)
+
+      const payload = {
+        nombre: formData.nombre.trim(),
+        telefono: formData.telefono.trim(),
+        correo: formData.correo.trim(),
+        descuento: Number(formData.descuento) || 0,
+        referencia: formData.referencia.trim(),
+        estatus: formData.estatus,
+      }
+
+      const response = await fetchJson<ClientApi>(
+        ENDPOINTS.update(formData.id),
+        {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        }
+      )
+
+      const actualizado = normalizeClient(response)
+
+      setCliente(actualizado)
+      setFormData(actualizado)
+      setEditMode(false)
+      setShowAlert(true)
+
+      console.log("Datos del cliente guardados:", actualizado)
+    } catch (error) {
+      console.error("Error al actualizar cliente:", error)
+      alert(
+        error instanceof Error
+          ? error.message
+          : "No se pudo actualizar el cliente."
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[300px] items-center justify-center p-6">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Cargando cliente...
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-950 dark:bg-red-950/30 dark:text-red-300">
+          {error}
+        </div>
+      </div>
+    )
+  }
+
+  if (!cliente || !formData) {
+    return <div className="p-6">Cliente no encontrado</div>
+  }
 
   const purchases = getMockPurchases(cliente.id)
   const totalComprado = purchases.reduce((acc, item) => acc + item.total, 0)
@@ -132,20 +306,6 @@ export default function ClienteDetallePage({ params }: Props) {
       : frecuenciaLabel === "Media"
         ? "secondary"
         : "outline"
-
-  const handleChange = (field: keyof Client, value: string | number) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
-  }
-
-  const handleSave = () => {
-    setEditMode(false)
-    setShowAlert(true)
-
-    console.log("Datos del cliente guardados:", formData)
-  }
 
   return (
     <div className="space-y-6 p-6">
@@ -184,8 +344,12 @@ export default function ClienteDetallePage({ params }: Props) {
                 Editar
               </Button>
             ) : (
-              <Button onClick={handleSave} className="gap-2">
-                <Save className="h-5 w-5" />
+              <Button onClick={handleSave} className="gap-2" disabled={saving}>
+                {saving ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Save className="h-5 w-5" />
+                )}
                 Guardar
               </Button>
             )}
