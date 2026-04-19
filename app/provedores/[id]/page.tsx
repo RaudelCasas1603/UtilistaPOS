@@ -1,18 +1,15 @@
 "use client"
 
-import { use, useEffect, useMemo, useState } from "react"
+import { use, useEffect, useState } from "react"
 import {
-  Activity,
   BadgePercent,
   Boxes,
   Building2,
   ClipboardList,
   Mail,
-  PackageSearch,
   Pencil,
   Phone,
   Save,
-  TrendingUp,
   Truck,
   User2,
   Loader2,
@@ -24,7 +21,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle2 } from "lucide-react"
 
@@ -52,6 +48,16 @@ type Provider = {
   estatus: EstatusProveedor
 }
 
+type ProviderStatsApi = {
+  total_productos: number | string
+  porcentaje_participacion: number | string
+}
+
+type ProviderStats = {
+  totalProductos: number
+  porcentajeParticipacion: number
+}
+
 type Props = {
   params: Promise<{
     id: string
@@ -63,6 +69,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 const ENDPOINTS = {
   getById: (id: string | number) => `${API_BASE}/api/proveedores/${id}`,
   update: (id: string | number) => `${API_BASE}/api/proveedores/${id}`,
+  stats: (id: string | number) => `${API_BASE}/api/proveedores/${id}/stats`,
 }
 
 function normalizeEstatus(value: unknown): EstatusProveedor {
@@ -84,6 +91,13 @@ function normalizeProvider(item: ProviderApi): Provider {
     empresa: item.empresa ?? "",
     referencia: item.referencia ?? "",
     estatus: normalizeEstatus(item.estatus),
+  }
+}
+
+function normalizeStats(item: ProviderStatsApi): ProviderStats {
+  return {
+    totalProductos: Number(item?.total_productos ?? 0),
+    porcentajeParticipacion: Number(item?.porcentaje_participacion ?? 0),
   }
 }
 
@@ -122,6 +136,10 @@ export default function ProveedorDetallePage({ params }: Props) {
 
   const [editMode, setEditMode] = useState(false)
   const [proveedor, setProveedor] = useState<Provider | null>(null)
+  const [stats, setStats] = useState<ProviderStats>({
+    totalProductos: 0,
+    porcentajeParticipacion: 0,
+  })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
@@ -133,8 +151,13 @@ export default function ProveedorDetallePage({ params }: Props) {
         setLoading(true)
         setError("")
 
-        const response = await fetchJson<ProviderApi>(ENDPOINTS.getById(id))
-        setProveedor(normalizeProvider(response))
+        const [providerResponse, statsResponse] = await Promise.all([
+          fetchJson<ProviderApi>(ENDPOINTS.getById(id)),
+          fetchJson<ProviderStatsApi>(ENDPOINTS.stats(id)),
+        ])
+
+        setProveedor(normalizeProvider(providerResponse))
+        setStats(normalizeStats(statsResponse))
       } catch (error) {
         console.error("Error al obtener proveedor:", error)
         setError(
@@ -161,33 +184,12 @@ export default function ProveedorDetallePage({ params }: Props) {
     )
   }
 
-  const metricasProveedor = useMemo(() => {
-    const base = proveedor?.id || 1
-
-    const productosRegistrados = 12 + (base % 18)
-    const rotacion = ["Baja", "Media", "Alta"][base % 3]
-    const rotacionValor =
-      rotacion === "Alta" ? 82 : rotacion === "Media" ? 56 : 28
-    const surtidoMensual = 3 + (base % 9)
-    const participacionInventario = 8 + (base % 27)
-
-    return {
-      productosRegistrados,
-      rotacion,
-      rotacionValor,
-      surtidoMensual,
-      participacionInventario,
-    }
-  }, [proveedor?.id])
-
-  const infoResumen = useMemo(() => {
-    return {
-      tieneCorreo: proveedor?.correo ? "Sí" : "No",
-      tieneTelefono: proveedor?.telefono ? "Sí" : "No",
-      empresa: proveedor?.empresa || "Sin empresa",
-      referencia: proveedor?.referencia || "Sin referencia",
-    }
-  }, [proveedor])
+  const infoResumen = {
+    tieneCorreo: proveedor?.correo ? "Sí" : "No",
+    tieneTelefono: proveedor?.telefono ? "Sí" : "No",
+    empresa: proveedor?.empresa || "Sin empresa",
+    referencia: proveedor?.referencia || "Sin referencia",
+  }
 
   const handleGuardar = async () => {
     if (!proveedor) return
@@ -412,7 +414,7 @@ export default function ProveedorDetallePage({ params }: Props) {
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <Card className="border shadow-sm">
               <CardContent className="flex items-center justify-between p-5">
                 <div>
@@ -420,36 +422,10 @@ export default function ProveedorDetallePage({ params }: Props) {
                     Productos de este proveedor
                   </p>
                   <p className="mt-1 text-2xl font-bold">
-                    {metricasProveedor.productosRegistrados}
+                    {stats.totalProductos}
                   </p>
                 </div>
                 <Boxes className="h-8 w-8 text-muted-foreground" />
-              </CardContent>
-            </Card>
-
-            <Card className="border shadow-sm">
-              <CardContent className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-sm text-muted-foreground">Rotación</p>
-                  <p className="mt-1 text-2xl font-bold">
-                    {metricasProveedor.rotacion}
-                  </p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-muted-foreground" />
-              </CardContent>
-            </Card>
-
-            <Card className="border shadow-sm">
-              <CardContent className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Surtidos este mes
-                  </p>
-                  <p className="mt-1 text-2xl font-bold">
-                    {metricasProveedor.surtidoMensual}
-                  </p>
-                </div>
-                <PackageSearch className="h-8 w-8 text-muted-foreground" />
               </CardContent>
             </Card>
 
@@ -460,36 +436,13 @@ export default function ProveedorDetallePage({ params }: Props) {
                     Participación en inventario
                   </p>
                   <p className="mt-1 text-2xl font-bold">
-                    {metricasProveedor.participacionInventario}%
+                    {stats.porcentajeParticipacion.toFixed(2)}%
                   </p>
                 </div>
                 <BadgePercent className="h-8 w-8 text-muted-foreground" />
               </CardContent>
             </Card>
           </div>
-
-          <Card className="border py-4 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-xl">
-                Rendimiento del proveedor
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-5">
-              <div className="w-auto rounded-2xl border p-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-muted-foreground" />
-                  <p className="font-semibold">Nivel de rotación</p>
-                </div>
-                <div className="space-y-2">
-                  <Progress value={metricasProveedor.rotacionValor} />
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>{metricasProveedor.rotacion}</span>
-                    <span>{metricasProveedor.rotacionValor}%</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="space-y-6">
@@ -525,38 +478,6 @@ export default function ProveedorDetallePage({ params }: Props) {
                 <p className="text-sm text-muted-foreground">Referencia</p>
                 <p className="text-base font-semibold">
                   {infoResumen.referencia}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-xl">Estado de relación</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-2xl border p-4">
-                <p className="text-sm text-muted-foreground">
-                  Nivel de importancia
-                </p>
-                <p className="mt-2 text-lg font-bold">
-                  {metricasProveedor.productosRegistrados >= 20
-                    ? "Proveedor clave"
-                    : metricasProveedor.productosRegistrados >= 10
-                      ? "Proveedor frecuente"
-                      : "Proveedor secundario"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border p-4">
-                <p className="text-sm text-muted-foreground">
-                  Comportamiento comercial
-                </p>
-                <p className="mt-2 text-lg font-bold">
-                  {metricasProveedor.rotacion}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Basado en movimiento de productos y frecuencia de surtido.
                 </p>
               </div>
             </CardContent>

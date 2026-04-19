@@ -72,6 +72,8 @@ type Client = {
   estatus: EstatusCliente
 }
 
+type NewClientForm = Omit<Client, "id" | "estatus">
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 const ENDPOINTS = {
@@ -150,6 +152,24 @@ function getDiscountStyles(descuento: number) {
   return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
 }
 
+function RequiredLabel({
+  htmlFor,
+  children,
+}: {
+  htmlFor: string
+  children: React.ReactNode
+}) {
+  return (
+    <Label htmlFor={htmlFor}>
+      {children} <span className="text-red-500">*</span>
+    </Label>
+  )
+}
+
+function getInputErrorClass(hasError: boolean) {
+  return hasError ? "border-red-500 focus-visible:ring-red-500" : ""
+}
+
 export default function ClientesPage() {
   const [data, setData] = React.useState<Client[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -159,10 +179,9 @@ export default function ClientesPage() {
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [open, setOpen] = React.useState(false)
   const [creating, setCreating] = React.useState(false)
+  const [showRequiredErrors, setShowRequiredErrors] = React.useState(false)
 
-  const [newClient, setNewClient] = React.useState<
-    Omit<Client, "id" | "estatus">
-  >({
+  const [newClient, setNewClient] = React.useState<NewClientForm>({
     nombre: "",
     telefono: "",
     correo: "",
@@ -195,10 +214,7 @@ export default function ClientesPage() {
     cargarClientes()
   }, [cargarClientes])
 
-  const handleChange = (
-    field: keyof Omit<Client, "id" | "estatus">,
-    value: string
-  ) => {
+  const handleChange = (field: keyof NewClientForm, value: string) => {
     setNewClient((prev) => ({
       ...prev,
       [field]:
@@ -206,13 +222,34 @@ export default function ClientesPage() {
     }))
   }
 
+  const requiredErrors = {
+    nombre: !newClient.nombre.trim(),
+    telefono: !newClient.telefono.trim(),
+    correo: !newClient.correo.trim(),
+    referencia: !newClient.referencia.trim(),
+  }
+
+  const isFormValid =
+    !requiredErrors.nombre &&
+    !requiredErrors.telefono &&
+    !requiredErrors.correo &&
+    !requiredErrors.referencia
+
+  const resetForm = () => {
+    setNewClient({
+      nombre: "",
+      telefono: "",
+      correo: "",
+      descuento: 0,
+      referencia: "",
+    })
+    setShowRequiredErrors(false)
+  }
+
   const handleAddClient = async () => {
-    if (
-      !newClient.nombre.trim() ||
-      !newClient.telefono.trim() ||
-      !newClient.correo.trim() ||
-      !newClient.referencia.trim()
-    ) {
+    setShowRequiredErrors(true)
+
+    if (!isFormValid) {
       return
     }
 
@@ -236,15 +273,7 @@ export default function ClientesPage() {
       const clientToAdd = normalizeClient(response)
 
       setData((prev) => [clientToAdd, ...prev])
-
-      setNewClient({
-        nombre: "",
-        telefono: "",
-        correo: "",
-        descuento: 0,
-        referencia: "",
-      })
-
+      resetForm()
       setOpen(false)
     } catch (error) {
       console.error("Error al crear cliente:", error)
@@ -520,7 +549,15 @@ export default function ClientesPage() {
               />
             </div>
 
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog
+              open={open}
+              onOpenChange={(value) => {
+                setOpen(value)
+                if (!value) {
+                  resetForm()
+                }
+              }}
+            >
               <DialogTrigger asChild>
                 <Button className="px-5 text-base">
                   <Plus className="mr-2 h-4 w-4" />
@@ -538,18 +575,24 @@ export default function ClientesPage() {
 
                 <div className="grid gap-4 py-2">
                   <div className="grid gap-2">
-                    <Label htmlFor="nombre">Nombre</Label>
+                    <RequiredLabel htmlFor="nombre">Nombre</RequiredLabel>
                     <Input
                       id="nombre"
                       value={newClient.nombre}
                       onChange={(e) => handleChange("nombre", e.target.value)}
                       placeholder="Ej. Juan Pérez"
+                      className={getInputErrorClass(
+                        showRequiredErrors && requiredErrors.nombre
+                      )}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Este campo es obligatorio.
+                    </p>
                   </div>
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <div className="grid gap-2">
-                      <Label htmlFor="telefono">Teléfono</Label>
+                      <RequiredLabel htmlFor="telefono">Teléfono</RequiredLabel>
                       <Input
                         id="telefono"
                         value={newClient.telefono}
@@ -557,18 +600,30 @@ export default function ClientesPage() {
                           handleChange("telefono", e.target.value)
                         }
                         placeholder="Ej. 8441234567"
+                        className={getInputErrorClass(
+                          showRequiredErrors && requiredErrors.telefono
+                        )}
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Este campo es obligatorio.
+                      </p>
                     </div>
 
                     <div className="grid gap-2">
-                      <Label htmlFor="correo">Correo</Label>
+                      <RequiredLabel htmlFor="correo">Correo</RequiredLabel>
                       <Input
                         id="correo"
                         type="email"
                         value={newClient.correo}
                         onChange={(e) => handleChange("correo", e.target.value)}
                         placeholder="Ej. cliente@correo.com"
+                        className={getInputErrorClass(
+                          showRequiredErrors && requiredErrors.correo
+                        )}
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Este campo es obligatorio.
+                      </p>
                     </div>
                   </div>
 
@@ -585,10 +640,15 @@ export default function ClientesPage() {
                         }
                         placeholder="0"
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Campo opcional.
+                      </p>
                     </div>
 
                     <div className="grid gap-2">
-                      <Label htmlFor="referencia">Referencia</Label>
+                      <RequiredLabel htmlFor="referencia">
+                        Referencia
+                      </RequiredLabel>
                       <Input
                         id="referencia"
                         value={newClient.referencia}
@@ -596,7 +656,13 @@ export default function ClientesPage() {
                           handleChange("referencia", e.target.value)
                         }
                         placeholder="Ej. Facebook, recomendación, volante"
+                        className={getInputErrorClass(
+                          showRequiredErrors && requiredErrors.referencia
+                        )}
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Este campo es obligatorio.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -606,13 +672,7 @@ export default function ClientesPage() {
                     variant="outline"
                     onClick={() => {
                       setOpen(false)
-                      setNewClient({
-                        nombre: "",
-                        telefono: "",
-                        correo: "",
-                        descuento: 0,
-                        referencia: "",
-                      })
+                      resetForm()
                     }}
                     disabled={creating}
                   >
