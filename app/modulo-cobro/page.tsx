@@ -53,12 +53,12 @@ export default function ModuloCobro() {
     <div className="flex h-full flex-col p-4">
       <div className="flex shrink-0 items-center justify-between">
         <h1 className="text-2xl font-bold">Módulo de Cobro</h1>
-        <h1 className="ml-4 rounded-md border p-2 text-2xl font-semibold">
+        <h1 className="ml-4 rounded-md p-2 text-2xl font-semibold">
           {fechaformateada}
         </h1>
       </div>
       <div className="mt-4 flex-1 overflow-hidden">
-        <div className="scrollbar-thin scrollbar-thumb-muted-foreground/30 grid h-full grid-cols-4 gap-4 overflow-y-auto pr-2">
+        <div className="grid h-full grid-cols-4 gap-4 overflow-y-auto pr-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {tickets.map((ticket) => {
             const total = ticket.items.reduce(
               (acc, item) => acc + item.precio,

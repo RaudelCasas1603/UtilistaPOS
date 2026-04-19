@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import {
   Plus,
@@ -16,6 +16,10 @@ import {
   Search,
   Check,
   ChevronsUpDown,
+  Loader2,
+  CheckCircle2,
+  Info,
+  XCircle,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -23,12 +27,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-
 import {
   Command,
   CommandEmpty,
@@ -45,6 +49,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
+type PaymentMethod = "efectivo" | "tarjeta" | "transferencia" | ""
+type SaleStatus = "pendiente" | "finalizada" | "cancelada" | ""
+
+type ProductApi = {
+  id: number
+  nombre?: string
+  name?: string
+  codigo_producto?: string
+  code?: string
+  precio_venta?: number | string
+  price?: number | string
+  stock_actual?: number | string
+  stock?: number | string
+  categoria_nombre?: string
+  category?: string
+}
+
 type Product = {
   id: number
   name: string
@@ -58,56 +79,106 @@ type CartItem = Product & {
   quantity: number
 }
 
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Cuaderno profesional",
-    code: "CUA-001",
-    price: 85,
-    stock: 24,
-    category: "Cuadernos",
-  },
-  {
-    id: 2,
-    name: "Pluma tinta azul",
-    code: "PLU-001",
-    price: 12,
-    stock: 40,
-    category: "Plumas",
-  },
-  {
-    id: 3,
-    name: "Resaltador amarillo",
-    code: "RES-001",
-    price: 18,
-    stock: 14,
-    category: "Plumas",
-  },
-  {
-    id: 4,
-    name: "Servicio de copias B/N",
-    code: "COP-001",
-    price: 1.5,
-    stock: 999,
-    category: "Copias",
-  },
-  {
-    id: 5,
-    name: "Folder tamaño carta",
-    code: "FOL-001",
-    price: 15,
-    stock: 8,
-    category: "Oficina",
-  },
-  {
-    id: 6,
-    name: "Paquete hojas blancas",
-    code: "HOJ-001",
-    price: 69,
-    stock: 9,
-    category: "Oficina",
-  },
-]
+type ClientApi = {
+  id: number | string
+  nombre?: string
+  name?: string
+  telefono?: string
+  phone?: string
+  correo?: string
+  email?: string
+  descuento?: number | string
+}
+
+type Client = {
+  id: string
+  name: string
+  phone: string
+  email: string
+  discount: number
+}
+
+type PendingTicketApi = {
+  id: number | string
+  folio: string
+  cliente_nombre?: string
+  customer?: string
+  total: number | string
+  total_articulos?: number | string
+  items?: number | string
+  fecha_hora?: string
+  createdAt?: string
+}
+
+type PendingTicket = {
+  id: string
+  folio: string
+  customer: string
+  items: number
+  total: number
+  createdAt: string
+}
+
+type VentaDetalleApi = {
+  id_producto: number | string
+  nombre?: string
+  name?: string
+  codigo_producto?: string
+  code?: string
+  cantidad: number | string
+  precio_unitario: number | string
+  categoria_nombre?: string
+  category?: string
+  stock_actual?: number | string
+}
+
+type VentaApi = {
+  id: number | string
+  folio: string
+  estatus: SaleStatus
+  metodo_pago?: PaymentMethod | null
+  id_cliente?: number | string
+  cliente_nombre?: string
+  cliente_telefono?: string
+  cliente_correo?: string
+  descuento?: number | string
+  total?: number | string
+  subtotal?: number | string
+  total_articulos?: number | string
+  items: VentaDetalleApi[]
+}
+
+type UiAlert = {
+  type: "success" | "error" | "info"
+  title: string
+  message: string
+} | null
+
+type PersistedSale = {
+  currentSaleId: string | null
+  currentSaleStatus: SaleStatus
+  selectedPendingTicket: string
+  paymentMethod: PaymentMethod
+  cashReceived: string
+  cart: CartItem[]
+  selectedClientId: string
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+const STORAGE_KEY = "utilista_venta_borrador"
+
+const ENDPOINTS = {
+  productos: `${API_BASE}/api/productos`,
+  clientes: `${API_BASE}/api/clientes`,
+  ventasPendientes: `${API_BASE}/api/ventas/pendientes`,
+  ventaById: (id: string | number) => `${API_BASE}/api/ventas/${id}`,
+  crearVenta: `${API_BASE}/api/ventas`,
+  actualizarVenta: (id: string | number) => `${API_BASE}/api/ventas/${id}`,
+  finalizarVenta: (id: string | number) =>
+    `${API_BASE}/api/ventas/${id}/finalizar`,
+  cancelarVenta: (id: string | number) =>
+    `${API_BASE}/api/ventas/${id}/cancelar`,
+}
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -117,45 +188,298 @@ function formatCurrency(value: number) {
   }).format(value)
 }
 
+function formatTimeLabel(value?: string) {
+  if (!value) return ""
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleString("es-MX", {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+  })
+}
+
+function normalizeProduct(item: ProductApi): Product {
+  return {
+    id: Number(item.id),
+    name: item.nombre ?? item.name ?? "Producto",
+    code: item.codigo_producto ?? item.code ?? "",
+    price: Number(item.precio_venta ?? item.price ?? 0),
+    stock: Number(item.stock_actual ?? item.stock ?? 0),
+    category: item.categoria_nombre ?? item.category ?? "General",
+  }
+}
+
+function normalizeClient(item: ClientApi): Client {
+  return {
+    id: String(item.id),
+    name: item.nombre ?? item.name ?? "Cliente",
+    phone: item.telefono ?? item.phone ?? "",
+    email: item.correo ?? item.email ?? "",
+    discount: Number(item.descuento ?? 0),
+  }
+}
+
+function normalizePendingTicket(item: PendingTicketApi): PendingTicket {
+  return {
+    id: String(item.id),
+    folio: item.folio,
+    customer: item.cliente_nombre ?? item.customer ?? "Cliente general",
+    items: Number(item.total_articulos ?? item.items ?? 0),
+    total: Number(item.total ?? 0),
+    createdAt: formatTimeLabel(item.fecha_hora ?? item.createdAt),
+  }
+}
+
+async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.headers ?? {}),
+    },
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    let message = `Error ${response.status} en ${url}`
+
+    try {
+      const errorData = await response.json()
+      message =
+        errorData?.message || errorData?.error || errorData?.detalle || message
+    } catch {
+      try {
+        const text = await response.text()
+        if (text) message = text
+      } catch {}
+    }
+
+    throw new Error(message)
+  }
+
+  return response.json()
+}
+
 export default function VentasPage() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [clients, setClients] = useState<Client[]>([])
+  const [pendingTickets, setPendingTickets] = useState<PendingTicket[]>([])
+
+  const [loadingCatalogs, setLoadingCatalogs] = useState(true)
+  const [loadingTicket, setLoadingTicket] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+  const [uiAlert, setUiAlert] = useState<UiAlert>(null)
+
   const [search, setSearch] = useState("")
   const [directCode, setDirectCode] = useState("")
   const [codeError, setCodeError] = useState("")
-  const [paymentMethod, setPaymentMethod] = useState<
-    "efectivo" | "tarjeta" | "transferencia" | ""
-  >("")
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("")
   const [ticketComboOpen, setTicketComboOpen] = useState(false)
   const [selectedPendingTicket, setSelectedPendingTicket] = useState("")
   const [cashReceived, setCashReceived] = useState("")
-  const [cart, setCart] = useState<CartItem[]>([
-    {
-      id: 1,
-      name: "Cuaderno profesional",
-      code: "CUA-001",
-      price: 85,
-      stock: 24,
-      category: "Cuadernos",
-      quantity: 2,
-    },
-    {
-      id: 2,
-      name: "Pluma tinta azul",
-      code: "PLU-001",
-      price: 12,
-      stock: 40,
-      category: "Plumas",
-      quantity: 3,
-    },
-    {
-      id: 4,
-      name: "Servicio de copias B/N",
-      code: "COP-001",
-      price: 1.5,
-      stock: 999,
-      category: "Copias",
-      quantity: 20,
-    },
+  const [cart, setCart] = useState<CartItem[]>([])
+
+  const [modalOpen, setModalOpen] = useState(false)
+  const [clientModalOpen, setClientModalOpen] = useState(false)
+  const [clientSearch, setClientSearch] = useState("")
+
+  const [currentSaleId, setCurrentSaleId] = useState<string | null>(null)
+  const [currentSaleStatus, setCurrentSaleStatus] = useState<SaleStatus>("")
+  const [restoredDraft, setRestoredDraft] = useState(false)
+
+  const [selectedClient, setSelectedClient] = useState<Client>({
+    id: "1",
+    name: "Cliente general",
+    phone: "",
+    email: "",
+    discount: 0,
+  })
+
+  const selectedPendingTicketData = pendingTickets.find(
+    (t) => t.id === selectedPendingTicket
+  )
+
+  const showAlert = (
+    type: "success" | "error" | "info",
+    title: string,
+    message: string
+  ) => {
+    setUiAlert({ type, title, message })
+  }
+
+  const clearPersistedSale = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  }
+
+  useEffect(() => {
+    if (!uiAlert) return
+
+    const timeout = setTimeout(() => {
+      setUiAlert(null)
+    }, 3000)
+
+    return () => clearTimeout(timeout)
+  }, [uiAlert])
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoadingCatalogs(true)
+        setError("")
+
+        const [productsRes, clientsRes, pendingRes] = await Promise.all([
+          fetchJson<ProductApi[]>(ENDPOINTS.productos),
+          fetchJson<ClientApi[]>(ENDPOINTS.clientes),
+          fetchJson<PendingTicketApi[]>(ENDPOINTS.ventasPendientes),
+        ])
+
+        const normalizedProducts = productsRes.map(normalizeProduct)
+        const normalizedClients = clientsRes.map(normalizeClient)
+        const normalizedPending = pendingRes.map(normalizePendingTicket)
+
+        setProducts(normalizedProducts)
+        setClients(normalizedClients)
+        setPendingTickets(normalizedPending)
+
+        const generalClient = normalizedClients.find(
+          (client) => client.id === "1"
+        ) ?? {
+          id: "1",
+          name: "Cliente general",
+          phone: "",
+          email: "",
+          discount: 0,
+        }
+
+        if (!restoredDraft) {
+          setSelectedClient(generalClient)
+        }
+
+        if (typeof window !== "undefined") {
+          const stored = localStorage.getItem(STORAGE_KEY)
+
+          if (stored) {
+            try {
+              const parsed: PersistedSale = JSON.parse(stored)
+
+              const restoredClient =
+                normalizedClients.find(
+                  (client) => client.id === parsed.selectedClientId
+                ) ?? generalClient
+
+              setCurrentSaleId(parsed.currentSaleId)
+              setCurrentSaleStatus(parsed.currentSaleStatus ?? "")
+              setSelectedPendingTicket(parsed.selectedPendingTicket ?? "")
+              setPaymentMethod(parsed.paymentMethod ?? "")
+              setCashReceived(parsed.cashReceived ?? "")
+              setCart(parsed.cart ?? [])
+              setSelectedClient(restoredClient)
+              setRestoredDraft(true)
+
+              if ((parsed.cart ?? []).length > 0) {
+                showAlert(
+                  "info",
+                  "Ticket recuperado",
+                  "Se restauró el ticket que tenías sin guardar."
+                )
+              }
+            } catch {
+              localStorage.removeItem(STORAGE_KEY)
+            }
+          }
+        }
+      } catch (err) {
+        console.error(err)
+        setError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo cargar la información de ventas."
+        )
+      } finally {
+        setLoadingCatalogs(false)
+      }
+    }
+
+    loadData()
+  }, [restoredDraft])
+
+  useEffect(() => {
+    if (loadingCatalogs) return
+    if (typeof window === "undefined") return
+
+    const payload: PersistedSale = {
+      currentSaleId,
+      currentSaleStatus,
+      selectedPendingTicket,
+      paymentMethod,
+      cashReceived,
+      cart,
+      selectedClientId: selectedClient.id,
+    }
+
+    const hasSomethingToSave =
+      cart.length > 0 ||
+      !!currentSaleId ||
+      !!selectedPendingTicket ||
+      !!paymentMethod ||
+      cashReceived !== "" ||
+      selectedClient.id !== "1"
+
+    if (hasSomethingToSave) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    } else {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  }, [
+    loadingCatalogs,
+    currentSaleId,
+    currentSaleStatus,
+    selectedPendingTicket,
+    paymentMethod,
+    cashReceived,
+    cart,
+    selectedClient,
   ])
+
+  const refreshPendingTickets = async () => {
+    try {
+      const pendingRes = await fetchJson<PendingTicketApi[]>(
+        ENDPOINTS.ventasPendientes
+      )
+      setPendingTickets(pendingRes.map(normalizePendingTicket))
+    } catch (err) {
+      console.error("Error al refrescar pendientes:", err)
+    }
+  }
+
+  const resetSaleState = (keepClients = true) => {
+    const generalClient = clients.find((client) => client.id === "1") ?? {
+      id: "1",
+      name: "Cliente general",
+      phone: "",
+      email: "",
+      discount: 0,
+    }
+
+    setCart([])
+    setCurrentSaleId(null)
+    setCurrentSaleStatus("")
+    setSelectedPendingTicket("")
+    setPaymentMethod("")
+    setCashReceived("")
+    setDirectCode("")
+    setCodeError("")
+    if (keepClients) {
+      setSelectedClient(generalClient)
+    }
+
+    clearPersistedSale()
+  }
 
   const filteredProducts = useMemo(() => {
     const term = search.toLowerCase().trim()
@@ -167,7 +491,19 @@ export default function VentasPage() {
         product.code.toLowerCase().includes(term) ||
         product.category.toLowerCase().includes(term)
     )
-  }, [search])
+  }, [search, products])
+
+  const filteredClients = useMemo(() => {
+    const term = clientSearch.toLowerCase().trim()
+    if (!term) return clients
+
+    return clients.filter(
+      (client) =>
+        client.name.toLowerCase().includes(term) ||
+        client.phone.toLowerCase().includes(term) ||
+        client.email.toLowerCase().includes(term)
+    )
+  }, [clientSearch, clients])
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -232,16 +568,34 @@ export default function VentasPage() {
   }
 
   const removeItem = (id: number) => {
+    const deletedItem = cart.find((item) => item.id === id)
+
     setCart((prev) => prev.filter((item) => item.id !== id))
+
+    if (deletedItem) {
+      showAlert(
+        "info",
+        "Producto eliminado",
+        `${deletedItem.name} se quitó del ticket.`
+      )
+    }
   }
 
   const subtotal = useMemo(() => {
     return cart.reduce((acc, item) => acc + item.price * item.quantity, 0)
   }, [cart])
 
-  const discount = 25
-  const total = subtotal - discount
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0)
+  const discount = useMemo(() => {
+    return Number(((subtotal * selectedClient.discount) / 100).toFixed(2))
+  }, [subtotal, selectedClient.discount])
+
+  const total = useMemo(() => {
+    return Number((subtotal - discount).toFixed(2))
+  }, [subtotal, discount])
+
+  const totalItems = useMemo(() => {
+    return cart.reduce((acc, item) => acc + item.quantity, 0)
+  }, [cart])
 
   const cashReceivedNumber = Number(cashReceived || 0)
   const cashChange = cashReceivedNumber - total
@@ -250,151 +604,290 @@ export default function VentasPage() {
     cashReceived !== "" &&
     cashReceivedNumber < total
 
-  const [modalOpen, setModalOpen] = useState(false)
-  const [clientModalOpen, setClientModalOpen] = useState(false)
-  const [clientSearch, setClientSearch] = useState("")
+  const isPendingLoaded = !!currentSaleId && currentSaleStatus === "pendiente"
 
-  const [selectedClient, setSelectedClient] = useState({
-    id: "general",
-    name: "Cliente general",
-    phone: "",
-    email: "",
-  })
-
-  const pendingTickets = [
-    {
-      id: "T-001",
-      folio: "T-001",
-      customer: "Cliente general",
-      items: 3,
-      total: 289.5,
-      createdAt: "10:35 AM",
-    },
-    {
-      id: "T-002",
-      folio: "T-002",
-      customer: "María López",
-      items: 5,
-      total: 640,
-      createdAt: "11:10 AM",
-    },
-    {
-      id: "T-003",
-      folio: "T-003",
-      customer: "Carlos Ruiz",
-      items: 2,
-      total: 159.9,
-      createdAt: "11:42 AM",
-    },
-    {
-      id: "T-004",
-      folio: "T-004",
-      customer: "Carlos Ruiz",
-      items: 2,
-      total: 159.9,
-      createdAt: "11:42 AM",
-    },
-    {
-      id: "T-005",
-      folio: "T-005",
-      customer: "Carlos Ruiz",
-      items: 2,
-      total: 159.9,
-      createdAt: "11:42 AM",
-    },
-    {
-      id: "T-006",
-      folio: "T-006",
-      customer: "Carlos Ruiz",
-      items: 2,
-      total: 159.9,
-      createdAt: "11:42 AM",
-    },
-  ]
-  const selectedPendingTicketData = pendingTickets.find(
-    (t) => t.id === selectedPendingTicket
-  )
-
-  const clients = [
-    {
-      id: "general",
-      name: "Cliente general",
-      phone: "",
-      email: "",
-    },
-    {
-      id: "1",
-      name: "María López",
-      phone: "3312345678",
-      email: "maria@email.com",
-    },
-    {
-      id: "2",
-      name: "Carlos Ruiz",
-      phone: "3323456789",
-      email: "carlos@email.com",
-    },
-    {
-      id: "3",
-      name: "Papelería Centro",
-      phone: "3334567890",
-      email: "contacto@papeleriacentro.com",
-    },
-  ]
-
-  const filteredClients = useMemo(() => {
-    const term = clientSearch.toLowerCase().trim()
-    if (!term) return clients
-
-    return clients.filter(
-      (client) =>
-        client.name.toLowerCase().includes(term) ||
-        client.phone.toLowerCase().includes(term) ||
-        client.email.toLowerCase().includes(term)
-    )
-  }, [clientSearch])
-
-  const handleRecoverTicket = (ticketId: string) => {
-    const ticket = pendingTickets.find((t) => t.id === ticketId)
-    if (!ticket) return
-
-    setSelectedPendingTicket(ticketId)
-    setTicketComboOpen(false)
-
-    // Aquí recuperas la venta real
-    // setCart(ticket.items)
-    // setSelectedClient(ticket.customer ?? generalClient)
-    // setDirectCode("")
-    // setCodeError("")
+  const savePayload = {
+    id_cliente: Number(selectedClient.id || 1),
+    id_usuario: 1,
+    metodo_pago: null,
+    estatus: "pendiente",
+    observaciones: "",
+    items: cart.map((item) => ({
+      id_producto: item.id,
+      cantidad: item.quantity,
+    })),
   }
 
-  const handleSelectClient = (client: {
-    id: string
-    name: string
-    phone: string
-    email: string
-  }) => {
+  const chargePayload = {
+    id_cliente: Number(selectedClient.id || 1),
+    id_usuario: 1,
+    metodo_pago: paymentMethod,
+    estatus: "finalizada",
+    observaciones: "",
+    items: cart.map((item) => ({
+      id_producto: item.id,
+      cantidad: item.quantity,
+    })),
+  }
+
+  useEffect(() => {
+    if (!error && !codeError) return
+
+    const timeout = setTimeout(() => {
+      if (error) setError("")
+      if (codeError) setCodeError("")
+    }, 3000)
+
+    return () => clearTimeout(timeout)
+  }, [error, codeError])
+
+  const handleRecoverTicket = async (ticketId: string) => {
+    try {
+      setLoadingTicket(true)
+      setCodeError("")
+
+      const venta = await fetchJson<VentaApi>(ENDPOINTS.ventaById(ticketId))
+
+      const clientFromVenta = clients.find(
+        (c) => c.id === String(venta.id_cliente ?? "1")
+      ) ?? {
+        id: String(venta.id_cliente ?? "1"),
+        name: venta.cliente_nombre ?? "Cliente general",
+        phone: venta.cliente_telefono ?? "",
+        email: venta.cliente_correo ?? "",
+        discount: 0,
+      }
+
+      const items: CartItem[] = venta.items.map((item) => {
+        const productMatch = products.find(
+          (product) => product.id === Number(item.id_producto)
+        )
+
+        return {
+          id: Number(item.id_producto),
+          name: item.nombre ?? item.name ?? productMatch?.name ?? "Producto",
+          code: item.codigo_producto ?? item.code ?? productMatch?.code ?? "",
+          price: Number(item.precio_unitario ?? productMatch?.price ?? 0),
+          stock: Number(item.stock_actual ?? productMatch?.stock ?? 0),
+          category:
+            item.categoria_nombre ??
+            item.category ??
+            productMatch?.category ??
+            "General",
+          quantity: Number(item.cantidad),
+        }
+      })
+
+      setCurrentSaleId(String(venta.id))
+      setCurrentSaleStatus(venta.estatus)
+      setSelectedPendingTicket(String(venta.id))
+      setTicketComboOpen(false)
+      setSelectedClient(clientFromVenta)
+      setPaymentMethod(venta.metodo_pago ?? "")
+      setCashReceived("")
+      setCart(items)
+      setDirectCode("")
+      setCodeError("")
+
+      showAlert(
+        "info",
+        "Ticket recuperado",
+        `Se cargó el ticket ${venta.folio} correctamente.`
+      )
+    } catch (err) {
+      console.error(err)
+      setCodeError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo recuperar el ticket pendiente."
+      )
+    } finally {
+      setLoadingTicket(false)
+    }
+  }
+
+  const handleSelectClient = (client: Client) => {
     setSelectedClient(client)
     setClientModalOpen(false)
     setClientSearch("")
   }
 
   const handleNewSale = () => {
-    // Limpias el ticket actual y vuelves al cliente general
-    // setCart([])
-    setSelectedClient({
-      id: "general",
-      name: "Cliente general",
-      phone: "",
-      email: "",
-    })
-    setDirectCode("")
-    setCodeError("")
+    resetSaleState()
+    showAlert("success", "Nueva venta", "Se inició un ticket nuevo.")
+  }
+
+  const handleGuardar = async () => {
+    try {
+      if (cart.length === 0) {
+        setCodeError("Agrega al menos un producto al ticket.")
+        return
+      }
+
+      setSaving(true)
+
+      if (isPendingLoaded && currentSaleId) {
+        await fetchJson(ENDPOINTS.actualizarVenta(currentSaleId), {
+          method: "PUT",
+          body: JSON.stringify(savePayload),
+        })
+
+        showAlert(
+          "success",
+          "Venta actualizada",
+          "La venta pendiente se actualizó correctamente."
+        )
+      } else {
+        await fetchJson(ENDPOINTS.crearVenta, {
+          method: "POST",
+          body: JSON.stringify(savePayload),
+        })
+
+        showAlert(
+          "success",
+          "Venta guardada",
+          "La venta se guardó como pendiente correctamente."
+        )
+      }
+
+      await refreshPendingTickets()
+      resetSaleState()
+    } catch (err) {
+      console.error(err)
+      setCodeError(
+        err instanceof Error ? err.message : "No se pudo guardar la venta."
+      )
+      showAlert("error", "Error", "No se pudo guardar la venta.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCobrar = async () => {
+    try {
+      if (cart.length === 0) {
+        setCodeError("Agrega al menos un producto al ticket.")
+        return
+      }
+
+      if (!paymentMethod) {
+        setCodeError("Selecciona un método de pago.")
+        return
+      }
+
+      if (paymentMethod === "efectivo" && isCashInsufficient) {
+        setCodeError("El monto recibido es menor al total a cobrar.")
+        return
+      }
+
+      setSaving(true)
+
+      if (isPendingLoaded && currentSaleId) {
+        await fetchJson(ENDPOINTS.finalizarVenta(currentSaleId), {
+          method: "POST",
+          body: JSON.stringify({
+            id_usuario: 1,
+            metodo_pago: paymentMethod,
+            observaciones: "",
+          }),
+        })
+      } else {
+        await fetchJson(ENDPOINTS.crearVenta, {
+          method: "POST",
+          body: JSON.stringify(chargePayload),
+        })
+      }
+
+      await refreshPendingTickets()
+      resetSaleState()
+
+      showAlert(
+        "success",
+        "Venta cobrada",
+        "La venta se cobró y cerró correctamente."
+      )
+    } catch (err) {
+      console.error(err)
+      setCodeError(
+        err instanceof Error ? err.message : "No se pudo cobrar la venta."
+      )
+      showAlert("error", "Error", "No se pudo cobrar la venta.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCancelar = async () => {
+    try {
+      if (!isPendingLoaded || !currentSaleId) return
+
+      setSaving(true)
+
+      await fetchJson(ENDPOINTS.cancelarVenta(currentSaleId), {
+        method: "POST",
+        body: JSON.stringify({
+          id_usuario: 1,
+        }),
+      })
+
+      await refreshPendingTickets()
+      resetSaleState()
+
+      showAlert(
+        "success",
+        "Venta cancelada",
+        "La venta pendiente se canceló correctamente."
+      )
+    } catch (err) {
+      console.error(err)
+      setCodeError(
+        err instanceof Error ? err.message : "No se pudo cancelar la venta."
+      )
+      showAlert("error", "Error", "No se pudo cancelar la venta.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loadingCatalogs) {
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Cargando ventas...
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="h-full min-h-0 overflow-hidden bg-background">
       <div className="mx-auto flex h-full min-h-0 max-w-[1900px] flex-col gap-6 overflow-hidden">
+        {uiAlert && (
+          <Alert
+            className={cn(
+              "shrink-0",
+              uiAlert.type === "success" &&
+                "border-green-400 bg-green-400/15 text-green-900 dark:text-green-300",
+              uiAlert.type === "error" &&
+                "border-red-400 bg-red-400/15 text-red-900 dark:text-red-300",
+              uiAlert.type === "info" &&
+                "border-blue-400 bg-blue-400/15 text-blue-900 dark:text-blue-300"
+            )}
+          >
+            {uiAlert.type === "success" ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : uiAlert.type === "error" ? (
+              <XCircle className="h-4 w-4" />
+            ) : (
+              <Info className="h-4 w-4" />
+            )}
+
+            <AlertTitle>{uiAlert.title}</AlertTitle>
+            <AlertDescription>{uiAlert.message}</AlertDescription>
+          </Alert>
+        )}
+
         <Card className="shrink-0 border-border/60 shadow-sm">
           <CardContent className="flex flex-col gap-4 p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -408,7 +901,6 @@ export default function VentasPage() {
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                {/* Buscar productos */}
                 <Dialog open={modalOpen} onOpenChange={setModalOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="icon" className="h-10 w-10">
@@ -475,7 +967,6 @@ export default function VentasPage() {
                   </DialogContent>
                 </Dialog>
 
-                {/* Tickets pendientes */}
                 <Popover
                   open={ticketComboOpen}
                   onOpenChange={setTicketComboOpen}
@@ -533,14 +1024,19 @@ export default function VentasPage() {
                                 </p>
                               </div>
 
-                              <Check
-                                className={cn(
-                                  "mt-0.5 h-4 w-4 shrink-0",
-                                  selectedPendingTicket === ticket.id
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
+                              {loadingTicket &&
+                              selectedPendingTicket === ticket.id ? (
+                                <Loader2 className="mt-0.5 h-4 w-4 animate-spin" />
+                              ) : (
+                                <Check
+                                  className={cn(
+                                    "mt-0.5 h-4 w-4 shrink-0",
+                                    selectedPendingTicket === ticket.id
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                              )}
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -549,7 +1045,6 @@ export default function VentasPage() {
                   </PopoverContent>
                 </Popover>
 
-                {/* Modal de clientes */}
                 <Dialog
                   open={clientModalOpen}
                   onOpenChange={setClientModalOpen}
@@ -606,6 +1101,8 @@ export default function VentasPage() {
                                     </span>
                                     <span>•</span>
                                     <span>{client.email || "Sin correo"}</span>
+                                    <span>•</span>
+                                    <span>Desc. {client.discount}%</span>
                                   </div>
                                 </div>
 
@@ -654,18 +1151,21 @@ export default function VentasPage() {
               </div>
             </div>
 
-            {codeError ? (
+            {error ? (
+              <p className="text-sm font-medium text-destructive">{error}</p>
+            ) : codeError ? (
               <p className="text-sm font-medium text-destructive">
                 {codeError}
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Captura la clave directamente o usa la lupa para buscar
                 productos.
               </p>
             )}
           </CardContent>
         </Card>
+
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-hidden xl:grid-cols-[1.55fr_0.95fr]">
           <div className="flex min-h-0 flex-col overflow-hidden">
             <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-border/60 shadow-sm">
@@ -678,11 +1178,16 @@ export default function VentasPage() {
 
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="secondary" className="px-3 py-1">
-                      {selectedClient?.name || "Cliente general"}
+                      {selectedClient.name || "Cliente general"}
                     </Badge>
                     <Badge variant="outline" className="px-3 py-1">
                       {totalItems} artículos
                     </Badge>
+                    {isPendingLoaded && (
+                      <Badge className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400">
+                        Pendiente
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -784,7 +1289,7 @@ export default function VentasPage() {
                     <div className="mt-3 flex items-center justify-between">
                       <span className="flex items-center gap-2 text-sm text-muted-foreground">
                         <BadgePercent className="h-4 w-4" />
-                        Descuento
+                        Descuento ({selectedClient.discount}%)
                       </span>
                       <span className="text-sm font-semibold text-foreground">
                         - {formatCurrency(discount)}
@@ -914,10 +1419,25 @@ export default function VentasPage() {
                   <Separator />
 
                   <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" className="h-11">
-                      Guardar
+                    <Button
+                      variant="outline"
+                      className="h-11"
+                      onClick={handleGuardar}
+                      disabled={saving || cart.length === 0}
+                    >
+                      {saving ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Guardar"
+                      )}
                     </Button>
-                    <Button variant="destructive" className="h-11">
+
+                    <Button
+                      variant="destructive"
+                      className="h-11"
+                      onClick={handleCancelar}
+                      disabled={!isPendingLoaded || saving}
+                    >
                       Cancelar
                     </Button>
                   </div>
@@ -925,11 +1445,18 @@ export default function VentasPage() {
                   <Button
                     size="lg"
                     className="h-12 w-full text-base font-semibold"
+                    onClick={handleCobrar}
                     disabled={
-                      paymentMethod === "efectivo" &&
-                      (cashReceived === "" || cashReceivedNumber < total)
+                      saving ||
+                      cart.length === 0 ||
+                      !paymentMethod ||
+                      (paymentMethod === "efectivo" &&
+                        (cashReceived === "" || cashReceivedNumber < total))
                     }
                   >
+                    {saving ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
                     Cobrar {formatCurrency(total)}
                   </Button>
                 </div>
