@@ -457,7 +457,7 @@ export default function VentasPage() {
     }
   }
 
-  const resetSaleState = (keepClients = true) => {
+  const resetSaleState = () => {
     const generalClient = clients.find((client) => client.id === "1") ?? {
       id: "1",
       name: "Cliente general",
@@ -474,9 +474,7 @@ export default function VentasPage() {
     setCashReceived("")
     setDirectCode("")
     setCodeError("")
-    if (keepClients) {
-      setSelectedClient(generalClient)
-    }
+    setSelectedClient(generalClient)
 
     clearPersistedSale()
   }
@@ -506,6 +504,13 @@ export default function VentasPage() {
   }, [clientSearch, clients])
 
   const addToCart = (product: Product) => {
+    const stock = Number(product.stock ?? 0)
+
+    if (stock <= 0) {
+      setCodeError("Ese producto no tiene stock disponible.")
+      return
+    }
+
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id)
 
@@ -539,6 +544,11 @@ export default function VentasPage() {
 
     if (!product) {
       setCodeError("No se encontró un producto con esa clave.")
+      return
+    }
+
+    if (product.stock <= 0) {
+      setCodeError("Ese producto no tiene stock disponible.")
       return
     }
 
@@ -928,39 +938,92 @@ export default function VentasPage() {
                             No se encontraron productos.
                           </div>
                         ) : (
-                          filteredProducts.map((product) => (
-                            <div
-                              key={product.id}
-                              className="flex items-center justify-between gap-4 rounded-xl border border-border/60 p-4"
-                            >
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-semibold text-foreground md:text-base">
-                                  {product.name}
-                                </p>
-                                <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                                  <span>{product.code}</span>
-                                  <span>•</span>
-                                  <span>{product.category}</span>
-                                  <span>•</span>
-                                  <span>Stock: {product.stock}</span>
+                          filteredProducts.map((product) => {
+                            const stock = Number(product.stock ?? 0)
+                            const isOutOfStock = stock <= 0
+
+                            return (
+                              <div
+                                key={product.id}
+                                className={cn(
+                                  "flex items-center justify-between gap-4 rounded-xl border border-border/60 p-4 transition",
+                                  isOutOfStock
+                                    ? "cursor-not-allowed bg-muted/30 opacity-60"
+                                    : "hover:bg-muted/30"
+                                )}
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p
+                                    className={cn(
+                                      "text-sm font-semibold md:text-base",
+                                      isOutOfStock
+                                        ? "text-muted-foreground"
+                                        : "text-foreground"
+                                    )}
+                                  >
+                                    {product.name}
+                                  </p>
+
+                                  <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                    <span>{product.code}</span>
+                                    <span>•</span>
+                                    <span>{product.category}</span>
+                                    <span>•</span>
+                                    <span
+                                      className={
+                                        isOutOfStock
+                                          ? "font-medium text-destructive"
+                                          : ""
+                                      }
+                                    >
+                                      Stock: {stock}
+                                    </span>
+
+                                    {isOutOfStock && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="font-semibold text-destructive">
+                                          Sin stock
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                  <p
+                                    className={cn(
+                                      "min-w-[90px] text-right text-sm font-bold",
+                                      isOutOfStock
+                                        ? "text-muted-foreground"
+                                        : "text-foreground"
+                                    )}
+                                  >
+                                    {formatCurrency(product.price)}
+                                  </p>
+
+                                  <Button
+                                    size="sm"
+                                    type="button"
+                                    disabled={isOutOfStock}
+                                    aria-disabled={isOutOfStock}
+                                    onClick={() => {
+                                      if (isOutOfStock) return
+                                      addToCart(product)
+                                    }}
+                                    className={cn(
+                                      "gap-2",
+                                      isOutOfStock &&
+                                        "pointer-events-none bg-muted text-muted-foreground opacity-50 hover:bg-muted"
+                                    )}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                    {isOutOfStock ? "Sin stock" : "Agregar"}
+                                  </Button>
                                 </div>
                               </div>
-
-                              <div className="flex items-center gap-3">
-                                <p className="min-w-[90px] text-right text-sm font-bold text-foreground">
-                                  {formatCurrency(product.price)}
-                                </p>
-                                <Button
-                                  size="sm"
-                                  className="gap-2"
-                                  onClick={() => addToCart(product)}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                  Agregar
-                                </Button>
-                              </div>
-                            </div>
-                          ))
+                            )
+                          })
                         )}
                       </div>
                     </div>
