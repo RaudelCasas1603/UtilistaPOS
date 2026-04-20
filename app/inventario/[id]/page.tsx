@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Pencil,
   Save,
@@ -18,6 +19,7 @@ import {
   ChartColumn,
   CheckCircle2,
   XCircle,
+  FileText,
 } from "lucide-react"
 
 type InventarioProducto = {
@@ -32,6 +34,7 @@ type InventarioProducto = {
   precio?: number
   costo?: number
   precio_publico?: number
+  precio_venta?: number
   categoria?: string
   ventasHoy?: number
   ventasSemana?: number
@@ -50,6 +53,7 @@ export default function InventarioProductoPage() {
   const [stockActual, setStockActual] = useState(0)
   const [stockMinimo, setStockMinimo] = useState(0)
   const [stockDeseado, setStockDeseado] = useState(0)
+  const [motivo, setMotivo] = useState("")
 
   const [alertSuccess, setAlertSuccess] = useState(false)
   const [alertError, setAlertError] = useState("")
@@ -95,6 +99,13 @@ export default function InventarioProductoPage() {
   const handleGuardar = async () => {
     if (!producto) return
 
+    const motivoLimpio = motivo.trim()
+
+    if (!motivoLimpio) {
+      setAlertError("Debes escribir el motivo del ajuste de inventario.")
+      return
+    }
+
     try {
       setSaving(true)
       setAlertError("")
@@ -110,6 +121,8 @@ export default function InventarioProductoPage() {
           stock_actual: Number(stockActual),
           stock_minimo: Number(stockMinimo),
           stock_deseado: Number(stockDeseado),
+          motivo: motivoLimpio,
+          id_usuario: 1,
         }),
       })
 
@@ -127,6 +140,7 @@ export default function InventarioProductoPage() {
       setStockMinimo(Number(data.stock_minimo ?? 0))
       setStockDeseado(Number(data.stock_deseado ?? 0))
 
+      setMotivo("")
       setEditMode(false)
       setAlertSuccess(true)
 
@@ -343,6 +357,26 @@ export default function InventarioProductoPage() {
               </div>
             </div>
 
+            {editMode && (
+              <div className="rounded-2xl border bg-muted/20 p-4">
+                <div className="mb-3 flex items-center gap-2 text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                  <span className="text-sm font-medium">Motivo del ajuste</span>
+                </div>
+
+                <Textarea
+                  value={motivo}
+                  onChange={(e) => setMotivo(e.target.value)}
+                  placeholder="Ej. Ajuste manual por conteo físico, mercancía dañada, reposición, corrección de captura..."
+                  className="min-h-[110px] resize-none"
+                />
+
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Este texto se guardará en el movimiento de inventario.
+                </p>
+              </div>
+            )}
+
             <div className="grid gap-3 md:grid-cols-2">
               <div className="rounded-2xl border bg-muted/20 p-4">
                 <p className="text-sm font-medium text-muted-foreground">
@@ -376,21 +410,42 @@ export default function InventarioProductoPage() {
             <div className="w-full pt-2">
               {!editMode ? (
                 <Button
-                  onClick={() => setEditMode(true)}
+                  onClick={() => {
+                    setEditMode(true)
+                    setAlertError("")
+                  }}
                   className="h-14 w-full gap-3 rounded-xl text-lg font-semibold"
                 >
                   <Pencil className="h-6 w-6" />
                   Editar
                 </Button>
               ) : (
-                <Button
-                  onClick={handleGuardar}
-                  disabled={saving}
-                  className="h-14 w-full gap-3 rounded-xl text-lg font-semibold"
-                >
-                  <Save className="h-6 w-6" />
-                  {saving ? "Guardando..." : "Guardar"}
-                </Button>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Button
+                    onClick={handleGuardar}
+                    disabled={saving}
+                    className="h-14 w-full gap-3 rounded-xl text-lg font-semibold"
+                  >
+                    <Save className="h-6 w-6" />
+                    {saving ? "Guardando..." : "Guardar"}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setEditMode(false)
+                      setMotivo("")
+                      setAlertError("")
+                      setStockActual(Number(producto.stock_actual ?? 0))
+                      setStockMinimo(Number(producto.stock_minimo ?? 0))
+                      setStockDeseado(Number(producto.stock_deseado ?? 0))
+                    }}
+                    className="h-14 w-full rounded-xl text-lg font-semibold"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
               )}
             </div>
           </CardContent>

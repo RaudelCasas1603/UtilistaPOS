@@ -356,16 +356,6 @@ export default function InventarioPage() {
         <Card className="border-border/60 shadow-sm">
           <CardContent className="flex items-center justify-between p-5">
             <div>
-              <p className="text-sm text-muted-foreground">Bajo mínimo</p>
-              <p className="mt-1 text-2xl font-bold">{bajoMinimo}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-amber-500" />
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
               <p className="text-sm text-muted-foreground">Agotados</p>
               <p className="mt-1 text-2xl font-bold">{agotados}</p>
             </div>

@@ -58,6 +58,13 @@ type Client = {
   estatus: EstatusCliente
 }
 
+type PurchaseApi = {
+  id: number
+  ticket: string
+  fecha_hora: string
+  total: number | string
+}
+
 type Purchase = {
   ticket: string
   fecha: string
@@ -76,6 +83,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 const ENDPOINTS = {
   getById: (id: string | number) => `${API_BASE}/api/clientes/${id}`,
   update: (id: string | number) => `${API_BASE}/api/clientes/${id}`,
+  purchases: (id: string | number) => `${API_BASE}/api/clientes/${id}/ventas`,
 }
 
 function normalizeEstatus(value: unknown): EstatusCliente {
@@ -97,6 +105,21 @@ function normalizeClient(item: ClientApi): Client {
     descuento: Number(item.descuento ?? 0),
     referencia: item.referencia ?? "",
     estatus: normalizeEstatus(item.estatus),
+  }
+}
+
+function normalizePurchase(item: PurchaseApi): Purchase {
+  const fechaObj = new Date(item.fecha_hora)
+
+  return {
+    ticket: item.ticket ?? "",
+    fecha: fechaObj.toISOString().split("T")[0],
+    hora: fechaObj.toLocaleTimeString("es-MX", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }),
+    total: Number(item.total ?? 0),
   }
 }
 
@@ -130,24 +153,6 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   return response.json()
 }
 
-function getMockPurchases(clientId: number): Purchase[] {
-  const base = [
-    { ticket: "TK-10482", fecha: "2026-04-03", hora: "09:14", total: 328.5 },
-    { ticket: "TK-10471", fecha: "2026-04-02", hora: "18:42", total: 1290.0 },
-    { ticket: "TK-10455", fecha: "2026-04-02", hora: "11:08", total: 214.0 },
-    { ticket: "TK-10431", fecha: "2026-04-01", hora: "17:25", total: 860.0 },
-    { ticket: "TK-10412", fecha: "2026-04-01", hora: "10:31", total: 145.5 },
-    { ticket: "TK-10397", fecha: "2026-03-31", hora: "19:03", total: 432.0 },
-    { ticket: "TK-10380", fecha: "2026-03-31", hora: "13:47", total: 119.0 },
-    { ticket: "TK-10366", fecha: "2026-03-30", hora: "16:12", total: 980.0 },
-  ]
-
-  return base.map((item, index) => ({
-    ...item,
-    total: Number((item.total + clientId * (index + 1) * 1.7).toFixed(2)),
-  }))
-}
-
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
@@ -168,6 +173,9 @@ export default function ClienteDetallePage({ params }: Props) {
 
   const [cliente, setCliente] = React.useState<Client | null>(null)
   const [formData, setFormData] = React.useState<Client | null>(null)
+
+  const [purchases, setPurchases] = React.useState<Purchase[]>([])
+  const [loadingPurchases, setLoadingPurchases] = React.useState(true)
 
   const [loading, setLoading] = React.useState(true)
   const [saving, setSaving] = React.useState(false)
@@ -199,6 +207,26 @@ export default function ClienteDetallePage({ params }: Props) {
     }
 
     cargarCliente()
+  }, [id])
+
+  React.useEffect(() => {
+    const cargarVentas = async () => {
+      try {
+        setLoadingPurchases(true)
+
+        const response = await fetchJson<PurchaseApi[]>(ENDPOINTS.purchases(id))
+        const ventasNormalizadas = response.map(normalizePurchase)
+
+        setPurchases(ventasNormalizadas)
+      } catch (error) {
+        console.error("Error al obtener ventas del cliente:", error)
+        setPurchases([])
+      } finally {
+        setLoadingPurchases(false)
+      }
+    }
+
+    cargarVentas()
   }, [id])
 
   React.useEffect(() => {
@@ -290,7 +318,6 @@ export default function ClienteDetallePage({ params }: Props) {
     return <div className="p-6">Cliente no encontrado</div>
   }
 
-  const purchases = getMockPurchases(cliente.id)
   const totalComprado = purchases.reduce((acc, item) => acc + item.total, 0)
   const ticketPromedio = purchases.length ? totalComprado / purchases.length : 0
   const compraMasAlta = purchases.length
@@ -438,7 +465,9 @@ export default function ClienteDetallePage({ params }: Props) {
                 <p className="text-sm text-muted-foreground">
                   Compras recientes
                 </p>
-                <p className="text-2xl font-bold">{purchases.length}</p>
+                <p className="text-2xl font-bold">
+                  {loadingPurchases ? "..." : purchases.length}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   Últimos movimientos registrados
                 </p>
@@ -454,7 +483,7 @@ export default function ClienteDetallePage({ params }: Props) {
               <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Ticket promedio</p>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(ticketPromedio)}
+                  {loadingPurchases ? "..." : formatCurrency(ticketPromedio)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Basado en las últimas 8 compras
@@ -471,11 +500,17 @@ export default function ClienteDetallePage({ params }: Props) {
               <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Frecuencia</p>
                 <div className="mt-1 flex items-center gap-2">
-                  <p className="text-2xl font-bold">{frecuenciaLabel}</p>
-                  <Badge variant={frecuenciaVariant}>{frecuenciaLabel}</Badge>
+                  <p className="text-2xl font-bold">
+                    {loadingPurchases ? "..." : frecuenciaLabel}
+                  </p>
+                  {!loadingPurchases && (
+                    <Badge variant={frecuenciaVariant}>{frecuenciaLabel}</Badge>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Compra más alta: {formatCurrency(compraMasAlta)}
+                  {loadingPurchases
+                    ? "Cargando compras..."
+                    : `Compra más alta: ${formatCurrency(compraMasAlta)}`}
                 </p>
               </div>
             </CardContent>
@@ -505,18 +540,41 @@ export default function ClienteDetallePage({ params }: Props) {
               </TableHeader>
 
               <TableBody className="text-md">
-                {purchases.map((purchase) => (
-                  <TableRow key={purchase.ticket}>
-                    <TableCell className="font-medium">
-                      {purchase.ticket}
-                    </TableCell>
-                    <TableCell>{formatDate(purchase.fecha)}</TableCell>
-                    <TableCell>{purchase.hora}</TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {formatCurrency(purchase.total)}
+                {loadingPurchases ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="py-8 text-center text-muted-foreground"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Cargando compras...
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : purchases.length > 0 ? (
+                  purchases.map((purchase) => (
+                    <TableRow key={purchase.ticket}>
+                      <TableCell className="font-medium">
+                        {purchase.ticket}
+                      </TableCell>
+                      <TableCell>{formatDate(purchase.fecha)}</TableCell>
+                      <TableCell>{purchase.hora}</TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {formatCurrency(purchase.total)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="py-8 text-center text-muted-foreground"
+                    >
+                      Este cliente aún no tiene compras registradas.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>

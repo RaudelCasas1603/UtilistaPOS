@@ -11,10 +11,18 @@ import {
   Cell,
   Tooltip,
 } from "recharts"
-import { Pencil, Save, CheckCircle2 } from "lucide-react"
+import {
+  Pencil,
+  Save,
+  CheckCircle2,
+  Package,
+  Hash,
+  Barcode,
+  DollarSign,
+  Coins,
+  Boxes,
+} from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-
-import { Package, Hash, Barcode, DollarSign, Coins, Boxes } from "lucide-react"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
 
@@ -28,11 +36,6 @@ type SalesTooltipProps = {
   active?: boolean
   payload?: Array<{
     value: number
-    color?: string
-    payload?: {
-      fecha?: string
-      cantidad?: number
-    }
   }>
   label?: string
 }
@@ -50,6 +53,16 @@ type ApiProducto = {
   stock: number | null
 }
 
+type ApiVenta7Dias = {
+  fecha: string
+  unidades_vendidas: number
+}
+
+type VentaGrafica = {
+  fecha: string
+  cantidad: number
+}
+
 type ProductoDetalle = {
   id: number
   nombre: string
@@ -59,7 +72,7 @@ type ProductoDetalle = {
   costo: number
   precio_publico: number
   stock: number
-  ventas: { fecha: string; cantidad: number }[]
+  ventas: VentaGrafica[]
 }
 
 function SalesTooltip({ active, payload, label }: SalesTooltipProps) {
@@ -68,8 +81,8 @@ function SalesTooltip({ active, payload, label }: SalesTooltipProps) {
   const item = payload[0]
 
   return (
-    <div className="bg-popover text-popover-foreground rounded-lg border border-border px-3 py-2 shadow-md">
-      <p className="mb-1 text-sm font-semibold">{label}</p>
+    <div className="bg-popover text-popover-foreground rounded-lg border border-border bg-card px-3 py-2 shadow-md">
+      <p className="mb-1 text-base font-semibold">{label}</p>
       <div className="flex items-center gap-2">
         <span
           className="h-2.5 w-2.5 rounded-full"
@@ -81,8 +94,33 @@ function SalesTooltip({ active, payload, label }: SalesTooltipProps) {
     </div>
   )
 }
+function formatearFechaCorta(fecha: string) {
+  if (!fecha) return "-"
 
-function mapApiProductoToDetalle(item: ApiProducto): ProductoDetalle {
+  const fechaLimpia = String(fecha).split("T")[0]
+  const [anio, mes, dia] = fechaLimpia.split("-").map(Number)
+
+  if (!anio || !mes || !dia) return fechaLimpia
+
+  const date = new Date(anio, mes - 1, dia)
+
+  return date.toLocaleDateString("es-MX", {
+    day: "2-digit",
+    month: "short",
+  })
+}
+
+function mapApiVentasToGrafica(items: ApiVenta7Dias[]): VentaGrafica[] {
+  return items.map((item) => ({
+    fecha: formatearFechaCorta(item.fecha),
+    cantidad: Number(item.unidades_vendidas ?? 0),
+  }))
+}
+
+function mapApiProductoToDetalle(
+  item: ApiProducto,
+  ventas: VentaGrafica[] = []
+): ProductoDetalle {
   return {
     id: item.id,
     nombre: item.nombre ?? "",
@@ -92,15 +130,7 @@ function mapApiProductoToDetalle(item: ApiProducto): ProductoDetalle {
     costo: Number(item.precio_compra ?? 0),
     precio_publico: Number(item.precio_venta ?? 0),
     stock: Number(item.stock ?? 0),
-    ventas: [
-      { fecha: "Lun", cantidad: 5 },
-      { fecha: "Mar", cantidad: 8 },
-      { fecha: "Mié", cantidad: 4 },
-      { fecha: "Jue", cantidad: 10 },
-      { fecha: "Vie", cantidad: 6 },
-      { fecha: "Sáb", cantidad: 12 },
-      { fecha: "Dom", cantidad: 3 },
-    ],
+    ventas,
   }
 }
 
@@ -121,16 +151,29 @@ export default function ProductoDetallePage({ params }: Props) {
         setLoading(true)
         setError("")
 
-        const response = await fetch(`${API_URL}/productos/${id}`, {
-          cache: "no-store",
-        })
+        const [productoResponse, ventasResponse] = await Promise.all([
+          fetch(`${API_URL}/productos/${id}`, {
+            cache: "no-store",
+          }),
+          fetch(`${API_URL}/productos/${id}/historial-ventas`, {
+            cache: "no-store",
+          }),
+        ])
 
-        if (!response.ok) {
+        if (!productoResponse.ok) {
           throw new Error("No se pudo cargar el producto")
         }
 
-        const result: ApiProducto = await response.json()
-        setProducto(mapApiProductoToDetalle(result))
+        const productoResult: ApiProducto = await productoResponse.json()
+
+        let ventasMapeadas: VentaGrafica[] = []
+
+        if (ventasResponse.ok) {
+          const ventasResult: ApiVenta7Dias[] = await ventasResponse.json()
+          ventasMapeadas = mapApiVentasToGrafica(ventasResult)
+        }
+
+        setProducto(mapApiProductoToDetalle(productoResult, ventasMapeadas))
       } catch (err) {
         console.error(err)
         setError("No se pudo cargar la información del producto")
@@ -204,13 +247,14 @@ export default function ProductoDetallePage({ params }: Props) {
           )
         }
 
-        // volver a pedir el producto completo con stock
-        const refreshResponse = await fetch(
-          `${API_URL}/productos/${producto.id}`,
-          {
+        const [refreshResponse, ventasResponse] = await Promise.all([
+          fetch(`${API_URL}/productos/${producto.id}`, {
             cache: "no-store",
-          }
-        )
+          }),
+          fetch(`${API_URL}/productos/${producto.id}/historial-ventas`, {
+            cache: "no-store",
+          }),
+        ])
 
         const refreshResult = await refreshResponse.json()
 
@@ -220,7 +264,14 @@ export default function ProductoDetallePage({ params }: Props) {
           )
         }
 
-        setProducto(mapApiProductoToDetalle(refreshResult))
+        let ventasMapeadas: VentaGrafica[] = []
+
+        if (ventasResponse.ok) {
+          const ventasResult: ApiVenta7Dias[] = await ventasResponse.json()
+          ventasMapeadas = mapApiVentasToGrafica(ventasResult)
+        }
+
+        setProducto(mapApiProductoToDetalle(refreshResult, ventasMapeadas))
         setShowAlert(true)
 
         setTimeout(() => {
@@ -244,6 +295,7 @@ export default function ProductoDetallePage({ params }: Props) {
 
     setIsEditing(true)
   }
+
   const utilidad = useMemo(() => {
     if (!producto) return 0
     return producto.precio_publico - producto.costo
@@ -259,7 +311,7 @@ export default function ProductoDetallePage({ params }: Props) {
 
     return [
       { nombre: "Costo", valor: producto.costo },
-      { nombre: "Precio Publico", valor: producto.precio },
+      { nombre: "Precio Público", valor: producto.precio_publico },
       { nombre: "Utilidad", valor: utilidad },
     ]
   }, [producto, utilidad])
@@ -538,7 +590,6 @@ export default function ProductoDetallePage({ params }: Props) {
                     <Cell fill="#6366f1" />
                     <Cell fill="#22c55e" />
                     <Cell fill="#f59e0b" />
-                    <Cell fill="#ef4444" />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -576,6 +627,7 @@ export default function ProductoDetallePage({ params }: Props) {
                   tick={{ fill: "#94a3b8", fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
+                  allowDecimals={false}
                 />
                 <Tooltip
                   content={<SalesTooltip />}
