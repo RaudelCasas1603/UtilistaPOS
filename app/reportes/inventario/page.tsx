@@ -1,166 +1,127 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Building2, ClipboardList, FileText } from "lucide-react"
+import { useEffect, useState } from "react"
+import { ClipboardList, FileText, Loader2 } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-type ProductoInventario = {
-  id: number
-  nombre: string
-  proveedor: string
-  stockActual: number
-  stockMinimo: number
-  stockIdeal: number
-}
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
-const inventarioData: ProductoInventario[] = [
-  {
-    id: 1,
-    nombre: "Cuaderno profesional raya",
-    proveedor: "Scribe",
-    stockActual: 0,
-    stockMinimo: 8,
-    stockIdeal: 20,
-  },
-  {
-    id: 2,
-    nombre: "Lápiz HB",
-    proveedor: "Maped",
-    stockActual: 3,
-    stockMinimo: 10,
-    stockIdeal: 30,
-  },
-  {
-    id: 3,
-    nombre: "Bolígrafo azul",
-    proveedor: "Bic",
-    stockActual: 12,
-    stockMinimo: 10,
-    stockIdeal: 35,
-  },
-  {
-    id: 4,
-    nombre: "Marcador permanente negro",
-    proveedor: "Sharpie",
-    stockActual: 0,
-    stockMinimo: 6,
-    stockIdeal: 18,
-  },
-  {
-    id: 5,
-    nombre: "Resma carta",
-    proveedor: "Office Depot",
-    stockActual: 4,
-    stockMinimo: 8,
-    stockIdeal: 15,
-  },
-  {
-    id: 6,
-    nombre: "Pegamento en barra",
-    proveedor: "Pritt",
-    stockActual: 1,
-    stockMinimo: 5,
-    stockIdeal: 16,
-  },
-  {
-    id: 7,
-    nombre: "Carpeta tamaño carta",
-    proveedor: "Scribe",
-    stockActual: 9,
-    stockMinimo: 12,
-    stockIdeal: 25,
-  },
-  {
-    id: 8,
-    nombre: "Tijera escolar",
-    proveedor: "Maped",
-    stockActual: 6,
-    stockMinimo: 4,
-    stockIdeal: 18,
-  },
-]
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
 
 type TipoReporte = "sin-stock" | "debajo-minimo" | "hacia-ideal"
 
+type ProductoReporte = {
+  id: number
+  id_producto: number
+  nombre: string
+  codigo_producto: string | null
+  codigo_barras: string | null
+  stock_actual: number
+  stock_minimo: number
+  stock_deseado: number
+  faltantes: number
+}
+
+type GrupoProveedor = {
+  empresa: string
+  totalProductos: number
+  productos: ProductoReporte[]
+}
+
+type RespuestaProveedores = {
+  ok: boolean
+  proveedores: string[]
+}
+
+type RespuestaReporte = {
+  ok: boolean
+  filtros: {
+    proveedor: string
+    tipoReporte: TipoReporte
+  }
+  totalProductos: number
+  proveedores: GrupoProveedor[]
+}
+
 export default function ReporteInventarioPage() {
+  const [proveedores, setProveedores] = useState<string[]>(["Todos"])
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState("Todos")
   const [tipoReporte, setTipoReporte] = useState<TipoReporte>("debajo-minimo")
-  const [reporteGenerado, setReporteGenerado] = useState(false)
 
-  const proveedores = useMemo(() => {
-    const unicos = Array.from(new Set(inventarioData.map((p) => p.proveedor)))
-    return ["Todos", ...unicos]
+  const [reporteGenerado, setReporteGenerado] = useState(false)
+  const [loadingProveedores, setLoadingProveedores] = useState(true)
+  const [loadingReporte, setLoadingReporte] = useState(false)
+  const [error, setError] = useState("")
+
+  const [reporte, setReporte] = useState<RespuestaReporte | null>(null)
+
+  useEffect(() => {
+    cargarProveedores()
   }, [])
 
-  const productosFiltrados = useMemo(() => {
-    let productos = [...inventarioData]
+  const cargarProveedores = async () => {
+    try {
+      setLoadingProveedores(true)
+      setError("")
 
-    if (proveedorSeleccionado !== "Todos") {
-      productos = productos.filter(
-        (producto) => producto.proveedor === proveedorSeleccionado
-      )
+      const res = await fetch(`${API_URL}/inventario/reportes/proveedores`, {
+        cache: "no-store",
+      })
+
+      const data: RespuestaProveedores = await res.json()
+
+      if (!res.ok || !data.ok) {
+        throw new Error("No se pudieron cargar los proveedores")
+      }
+
+      setProveedores(data.proveedores || ["Todos"])
+    } catch (err) {
+      console.error(err)
+      setError("No fue posible cargar los proveedores.")
+      setProveedores(["Todos"])
+    } finally {
+      setLoadingProveedores(false)
     }
-
-    if (tipoReporte === "sin-stock") {
-      productos = productos.filter((producto) => producto.stockActual === 0)
-    }
-
-    if (tipoReporte === "debajo-minimo") {
-      productos = productos.filter(
-        (producto) => producto.stockActual < producto.stockMinimo
-      )
-    }
-
-    if (tipoReporte === "hacia-ideal") {
-      productos = productos.filter(
-        (producto) => producto.stockActual < producto.stockIdeal
-      )
-    }
-
-    return productos
-  }, [proveedorSeleccionado, tipoReporte])
-
-  const productosAgrupados = useMemo(() => {
-    return productosFiltrados.reduce(
-      (acc, producto) => {
-        if (!acc[producto.proveedor]) {
-          acc[producto.proveedor] = []
-        }
-        acc[producto.proveedor].push(producto)
-        return acc
-      },
-      {} as Record<string, ProductoInventario[]>
-    )
-  }, [productosFiltrados])
-
-  const totalProductos = productosFiltrados.length
-
-  const generarReporte = async () => {
-    setReporteGenerado(true)
-
-    // Aquí luego conectas tu endpoint
-    // const res = await fetch("/api/reportes/inventario", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({
-    //     proveedor: proveedorSeleccionado,
-    //     tipoReporte,
-    //   }),
-    // })
-    //
-    // const data = await res.json()
-    // console.log(data)
   }
 
-  const obtenerFaltantes = (producto: ProductoInventario) => {
-    if (tipoReporte === "sin-stock") {
-      return producto.stockIdeal - producto.stockActual
-    }
+  const generarReporte = async () => {
+    try {
+      setLoadingReporte(true)
+      setError("")
+      setReporteGenerado(true)
 
-    if (tipoReporte === "debajo-minimo") {
-      return producto.stockMinimo - producto.stockActual
-    }
+      const params = new URLSearchParams({
+        proveedor: proveedorSeleccionado,
+        tipoReporte,
+      })
 
-    return producto.stockIdeal - producto.stockActual
+      const res = await fetch(
+        `${API_URL}/inventario/reportes/faltantes?${params.toString()}`,
+        {
+          cache: "no-store",
+        }
+      )
+
+      const data: RespuestaReporte = await res.json()
+
+      if (!res.ok || !data.ok) {
+        throw new Error("No se pudo generar el reporte")
+      }
+
+      setReporte(data)
+    } catch (err) {
+      console.error(err)
+      setReporte(null)
+      setError("No fue posible generar el reporte de inventario.")
+    } finally {
+      setLoadingReporte(false)
+    }
   }
 
   const tituloTipoReporte = {
@@ -169,13 +130,16 @@ export default function ReporteInventarioPage() {
     "hacia-ideal": "Productos para llegar al ideal",
   }
 
+  const totalProductos = reporte?.totalProductos || 0
+  const grupos = reporte?.proveedores || []
+
   return (
     <div className="flex h-full w-full flex-col gap-4 p-4 md:p-6">
       <div className="overflow-hidden rounded-3xl border bg-background shadow-sm">
         <div className="bg-muted/30 px-4 py-5 md:px-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="borderp-2.5 rounded-2xl">
+              <div className="rounded-2xl">
                 <ClipboardList className="h-5 w-5" />
               </div>
 
@@ -192,20 +156,31 @@ export default function ReporteInventarioPage() {
 
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-[220px_1fr_220px]">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Proveedor</label>
-                <select
+                <label className="text-sm font-medium">Empresa</label>
+                <Select
                   value={proveedorSeleccionado}
-                  onChange={(e) => setProveedorSeleccionado(e.target.value)}
-                  className="h-11 w-full rounded-2xl border bg-background px-3 text-sm shadow-sm transition outline-none focus:ring-2 focus:ring-sky-500/30"
+                  onValueChange={(value) => setProveedorSeleccionado(value)}
                 >
-                  {proveedores.map((proveedor) => (
-                    <option key={proveedor} value={proveedor}>
-                      {proveedor}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <SelectTrigger className="h-11 w-full rounded-2xl">
+                    <SelectValue placeholder="Selecciona empresa" />
+                  </SelectTrigger>
 
+                  <SelectContent
+                    className="rounded-lg border border-border bg-background shadow-lg"
+                    position="popper"
+                  >
+                    {proveedores
+                      .filter(
+                        (proveedor) => proveedor && proveedor.trim() !== ""
+                      )
+                      .map((proveedor) => (
+                        <SelectItem key={proveedor} value={proveedor}>
+                          {proveedor}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tipo de reporte</label>
                 <select
@@ -228,10 +203,20 @@ export default function ReporteInventarioPage() {
               <div className="flex flex-col justify-end">
                 <button
                   onClick={generarReporte}
-                  className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
+                  disabled={loadingReporte || loadingProveedores}
+                  className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  <FileText className="h-4 w-4" />
-                  Generar reporte
+                  {loadingReporte ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Generando...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="h-4 w-4" />
+                      Generar reporte
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -240,13 +225,22 @@ export default function ReporteInventarioPage() {
               <span className="rounded-full border px-3 py-1 text-xs font-medium dark:border-sky-900 dark:bg-sky-500/10 dark:text-sky-600">
                 {tituloTipoReporte[tipoReporte]}
               </span>
+
               <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-600">
                 {proveedorSeleccionado}
               </span>
+
               <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:border-amber-900 dark:bg-amber-500/10 dark:text-amber-600">
                 {totalProductos} productos
               </span>
             </div>
+
+            {error ? (
+              <Alert variant="destructive">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
           </div>
         </div>
       </div>
@@ -271,7 +265,14 @@ export default function ReporteInventarioPage() {
                 </span>
               </p>
             </div>
-          ) : Object.keys(productosAgrupados).length === 0 ? (
+          ) : loadingReporte ? (
+            <div className="flex h-full items-center justify-center rounded-3xl border border-dashed bg-muted/20 px-6 text-center">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cargando reporte...
+              </div>
+            </div>
+          ) : grupos.length === 0 ? (
             <div className="flex h-full items-center justify-center rounded-3xl border border-dashed bg-muted/20 px-6 text-center">
               <p className="text-sm text-muted-foreground">
                 No se encontraron productos para este reporte.
@@ -279,74 +280,73 @@ export default function ReporteInventarioPage() {
             </div>
           ) : (
             <div className="space-y-5">
-              {Object.entries(productosAgrupados).map(
-                ([proveedor, productos]) => (
-                  <section
-                    key={proveedor}
-                    className="overflow-hidden rounded-2xl border bg-gradient-to-br from-background to-muted/20"
-                  >
-                    <div className="flex items-center gap-3 border-b bg-muted/40 px-4 py-3 md:px-5">
-                      <div className="rounded-xl bg-sky-500/10 p-2 dark:bg-sky-500/15">
-                        <Building2 className="h-4 w-4 text-sky-700 dark:text-sky-300" />
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base font-bold">{proveedor}</h3>
-                        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                          {productos.length} producto
-                          {productos.length !== 1 ? "s" : ""}
-                        </span>
-                      </div>
+              {grupos.map((grupo, index) => (
+                <section
+                  key={`${grupo.empresa}-${index}`}
+                  className="overflow-hidden rounded-2xl border bg-gradient-to-br from-background to-muted/20"
+                >
+                  <div className="flex items-center gap-3 border-b bg-muted/40 px-4 py-3 md:px-5">
+                    <div className="rounded-xl bg-sky-500/10 p-2 dark:bg-sky-500/15">
+                      <ClipboardList className="h-4 w-4 text-sky-700 dark:text-sky-300" />
                     </div>
 
-                    <div className="px-4 py-4 md:px-5">
-                      <ul className="space-y-3">
-                        {productos.map((producto) => {
-                          const faltantes = Math.max(
-                            obtenerFaltantes(producto),
-                            0
-                          )
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-base font-bold">{grupo.empresa}</h3>
+                      <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                        {grupo.totalProductos} producto
+                        {grupo.totalProductos !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  </div>
 
-                          return (
-                            <li
-                              key={producto.id}
-                              className="rounded-2xl border bg-background/80 px-4 py-3 shadow-sm"
-                            >
-                              <div className="flex gap-3">
-                                <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-sky-500" />
+                  <div className="px-4 py-4 md:px-5">
+                    <ul className="space-y-3">
+                      {grupo.productos.map((producto) => (
+                        <li
+                          key={producto.id}
+                          className="rounded-2xl border bg-background/80 px-4 py-3 shadow-sm"
+                        >
+                          <div className="flex gap-3">
+                            <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-sky-500" />
 
-                                <div className="flex items-center">
-                                  <div className="text-sm leading-6 text-foreground">
-                                    <span className="font-semibold">
-                                      {producto.nombre}
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm leading-6 text-foreground">
+                                <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                                  <span className="font-semibold">
+                                    {producto.nombre}
+                                  </span>
+
+                                  {producto.codigo_producto ? (
+                                    <span className="text-xs text-muted-foreground">
+                                      {producto.codigo_producto}
                                     </span>
-                                    <div className="text-end">
-                                      <span className="text-muted-foreground">
-                                        {" "}
-                                        Hay{" "}
-                                      </span>
-                                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                        {producto.stockActual} piezas
-                                      </span>
-                                      <span className="text-muted-foreground">
-                                        {" "}
-                                        y faltan{" "}
-                                      </span>
-                                      <span className="font-semibold text-rose-600 dark:text-rose-400">
-                                        {faltantes} piezas
-                                      </span>
-                                    </div>
-                                  </div>
+                                  ) : null}
+                                </div>
+
+                                <div className="mt-1 text-end">
+                                  <span className="text-muted-foreground">
+                                    Hay{" "}
+                                  </span>
+                                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                    {producto.stock_actual} piezas
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    {" "}
+                                    y faltan{" "}
+                                  </span>
+                                  <span className="font-semibold text-rose-600 dark:text-rose-400">
+                                    {producto.faltantes} piezas
+                                  </span>
                                 </div>
                               </div>
-                            </li>
-                          )
-                        })}
-                      </ul>
-                    </div>
-                  </section>
-                )
-              )}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
+              ))}
             </div>
           )}
         </div>
