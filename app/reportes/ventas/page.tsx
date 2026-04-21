@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   Card,
   CardContent,
@@ -16,9 +16,8 @@ import {
   Receipt,
   BadgeDollarSign,
   ShoppingBasket,
-  Users,
-  TrendingUp,
-  Package,
+  Loader2,
+  AlertCircle,
 } from "lucide-react"
 import {
   ResponsiveContainer,
@@ -30,47 +29,114 @@ import {
   Legend,
   Bar,
 } from "recharts"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-const ventasPorDia = [
-  { fecha: "01 Abr", ventas: 4250, margen: 1380, tickets: 18, productos: 64 },
-  { fecha: "02 Abr", ventas: 5100, margen: 1720, tickets: 22, productos: 79 },
-  { fecha: "03 Abr", ventas: 3890, margen: 1210, tickets: 16, productos: 55 },
-  { fecha: "04 Abr", ventas: 6400, margen: 2140, tickets: 27, productos: 91 },
-  { fecha: "05 Abr", ventas: 5920, margen: 1980, tickets: 25, productos: 84 },
-  { fecha: "06 Abr", ventas: 4580, margen: 1490, tickets: 19, productos: 68 },
-  { fecha: "07 Abr", ventas: 7100, margen: 2460, tickets: 30, productos: 102 },
-]
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
 
-const metodosPago = [
-  { nombre: "Efectivo", total: "$14,820", porcentaje: "39%" },
-  { nombre: "Tarjeta", total: "$17,430", porcentaje: "46%" },
-  { nombre: "Transferencia", total: "$5,520", porcentaje: "15%" },
-]
+type PeriodoReporte =
+  | "hoy"
+  | "ultimos_7_dias"
+  | "ultimos_30_dias"
+  | "este_mes"
+  | "ultimos_7_meses"
+  | "personalizado"
 
-const topProductos = [
-  { nombre: "Cuaderno profesional", cantidad: 42, ingreso: "$3,780" },
-  { nombre: "Lápiz adhesivo", cantidad: 35, ingreso: "$1,925" },
-  { nombre: "Juego geométrico", cantidad: 28, ingreso: "$2,240" },
-  { nombre: "Plumones", cantidad: 24, ingreso: "$2,880" },
-  { nombre: "Resma carta", cantidad: 19, ingreso: "$2,470" },
-]
+type Resumen = {
+  totalVendido: number
+  totalMargen: number
+  totalTickets: number
+  totalProductos: number
+  clientesAtendidos: number
+  ticketPromedio: number
+  margenPromedio: number
+  diasConVenta: number
+  promedioProductosPorTicket: number
+}
 
-const resumenDias = [
-  { fecha: "01 Abr", tickets: 18, vendidos: "$4,250", margen: "$1,380" },
-  { fecha: "02 Abr", tickets: 22, vendidos: "$5,100", margen: "$1,720" },
-  { fecha: "03 Abr", tickets: 16, vendidos: "$3,890", margen: "$1,210" },
-  { fecha: "04 Abr", tickets: 27, vendidos: "$6,400", margen: "$2,140" },
-  { fecha: "05 Abr", tickets: 25, vendidos: "$5,920", margen: "$1,980" },
-  { fecha: "06 Abr", tickets: 19, vendidos: "$4,580", margen: "$1,490" },
-  { fecha: "07 Abr", tickets: 30, vendidos: "$7,100", margen: "$2,460" },
-]
+type MejorDia = {
+  fecha: string
+  fechaReal?: string
+  ventas: number
+  margen: number
+  tickets: number
+  productos: number
+} | null
+
+type VentaPorDia = {
+  fecha: string
+  fechaReal?: string
+  ventas: number
+  margen: number
+  tickets: number
+  productos: number
+}
+
+type MetodoPago = {
+  nombre: string
+  total: number
+  porcentaje: number
+}
+
+type TopProducto = {
+  id?: number
+  nombre: string
+  cantidad: number
+  ingreso: number
+  margen?: number
+}
+
+type ResumenDia = {
+  fecha: string
+  fechaReal?: string
+  tickets: number
+  vendidos: number
+  margen: number
+  productos?: number
+}
+
+type ReporteCompletoResponse = {
+  filtros?: {
+    periodo?: string
+    fechaInicio?: string
+    fechaFin?: string
+    limit?: number
+  }
+  resumen: Resumen
+  mejorDia: MejorDia
+  ventasPorDia: VentaPorDia[]
+  metodosPago: MetodoPago[]
+  topProductos: TopProducto[]
+  resumenDias: ResumenDia[]
+}
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
     maximumFractionDigits: 0,
-  }).format(value)
+  }).format(Number(value || 0))
+}
+
+function formatPercent(value: number) {
+  return `${Number(value || 0).toFixed(1)}%`
+}
+
+function formatDateInput(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+function formatShortDateEs(value?: string) {
+  if (!value) return ""
+
+  const date = new Date(`${value}T00:00:00`)
+
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "2-digit",
+    month: "short",
+  }).format(date)
 }
 
 type CustomTooltipProps = {
@@ -78,13 +144,6 @@ type CustomTooltipProps = {
   payload?: Array<{
     value: number
     dataKey?: string
-    name?: string
-    color?: string
-    payload?: {
-      fecha?: string
-      ventas?: number
-      margen?: number
-    }
   }>
   label?: string
 }
@@ -96,7 +155,7 @@ function SalesMarginTooltip({ active, payload, label }: CustomTooltipProps) {
   const margen = payload.find((item) => item.dataKey === "margen")
 
   return (
-    <div className="bg-popover text-popover-foreground rounded-xl border border-border bg-border px-3 py-2 shadow-md">
+    <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-md">
       <p className="mb-2 text-sm font-semibold">{label}</p>
 
       {ventas && (
@@ -133,46 +192,133 @@ function SalesMarginTooltip({ active, payload, label }: CustomTooltipProps) {
 }
 
 export default function ReporteVentasPage() {
-  const [fechaInicio, setFechaInicio] = useState("2026-04-01")
-  const [fechaFin, setFechaFin] = useState("2026-04-07")
+  const hoy = useMemo(() => new Date(), [])
+  const hace7Dias = useMemo(() => {
+    const date = new Date()
+    date.setDate(date.getDate() - 6)
+    return date
+  }, [])
 
-  const resumen = useMemo(() => {
-    const totalVendido = ventasPorDia.reduce(
-      (acc, item) => acc + item.ventas,
-      0
-    )
-    const totalMargen = ventasPorDia.reduce((acc, item) => acc + item.margen, 0)
-    const totalTickets = ventasPorDia.reduce(
-      (acc, item) => acc + item.tickets,
-      0
-    )
-    const totalProductos = ventasPorDia.reduce(
-      (acc, item) => acc + item.productos,
-      0
-    )
+  const [periodoActivo, setPeriodoActivo] =
+    useState<PeriodoReporte>("ultimos_7_dias")
+  const [fechaInicio, setFechaInicio] = useState(formatDateInput(hace7Dias))
+  const [fechaFin, setFechaFin] = useState(formatDateInput(hoy))
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
-    const ticketPromedio = totalTickets > 0 ? totalVendido / totalTickets : 0
-    const margenPromedio =
-      totalVendido > 0 ? (totalMargen / totalVendido) * 100 : 0
-    const diasConVenta = ventasPorDia.filter((item) => item.ventas > 0).length
-    const promedioProductosPorTicket =
-      totalTickets > 0 ? totalProductos / totalTickets : 0
+  const [reporte, setReporte] = useState<ReporteCompletoResponse>({
+    resumen: {
+      totalVendido: 0,
+      totalMargen: 0,
+      totalTickets: 0,
+      totalProductos: 0,
+      clientesAtendidos: 0,
+      ticketPromedio: 0,
+      margenPromedio: 0,
+      diasConVenta: 0,
+      promedioProductosPorTicket: 0,
+    },
+    mejorDia: null,
+    ventasPorDia: [],
+    metodosPago: [],
+    topProductos: [],
+    resumenDias: [],
+  })
 
-    return {
-      totalVendido,
-      totalMargen,
-      totalTickets,
-      totalProductos,
-      ticketPromedio,
-      margenPromedio,
-      diasConVenta,
-      promedioProductosPorTicket,
+  const cargarReporte = useCallback(
+    async (params?: {
+      periodo?: PeriodoReporte
+      fechaInicio?: string
+      fechaFin?: string
+      limit?: number
+    }) => {
+      try {
+        setLoading(true)
+        setError("")
+
+        const searchParams = new URLSearchParams()
+
+        if (params?.periodo) {
+          searchParams.set("periodo", params.periodo)
+        }
+
+        if (params?.periodo === "personalizado") {
+          if (params.fechaInicio) {
+            searchParams.set("fechaInicio", params.fechaInicio)
+          }
+          if (params.fechaFin) {
+            searchParams.set("fechaFin", params.fechaFin)
+          }
+        }
+
+        searchParams.set("limit", String(params?.limit || 5))
+
+        const res = await fetch(
+          `${API_URL}/reportes/ventas/completo?${searchParams.toString()}`,
+          {
+            method: "GET",
+            cache: "no-store",
+          }
+        )
+
+        const data = await res.json()
+
+        if (!res.ok) {
+          throw new Error(data?.message || "No se pudo cargar el reporte")
+        }
+
+        setReporte(data)
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Ocurrió un error al cargar"
+        setError(message)
+      } finally {
+        setLoading(false)
+      }
+    },
+    []
+  )
+
+  useEffect(() => {
+    cargarReporte({
+      periodo: "ultimos_7_dias",
+      limit: 5,
+    })
+  }, [cargarReporte])
+
+  const aplicarPeriodo = async (periodo: PeriodoReporte) => {
+    setPeriodoActivo(periodo)
+
+    if (periodo !== "personalizado") {
+      await cargarReporte({
+        periodo,
+        limit: 5,
+      })
     }
-  }, [])
+  }
 
-  const mejorDia = useMemo(() => {
-    return [...ventasPorDia].sort((a, b) => b.ventas - a.ventas)[0]
-  }, [])
+  const aplicarRangoPersonalizado = async () => {
+    setPeriodoActivo("personalizado")
+
+    await cargarReporte({
+      periodo: "personalizado",
+      fechaInicio,
+      fechaFin,
+      limit: 5,
+    })
+  }
+
+  const resumen = reporte.resumen
+  const mejorDia = reporte.mejorDia
+  const ventasPorDia = reporte.ventasPorDia
+  const metodosPago = reporte.metodosPago
+  const topProductos = reporte.topProductos
+  const resumenDias = reporte.resumenDias
+
+  const ventasPorDiaChart = ventasPorDia.map((item) => ({
+    ...item,
+    fechaLabel: formatShortDateEs(item.fechaReal || item.fecha),
+  }))
 
   return (
     <div className="space-y-6 p-6">
@@ -188,7 +334,7 @@ export default function ReporteVentasPage() {
 
         <div className="flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-end">
           <div className="space-y-1">
-            <label className="text-sm font-medium">Fecha inicio</label>
+            <label className="mr-2 text-sm font-medium">Fecha inicio</label>
             <Input
               type="date"
               value={fechaInicio}
@@ -198,7 +344,7 @@ export default function ReporteVentasPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-medium">Fecha fin</label>
+            <label className="mr-2 text-sm font-medium">Fecha fin</label>
             <Input
               type="date"
               value={fechaFin}
@@ -208,8 +354,16 @@ export default function ReporteVentasPage() {
           </div>
 
           <div className="flex gap-2">
-            <Button className="gap-2">
-              <CalendarDays className="h-4 w-4" />
+            <Button
+              className="gap-2"
+              onClick={aplicarRangoPersonalizado}
+              disabled={loading || !fechaInicio || !fechaFin}
+            >
+              {loading && periodoActivo === "personalizado" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CalendarDays className="h-4 w-4" />
+              )}
               Aplicar
             </Button>
           </div>
@@ -217,19 +371,60 @@ export default function ReporteVentasPage() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm">
+        <Button
+          variant={periodoActivo === "hoy" ? "default" : "outline"}
+          size="sm"
+          onClick={() => aplicarPeriodo("hoy")}
+          disabled={loading}
+        >
           Hoy
         </Button>
-        <Button variant="outline" size="sm">
+
+        <Button
+          variant={periodoActivo === "ultimos_7_dias" ? "default" : "outline"}
+          size="sm"
+          onClick={() => aplicarPeriodo("ultimos_7_dias")}
+          disabled={loading}
+        >
           Últimos 7 días
         </Button>
-        <Button variant="outline" size="sm">
+
+        <Button
+          variant={periodoActivo === "ultimos_30_dias" ? "default" : "outline"}
+          size="sm"
+          onClick={() => aplicarPeriodo("ultimos_30_dias")}
+          disabled={loading}
+        >
           Últimos 30 días
         </Button>
-        <Button variant="outline" size="sm">
+
+        <Button
+          variant={periodoActivo === "este_mes" ? "default" : "outline"}
+          size="sm"
+          onClick={() => aplicarPeriodo("este_mes")}
+          disabled={loading}
+        >
           Mes actual
         </Button>
+
+        <Button
+          variant={periodoActivo === "ultimos_7_meses" ? "default" : "outline"}
+          size="sm"
+          onClick={() => aplicarPeriodo("ultimos_7_meses")}
+          disabled={loading}
+        >
+          Últimos 7 meses
+        </Button>
       </div>
+
+      {error ? (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error al cargar el reporte</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+
       <div className="max-h-[850px] space-y-4 overflow-y-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Card className="rounded-2xl">
@@ -241,7 +436,7 @@ export default function ReporteVentasPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(resumen.totalVendido)}
+                {loading ? "Cargando..." : formatCurrency(resumen.totalVendido)}
               </div>
               <p className="text-xs text-muted-foreground">
                 Ingreso total del periodo seleccionado
@@ -258,10 +453,10 @@ export default function ReporteVentasPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(resumen.totalMargen)}
+                {loading ? "Cargando..." : formatCurrency(resumen.totalMargen)}
               </div>
               <p className="text-xs text-muted-foreground">
-                {resumen.margenPromedio.toFixed(1)}% sobre venta
+                {formatPercent(resumen.margenPromedio)} sobre venta
               </p>
             </CardContent>
           </Card>
@@ -274,7 +469,9 @@ export default function ReporteVentasPage() {
               <Receipt className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{resumen.totalTickets}</div>
+              <div className="text-2xl font-bold">
+                {loading ? "..." : resumen.totalTickets}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {formatCurrency(resumen.ticketPromedio)} por ticket
               </p>
@@ -289,7 +486,9 @@ export default function ReporteVentasPage() {
               <ShoppingBasket className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{resumen.totalProductos}</div>
+              <div className="text-2xl font-bold">
+                {loading ? "..." : resumen.totalProductos}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {resumen.promedioProductosPorTicket.toFixed(1)} por ticket
               </p>
@@ -306,13 +505,23 @@ export default function ReporteVentasPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="text-2xl font-bold">{mejorDia.fecha}</div>
-              <p className="text-sm text-muted-foreground">
-                Venta: {formatCurrency(mejorDia.ventas)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Margen: {formatCurrency(mejorDia.margen)}
-              </p>
+              {mejorDia ? (
+                <>
+                  <div className="text-2xl font-bold">
+                    {formatShortDateEs(mejorDia.fechaReal || mejorDia.fecha)}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Venta: {formatCurrency(mejorDia.ventas)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Margen: {formatCurrency(mejorDia.margen)}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No hay datos para este periodo
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -339,9 +548,11 @@ export default function ReporteVentasPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="text-2xl font-bold">124</div>
+              <div className="text-2xl font-bold">
+                {resumen.clientesAtendidos}
+              </div>
               <p className="text-sm text-muted-foreground">
-                Puedes sustituirlo por clientes únicos después
+                Clientes únicos atendidos en el periodo
               </p>
             </CardContent>
           </Card>
@@ -358,7 +569,7 @@ export default function ReporteVentasPage() {
             <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={ventasPorDia}
+                  data={ventasPorDiaChart}
                   margin={{ top: 6, right: 8, left: -12, bottom: 12 }}
                   barCategoryGap={18}
                 >
@@ -368,7 +579,7 @@ export default function ReporteVentasPage() {
                     vertical={false}
                   />
                   <XAxis
-                    dataKey="fecha"
+                    dataKey="fechaLabel"
                     tick={{ fill: "#94a3b8", fontSize: 12 }}
                     axisLine={false}
                     tickLine={false}
@@ -400,6 +611,12 @@ export default function ReporteVentasPage() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+
+            {!loading && ventasPorDia.length === 0 ? (
+              <p className="mt-4 text-sm text-muted-foreground">
+                No hay información para mostrar en la gráfica.
+              </p>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -412,20 +629,28 @@ export default function ReporteVentasPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {metodosPago.map((metodo) => (
-                <div
-                  key={metodo.nombre}
-                  className="flex items-center justify-between rounded-xl border p-3"
-                >
-                  <div>
-                    <p className="font-medium">{metodo.nombre}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {metodo.porcentaje}
+              {metodosPago.length > 0 ? (
+                metodosPago.map((metodo) => (
+                  <div
+                    key={metodo.nombre}
+                    className="flex items-center justify-between rounded-xl border p-3"
+                  >
+                    <div>
+                      <p className="font-medium">{metodo.nombre}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {metodo.porcentaje.toFixed(2)}%
+                      </p>
+                    </div>
+                    <p className="font-semibold">
+                      {formatCurrency(metodo.total)}
                     </p>
                   </div>
-                  <p className="font-semibold">{metodo.total}</p>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No hay métodos de pago registrados en este periodo.
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -437,25 +662,38 @@ export default function ReporteVentasPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {topProductos.map((producto, index) => (
-                <div
-                  key={producto.nombre}
-                  className="flex items-center justify-between rounded-xl border p-3"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full border text-sm font-semibold">
-                      {index + 1}
+              {topProductos.length > 0 ? (
+                topProductos.map((producto, index) => (
+                  <div
+                    key={`${producto.id ?? producto.nombre}-${index}`}
+                    className="flex items-center justify-between rounded-xl border p-3"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full border text-sm font-semibold">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium">{producto.nombre}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {producto.cantidad} piezas vendidas
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{producto.nombre}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {producto.cantidad} piezas vendidas
+                    <div className="text-right">
+                      <p className="font-semibold">
+                        {formatCurrency(producto.ingreso)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Margen: {formatCurrency(producto.margen || 0)}
                       </p>
                     </div>
                   </div>
-                  <p className="font-semibold">{producto.ingreso}</p>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No hay productos vendidos en este periodo.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -479,14 +717,31 @@ export default function ReporteVentasPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {resumenDias.map((dia) => (
-                    <tr key={dia.fecha} className="border-b last:border-0">
-                      <td className="px-4 py-3">{dia.fecha}</td>
-                      <td className="px-4 py-3">{dia.tickets}</td>
-                      <td className="px-4 py-3">{dia.vendidos}</td>
-                      <td className="px-4 py-3">{dia.margen}</td>
+                  {resumenDias.length > 0 ? (
+                    resumenDias.map((dia) => (
+                      <tr key={dia.fecha} className="border-b last:border-0">
+                        <td className="px-4 py-3">
+                          {formatShortDateEs(dia.fechaReal || dia.fecha)}
+                        </td>
+                        <td className="px-4 py-3">{dia.tickets}</td>
+                        <td className="px-4 py-3">
+                          {formatCurrency(dia.vendidos)}
+                        </td>
+                        <td className="px-4 py-3">
+                          {formatCurrency(dia.margen)}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-4 py-6 text-center text-muted-foreground"
+                      >
+                        No hay información diaria en este periodo.
+                      </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
