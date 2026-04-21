@@ -178,8 +178,9 @@ const ENDPOINTS = {
     `${API_BASE}/api/ventas/${id}/finalizar`,
   cancelarVenta: (id: string | number) =>
     `${API_BASE}/api/ventas/${id}/cancelar`,
+  imprimirTicket: (id: string | number) =>
+    `${API_BASE}/api/impresion/ticket/${id}`,
 }
-
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
@@ -530,6 +531,21 @@ export default function VentasPage() {
     setCodeError("")
   }
 
+  const imprimirTicket = async (idVenta: string | number) => {
+    try {
+      await fetchJson(ENDPOINTS.imprimirTicket(idVenta), {
+        method: "POST",
+      })
+    } catch (err) {
+      console.error("Error al imprimir ticket:", err)
+      showAlert(
+        "error",
+        "Venta cobrada, pero no se imprimió",
+        err instanceof Error ? err.message : "No se pudo imprimir el ticket."
+      )
+    }
+  }
+
   const handleDirectCodeSubmit = () => {
     const normalizedCode = directCode.trim().toLowerCase()
 
@@ -792,20 +808,33 @@ export default function VentasPage() {
 
       setSaving(true)
 
+      let idVentaParaImprimir: string | number | null = null
+
       if (isPendingLoaded && currentSaleId) {
-        await fetchJson(ENDPOINTS.finalizarVenta(currentSaleId), {
-          method: "POST",
-          body: JSON.stringify({
-            id_usuario: 1,
-            metodo_pago: paymentMethod,
-            observaciones: "",
-          }),
-        })
+        const response = await fetchJson<any>(
+          ENDPOINTS.finalizarVenta(currentSaleId),
+          {
+            method: "POST",
+            body: JSON.stringify({
+              id_usuario: 1,
+              metodo_pago: paymentMethod,
+              observaciones: "",
+            }),
+          }
+        )
+
+        idVentaParaImprimir = response?.id ?? currentSaleId
       } else {
-        await fetchJson(ENDPOINTS.crearVenta, {
+        const response = await fetchJson<any>(ENDPOINTS.crearVenta, {
           method: "POST",
           body: JSON.stringify(chargePayload),
         })
+
+        idVentaParaImprimir = response?.id ?? null
+      }
+
+      if (idVentaParaImprimir) {
+        await imprimirTicket(idVentaParaImprimir)
       }
 
       await refreshPendingTickets()
@@ -826,7 +855,6 @@ export default function VentasPage() {
       setSaving(false)
     }
   }
-
   const handleCancelar = async () => {
     try {
       if (!isPendingLoaded || !currentSaleId) return
