@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useMemo, useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Combobox,
   ComboboxContent,
@@ -10,7 +10,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox"
-
 import {
   HandCoins,
   ReceiptText,
@@ -21,8 +20,6 @@ import {
   TrendingUp,
 } from "lucide-react"
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -35,44 +32,86 @@ import {
   BarChart,
 } from "recharts"
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
+
+type PeriodoValue = "dia" | "semana" | "mes"
+
 type Periodo = {
   label: string
-  value: string
+  value: PeriodoValue
 }
 
-// Opciones de período para el Combobox
-const periodo: Periodo[] = [
-  { label: "Dia", value: "dia" },
+type ResumenResponse = {
+  periodo: PeriodoValue
+  fechaReferencia: string
+  rango: {
+    inicio: string
+    fin: string
+  }
+  resumen: {
+    ventas: number
+    tickets: number
+    ticketPromedio: number
+    stockBajo: number
+  }
+}
+
+type GraficaVentasItem = {
+  label: string
+  ventas: number
+}
+
+type GraficaVentasResponse = {
+  periodo: PeriodoValue
+  descripcion: string
+  data: GraficaVentasItem[]
+}
+
+type GraficaMargenItem = {
+  label: string
+  margen: number
+}
+
+type GraficaMargenResponse = {
+  periodo: PeriodoValue
+  descripcion: string
+  data: GraficaMargenItem[]
+}
+
+type CategoriaItem = {
+  name: string
+  value: number
+}
+
+type CategoriasResponse = {
+  periodo: PeriodoValue
+  descripcion: string
+  data: CategoriaItem[]
+}
+
+type CustomBarTooltipProps = {
+  active?: boolean
+  payload?: Array<{
+    value?: number
+  }>
+  label?: string
+  prefix?: string
+  bulletColor?: string
+}
+
+type CustomPieTooltipProps = {
+  active?: boolean
+  payload?: Array<{
+    value?: number
+    name?: string
+  }>
+}
+
+const periodos: Periodo[] = [
+  { label: "Día", value: "dia" },
   { label: "Semana", value: "semana" },
   { label: "Mes", value: "mes" },
 ]
-
-// Datos de ejemplo para el gráfico
-const data = [
-  { day: "Lun", ventas: 1200 },
-  { day: "Mar", ventas: 1800 },
-  { day: "Mié", ventas: 1500 },
-  { day: "Jue", ventas: 2100 },
-  { day: "Vie", ventas: 2800 },
-  { day: "Sáb", ventas: 2400 },
-  { day: "Dom", ventas: 1000 },
-  { day: "Lun", ventas: 1200 },
-  { day: "Mar", ventas: 1800 },
-  { day: "Mié", ventas: 1500 },
-  { day: "Jue", ventas: 2100 },
-  { day: "Vie", ventas: 3000 },
-  { day: "Sáb", ventas: 2400 },
-  { day: "Dom", ventas: 1000 },
-]
-
-const data2 = [
-  { name: "Cuadernos", value: 35 },
-  { name: "Plumas", value: 20 },
-  { name: "Copias", value: 25 },
-  { name: "Otros", value: 20 },
-]
-
-// Colores para el gráfico
 
 const COLORS = [
   "var(--chart-1)",
@@ -89,19 +128,241 @@ const COLORS = [
   "var(--chart-12)",
 ]
 
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    minimumFractionDigits: 2,
+  }).format(Number(value || 0))
+}
+
+function formatCompactNumber(value: number) {
+  return new Intl.NumberFormat("es-MX").format(Number(value || 0))
+}
+
+function getTrendText(periodo: PeriodoValue) {
+  if (periodo === "dia") return "vs ayer"
+  if (periodo === "semana") return "vs semana pasada"
+  return "vs mes pasado"
+}
+
+function formatLabelDate(value: string) {
+  if (!value) return ""
+
+  if (/^\d{2}:\d{2}$/.test(value)) return value
+
+  if (["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].includes(value)) {
+    return value
+  }
+
+  if (/^\d{1,2}$/.test(value)) {
+    const day = Number(value)
+    const today = new Date()
+    const date = new Date(today.getFullYear(), today.getMonth(), day)
+
+    return new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "short",
+    }).format(date)
+  }
+
+  const parsed = new Date(value)
+  if (!Number.isNaN(parsed.getTime())) {
+    return new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "short",
+    }).format(parsed)
+  }
+
+  return value
+}
+
+function CustomBarTooltip({
+  active,
+  payload,
+  label,
+  prefix = "Ventas",
+  bulletColor = "#6366f1",
+}: CustomBarTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null
+
+  const item = payload[0]
+
+  return (
+    <div className="rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-md">
+      <p className="mb-1 text-sm font-semibold text-black">
+        {formatLabelDate(label || "")}
+      </p>
+
+      <div className="flex items-center gap-2">
+        <span
+          className="h-2.5 w-2.5 rounded-full"
+          style={{ backgroundColor: bulletColor }}
+        />
+        <span className="text-sm text-black">{prefix}:</span>
+        <span className="text-sm font-bold text-black">
+          {formatCurrency(Number(item.value || 0))}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function CustomPieTooltip({ active, payload }: CustomPieTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null
+
+  const item = payload[0]
+
+  return (
+    <div className="rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-md">
+      <p className="mb-1 text-sm font-semibold text-black">{item.name || ""}</p>
+
+      <div className="flex items-center gap-2">
+        <span
+          className="h-2.5 w-2.5 rounded-full"
+          style={{ backgroundColor: "#6366f1" }}
+        />
+        <span className="text-sm text-black">Porcentaje:</span>
+        <span className="text-sm font-bold text-black">
+          {Number(item.value || 0)}%
+        </span>
+      </div>
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<Periodo | null>(
-    periodo[0]
+    periodos[0]
   )
+
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [resumen, setResumen] = useState<ResumenResponse | null>(null)
+  const [graficaVentas, setGraficaVentas] =
+    useState<GraficaVentasResponse | null>(null)
+  const [graficaMargen, setGraficaMargen] =
+    useState<GraficaMargenResponse | null>(null)
+  const [categorias, setCategorias] = useState<CategoriasResponse | null>(null)
+
+  const periodoActual = selectedPeriod?.value ?? "dia"
+
+  useEffect(() => {
+    let cancelado = false
+
+    async function cargarDashboard() {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const [resResumen, resVentas, resMargen, resCategorias] =
+          await Promise.all([
+            fetch(`${API_URL}/dashboard/resumen?periodo=${periodoActual}`, {
+              cache: "no-store",
+            }),
+            fetch(
+              `${API_URL}/dashboard/grafica-ventas?periodo=${periodoActual}`,
+              {
+                cache: "no-store",
+              }
+            ),
+            fetch(
+              `${API_URL}/dashboard/grafica-margen?periodo=${periodoActual}`,
+              {
+                cache: "no-store",
+              }
+            ),
+            fetch(
+              `${API_URL}/dashboard/ventas-categorias?periodo=${periodoActual}`,
+              {
+                cache: "no-store",
+              }
+            ),
+          ])
+
+        if (!resResumen.ok) {
+          throw new Error("No se pudo obtener el resumen del dashboard")
+        }
+        if (!resVentas.ok) {
+          throw new Error("No se pudo obtener la gráfica de ventas")
+        }
+        if (!resMargen.ok) {
+          throw new Error("No se pudo obtener la gráfica de margen")
+        }
+        if (!resCategorias.ok) {
+          throw new Error("No se pudo obtener la gráfica por categoría")
+        }
+
+        const resumenJson: ResumenResponse = await resResumen.json()
+        const ventasJson: GraficaVentasResponse = await resVentas.json()
+        const margenJson: GraficaMargenResponse = await resMargen.json()
+        const categoriasJson: CategoriasResponse = await resCategorias.json()
+
+        if (cancelado) return
+
+        setResumen(resumenJson)
+        setGraficaVentas(ventasJson)
+        setGraficaMargen(margenJson)
+        setCategorias(categoriasJson)
+      } catch (err) {
+        if (cancelado) return
+        const mensaje =
+          err instanceof Error
+            ? err.message
+            : "Ocurrió un error al cargar el dashboard"
+        setError(mensaje)
+      } finally {
+        if (!cancelado) {
+          setLoading(false)
+        }
+      }
+    }
+
+    cargarDashboard()
+
+    return () => {
+      cancelado = true
+    }
+  }, [periodoActual])
+
+  const ventasData = useMemo(() => {
+    return (
+      graficaVentas?.data.map((item) => ({
+        day: item.label,
+        ventas: Number(item.ventas || 0),
+      })) || []
+    )
+  }, [graficaVentas])
+
+  const margenData = useMemo(() => {
+    return (
+      graficaMargen?.data.map((item) => ({
+        day: item.label,
+        margen: Number(item.margen || 0),
+      })) || []
+    )
+  }, [graficaMargen])
+
+  const categoriasData = useMemo(() => {
+    return (
+      categorias?.data.map((item) => ({
+        name: item.name,
+        value: Number(item.value || 0),
+      })) || []
+    )
+  }, [categorias])
+
   return (
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
+
         <div className="mt-2 flex items-center justify-center gap-2">
           <CalendarClockIcon className="ml-4 h-6 w-6" />
           <div className="w-46">
             <Combobox
-              items={periodo}
+              items={periodos}
               value={selectedPeriod}
               onValueChange={(period: Periodo | null) => {
                 setSelectedPeriod(period)
@@ -124,18 +385,26 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="mt-2 grid w-3/5 grid-cols-4 gap-3">
+      {error ? (
+        <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          {error}
+        </div>
+      ) : null}
+
+      <div className="mt-2 grid w-full grid-cols-1 gap-3 md:grid-cols-2 xl:w-3/5 xl:grid-cols-4">
         <Card className="border-border/60 bg-card shadow-md transition-all hover:shadow-lg">
           <CardContent className="flex h-24 items-center justify-between p-4">
             <div>
               <p className="text-sm font-semibold text-muted-foreground">
                 Ventas
               </p>
-              <p className="text-2xl font-bold text-foreground">$8,220.25</p>
+              <p className="text-2xl font-bold text-foreground">
+                {loading ? "..." : formatCurrency(resumen?.resumen.ventas || 0)}
+              </p>
 
               <div className="flex items-center gap-1 text-xs text-emerald-600">
                 <TrendingUp className="h-4 w-4" />
-                <span>+12.4%</span>
+                <span>{getTrendText(periodoActual)}</span>
               </div>
             </div>
 
@@ -151,11 +420,15 @@ export default function DashboardPage() {
               <p className="text-sm font-semibold text-muted-foreground">
                 Tickets
               </p>
-              <p className="text-2xl font-bold text-foreground">124</p>
+              <p className="text-2xl font-bold text-foreground">
+                {loading
+                  ? "..."
+                  : formatCompactNumber(resumen?.resumen.tickets || 0)}
+              </p>
 
               <div className="flex items-center gap-1 text-xs text-emerald-600">
                 <TrendingUp className="h-4 w-4" />
-                <span>+8.1%</span>
+                <span>{getTrendText(periodoActual)}</span>
               </div>
             </div>
 
@@ -171,11 +444,15 @@ export default function DashboardPage() {
               <p className="text-sm font-semibold text-muted-foreground">
                 Ticket Promedio
               </p>
-              <p className="text-2xl font-bold text-foreground">$66.29</p>
+              <p className="text-2xl font-bold text-foreground">
+                {loading
+                  ? "..."
+                  : formatCurrency(resumen?.resumen.ticketPromedio || 0)}
+              </p>
 
-              <div className="flex items-center gap-1 text-xs text-rose-600">
-                <TrendingDown className="h-4 w-4" />
-                <span>-3.2%</span>
+              <div className="flex items-center gap-1 text-xs text-amber-600">
+                <Receipt className="h-4 w-4" />
+                <span>{getTrendText(periodoActual)}</span>
               </div>
             </div>
 
@@ -191,11 +468,15 @@ export default function DashboardPage() {
               <p className="text-sm font-semibold text-muted-foreground">
                 Stock Bajo
               </p>
-              <p className="text-2xl font-bold text-foreground">9</p>
+              <p className="text-2xl font-bold text-foreground">
+                {loading
+                  ? "..."
+                  : formatCompactNumber(resumen?.resumen.stockBajo || 0)}
+              </p>
 
               <div className="flex items-center gap-1 text-xs text-rose-600">
                 <TrendingDown className="h-4 w-4" />
-                <span>-5.6%</span>
+                <span>requiere atención</span>
               </div>
             </div>
 
@@ -205,22 +486,31 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
       <div className="my-4 mb-4 h-auto rounded-lg border border-muted-foreground">
         <ResponsiveContainer width="100%" height={330}>
           <BarChart
-            data={data}
+            data={ventasData}
             margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
           >
             <XAxis
               dataKey="day"
+              tickFormatter={formatLabelDate}
               label={{
-                value: `Ventas por ${selectedPeriod?.label.toLowerCase()}`,
+                value:
+                  graficaVentas?.descripcion ||
+                  `Ventas por ${selectedPeriod?.label.toLowerCase()}`,
                 position: "bottom",
                 offset: 10,
               }}
             />
             <YAxis />
-            <Tooltip />
+            <Tooltip
+              content={
+                <CustomBarTooltip prefix="Ventas" bulletColor="#a855f7" />
+              }
+              wrapperStyle={{ outline: "none" }}
+            />
             <Bar
               dataKey="ventas"
               fill="var(--chart-12)"
@@ -229,25 +519,34 @@ export default function DashboardPage() {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="mt-2 h-[380px] rounded-lg border border-muted-foreground p-4">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data}
+              data={margenData}
               margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
             >
               <XAxis
                 dataKey="day"
+                tickFormatter={formatLabelDate}
                 label={{
-                  value: "Margen de Ganancia por día",
+                  value:
+                    graficaMargen?.descripcion ||
+                    `Margen de ganancia por ${selectedPeriod?.label.toLowerCase()}`,
                   position: "bottom",
                   offset: 10,
                 }}
               />
               <YAxis />
-              <Tooltip />
+              <Tooltip
+                content={
+                  <CustomBarTooltip prefix="Margen" bulletColor="#f59e0b" />
+                }
+                wrapperStyle={{ outline: "none" }}
+              />
               <Bar
-                dataKey="ventas"
+                dataKey="margen"
                 fill="var(--chart-5)"
                 radius={[6, 6, 0, 0]}
               />
@@ -256,29 +555,32 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-2 h-[380px] rounded-lg border border-muted-foreground p-4">
-          <h3 className="font-lg mb-2 text-center text-xl text-foreground">
-            Porcentaje de Venta por Categoria
+          <h3 className="mb-2 text-center text-xl text-foreground">
+            {categorias?.descripcion || "Porcentaje de Venta por Categoría"}
           </h3>
 
           <ResponsiveContainer width="100%" height="100%">
             <PieChart margin={{ top: 10, right: 10, bottom: 30, left: 10 }}>
               <Pie
-                data={data2}
+                data={categoriasData}
                 dataKey="value"
                 nameKey="name"
                 innerRadius={70}
                 outerRadius={120}
                 paddingAngle={3}
               >
-                {data2.map((entry, index) => (
+                {categoriasData.map((entry, index) => (
                   <Cell
-                    key={`cell-${index}`}
+                    key={`cell-${entry.name}-${index}`}
                     fill={COLORS[index % COLORS.length]}
                   />
                 ))}
               </Pie>
 
-              <Tooltip />
+              <Tooltip
+                content={<CustomPieTooltip />}
+                wrapperStyle={{ outline: "none" }}
+              />
               <Legend verticalAlign="bottom" height={36} />
             </PieChart>
           </ResponsiveContainer>
