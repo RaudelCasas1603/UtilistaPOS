@@ -36,6 +36,8 @@ import {
   LogOut,
   FileCheck,
   HandCoins,
+  History,
+  TicketX,
 } from "lucide-react"
 
 export default function AppSidebar() {
@@ -184,6 +186,34 @@ export default function AppSidebar() {
               <Truck className="h-7 w-7 shrink-0" />
               {!collapsed && (
                 <span className="text-lg font-medium">Provedores</span>
+              )}
+            </Link>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <Link
+              href="/historial-ventas"
+              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
+                collapsed ? "justify-center px-0" : "gap-4 px-4"
+              }`}
+            >
+              <History className="h-7 w-7 shrink-0" />
+              {!collapsed && (
+                <span className="text-lg font-medium">Historial de Ventas</span>
+              )}
+            </Link>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <Link
+              href="/devoluciones"
+              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
+                collapsed ? "justify-center px-0" : "gap-4 px-4"
+              }`}
+            >
+              <TicketX className="h-7 w-7 shrink-0" />
+              {!collapsed && (
+                <span className="text-lg font-medium">Devoluciones</span>
               )}
             </Link>
           </SidebarMenuItem>

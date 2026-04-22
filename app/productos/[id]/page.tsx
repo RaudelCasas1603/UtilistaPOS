@@ -21,6 +21,8 @@ import {
   DollarSign,
   Coins,
   Boxes,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -75,25 +77,49 @@ type ProductoDetalle = {
   ventas: VentaGrafica[]
 }
 
+type MovimientoTipo = "entrada" | "salida" | "ajuste"
+
+type MovimientoInventario = {
+  id: number
+  id_producto: number
+  tipo_movimiento: MovimientoTipo
+  cantidad: number
+  stock_anterior: number
+  stock_nuevo: number
+  motivo: string | null
+  id_usuario: number
+  id_venta: number | null
+  created_at: string
+}
+
+type MovimientosResponse = {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+  data: MovimientoInventario[]
+}
+
 function SalesTooltip({ active, payload, label }: SalesTooltipProps) {
   if (!active || !payload || payload.length === 0) return null
 
   const item = payload[0]
 
   return (
-    <div className="bg-popover text-popover-foreground rounded-lg border border-border bg-card px-3 py-2 shadow-md">
-      <p className="mb-1 text-base font-semibold">{label}</p>
+    <div className="rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-md">
+      <p className="mb-1 text-base font-semibold text-black">{label}</p>
       <div className="flex items-center gap-2">
         <span
           className="h-2.5 w-2.5 rounded-full"
           style={{ backgroundColor: "#6366f1" }}
         />
-        <span className="text-sm text-muted-foreground">Unidades:</span>
-        <span className="text-sm font-bold">{item.value}</span>
+        <span className="text-sm text-black">Unidades:</span>
+        <span className="text-sm font-bold text-black">{item.value}</span>
       </div>
     </div>
   )
 }
+
 function formatearFechaCorta(fecha: string) {
   if (!fecha) return "-"
 
@@ -107,6 +133,21 @@ function formatearFechaCorta(fecha: string) {
   return date.toLocaleDateString("es-MX", {
     day: "2-digit",
     month: "short",
+  })
+}
+
+function formatearFechaHora(fecha: string) {
+  if (!fecha) return "-"
+
+  const date = new Date(fecha)
+  if (Number.isNaN(date.getTime())) return fecha
+
+  return date.toLocaleString("es-MX", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   })
 }
 
@@ -134,6 +175,16 @@ function mapApiProductoToDetalle(
   }
 }
 
+function getBadgeTipoMovimiento(tipo: MovimientoTipo) {
+  if (tipo === "entrada") {
+    return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+  }
+  if (tipo === "salida") {
+    return "bg-rose-500/15 text-rose-700 dark:text-rose-400"
+  }
+  return "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+}
+
 export default function ProductoDetallePage({ params }: Props) {
   const { id } = use(params)
 
@@ -142,10 +193,24 @@ export default function ProductoDetallePage({ params }: Props) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+  const [errorMovimientos, setErrorMovimientos] = useState("")
+  const [paginaMovimientos, setPaginaMovimientos] = useState(1)
+  const [loadingMovimientos, setLoadingMovimientos] = useState(false)
 
   const [producto, setProducto] = useState<ProductoDetalle | null>(null)
+  const [movimientos, setMovimientos] = useState<MovimientoInventario[]>([])
+  const [totalMovimientos, setTotalMovimientos] = useState(0)
+  const [totalPaginasMovimientos, setTotalPaginasMovimientos] = useState(1)
+
+  const movimientosPorPagina = 6
 
   useEffect(() => {
+    setPaginaMovimientos(1)
+  }, [id])
+
+  useEffect(() => {
+    let cancelado = false
+
     const fetchProducto = async () => {
       try {
         setLoading(true)
@@ -173,17 +238,84 @@ export default function ProductoDetallePage({ params }: Props) {
           ventasMapeadas = mapApiVentasToGrafica(ventasResult)
         }
 
+        if (cancelado) return
         setProducto(mapApiProductoToDetalle(productoResult, ventasMapeadas))
       } catch (err) {
         console.error(err)
+        if (cancelado) return
         setError("No se pudo cargar la información del producto")
       } finally {
-        setLoading(false)
+        if (!cancelado) {
+          setLoading(false)
+        }
       }
     }
 
-    fetchProducto()
+    if (id) {
+      fetchProducto()
+    }
+
+    return () => {
+      cancelado = true
+    }
   }, [id])
+
+  useEffect(() => {
+    let cancelado = false
+
+    const fetchMovimientos = async () => {
+      try {
+        setLoadingMovimientos(true)
+        setErrorMovimientos("")
+
+        const response = await fetch(
+          `${API_URL}/mov-inventario/producto/${id}?page=${paginaMovimientos}&limit=${movimientosPorPagina}`,
+          {
+            cache: "no-store",
+          }
+        )
+
+        const result = await response.json()
+
+        if (!response.ok) {
+          throw new Error(
+            result?.message || "No se pudieron cargar los movimientos"
+          )
+        }
+
+        if (cancelado) return
+
+        setMovimientos(Array.isArray(result.data) ? result.data : [])
+        setTotalMovimientos(Number(result.total || 0))
+        setTotalPaginasMovimientos(Math.max(Number(result.totalPages || 1), 1))
+      } catch (err) {
+        console.error("Error cargando movimientos:", err)
+
+        if (cancelado) return
+
+        setMovimientos([])
+        setTotalMovimientos(0)
+        setTotalPaginasMovimientos(1)
+        setErrorMovimientos(
+          err instanceof Error
+            ? err.message
+            : "No se pudieron cargar los movimientos"
+        )
+      } finally {
+        if (!cancelado) {
+          setLoadingMovimientos(false)
+        }
+      }
+    }
+
+    if (id) {
+      fetchMovimientos()
+    }
+
+    return () => {
+      cancelado = true
+    }
+  }, [id, paginaMovimientos])
 
   const handleInputChange = (
     field:
@@ -344,8 +476,8 @@ export default function ProductoDetallePage({ params }: Props) {
   }
 
   return (
-    <div className="h-full overflow-hidden bg-background p-4 xl:p-5">
-      <div className="mx-auto flex h-full max-w-[90%] flex-col gap-4">
+    <div className="h-full overflow-y-auto bg-background p-4 [scrollbar-width:none] xl:p-5 [&::-webkit-scrollbar]:hidden">
+      <div className="mx-auto flex max-w-[90%] flex-col gap-4">
         {showAlert && (
           <Alert className="border-green-400 bg-green-400">
             <CheckCircle2 className="h-4 w-4 text-green-800" />
@@ -649,6 +781,162 @@ export default function ProductoDetallePage({ params }: Props) {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+          </div>
+
+          <div className="mt-6">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">
+                  Últimos 30 movimientos
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Historial reciente del inventario del producto
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-muted-foreground">
+                Página {paginaMovimientos} de {totalPaginasMovimientos}
+              </div>
+            </div>
+
+            {errorMovimientos ? (
+              <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {errorMovimientos}
+              </div>
+            ) : null}
+
+            <div className="overflow-hidden rounded-2xl border border-border">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[920px] text-sm">
+                  <thead className="bg-muted/40">
+                    <tr className="border-b border-border">
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">
+                        ID
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">
+                        Tipo
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">
+                        Cantidad
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">
+                        Stock anterior
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">
+                        Stock nuevo
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">
+                        Motivo
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">
+                        Venta
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">
+                        Fecha
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="bg-card">
+                    {movimientos.map((mov) => (
+                      <tr
+                        key={mov.id}
+                        className="border-b border-border/70 transition hover:bg-muted/30"
+                      >
+                        <td className="px-4 py-3 text-foreground">{mov.id}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${getBadgeTipoMovimiento(
+                              mov.tipo_movimiento
+                            )}`}
+                          >
+                            {mov.tipo_movimiento}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-medium text-foreground">
+                          {mov.cantidad}
+                        </td>
+                        <td className="px-4 py-3 text-foreground">
+                          {mov.stock_anterior}
+                        </td>
+                        <td className="px-4 py-3 text-foreground">
+                          {mov.stock_nuevo}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {mov.motivo || "-"}
+                        </td>
+                        <td className="px-4 py-3 text-foreground">
+                          {mov.id_venta ?? "-"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {formatearFechaHora(mov.created_at)}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {!loadingMovimientos && movimientos.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="px-4 py-8 text-center text-muted-foreground"
+                        >
+                          No hay movimientos para mostrar.
+                        </td>
+                      </tr>
+                    )}
+
+                    {loadingMovimientos && (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="px-4 py-8 text-center text-muted-foreground"
+                        >
+                          Cargando movimientos...
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-border bg-background px-4 py-3">
+                <p className="text-sm text-muted-foreground">
+                  Mostrando {movimientos.length} de {totalMovimientos}{" "}
+                  movimientos
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPaginaMovimientos((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={paginaMovimientos === 1 || loadingMovimientos}
+                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Anterior
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPaginaMovimientos((prev) =>
+                        Math.min(totalPaginasMovimientos, prev + 1)
+                      )
+                    }
+                    disabled={
+                      paginaMovimientos === totalPaginasMovimientos ||
+                      loadingMovimientos
+                    }
+                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Siguiente
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
