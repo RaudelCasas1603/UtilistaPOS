@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,14 +11,15 @@ import {
   Wallet,
 } from "lucide-react"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card"
 import {
   Table,
@@ -28,7 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 
 type Venta = {
   id: number
@@ -39,276 +39,21 @@ type Venta = {
   metodoPago: "efectivo" | "tarjeta" | "transferencia"
   totalArticulos: number
   total: number
-  estatus: "finalizada" | "cancelada" | "pendiente"
+  estatus: "finalizada" | "pendiente" | "cancelada"
 }
 
-const ventasDummy: Venta[] = [
-  {
-    id: 1,
-    folio: "V-00001",
-    fecha: "2026-04-01",
-    hora: "09:15 AM",
-    cliente: "Cliente general",
-    metodoPago: "efectivo",
-    totalArticulos: 3,
-    total: 126.5,
-    estatus: "finalizada",
-  },
-  {
-    id: 2,
-    folio: "V-00002",
-    fecha: "2026-04-01",
-    hora: "09:42 AM",
-    cliente: "María López",
-    metodoPago: "tarjeta",
-    totalArticulos: 5,
-    total: 248.0,
-    estatus: "finalizada",
-  },
-  {
-    id: 3,
-    folio: "V-00003",
-    fecha: "2026-04-01",
-    hora: "10:10 AM",
-    cliente: "Juan Pérez",
-    metodoPago: "transferencia",
-    totalArticulos: 2,
-    total: 89.9,
-    estatus: "pendiente",
-  },
-  {
-    id: 4,
-    folio: "V-00004",
-    fecha: "2026-04-01",
-    hora: "10:35 AM",
-    cliente: "Cliente general",
-    metodoPago: "efectivo",
-    totalArticulos: 6,
-    total: 310.0,
-    estatus: "finalizada",
-  },
-  {
-    id: 5,
-    folio: "V-00005",
-    fecha: "2026-04-01",
-    hora: "11:00 AM",
-    cliente: "Ana Torres",
-    metodoPago: "tarjeta",
-    totalArticulos: 1,
-    total: 45.0,
-    estatus: "finalizada",
-  },
-  {
-    id: 6,
-    folio: "V-00006",
-    fecha: "2026-04-01",
-    hora: "11:28 AM",
-    cliente: "Luis Ramírez",
-    metodoPago: "efectivo",
-    totalArticulos: 8,
-    total: 520.0,
-    estatus: "cancelada",
-  },
-  {
-    id: 7,
-    folio: "V-00007",
-    fecha: "2026-04-01",
-    hora: "12:03 PM",
-    cliente: "Cliente general",
-    metodoPago: "transferencia",
-    totalArticulos: 4,
-    total: 172.4,
-    estatus: "finalizada",
-  },
-  {
-    id: 8,
-    folio: "V-00008",
-    fecha: "2026-04-01",
-    hora: "12:50 PM",
-    cliente: "Sofía Herrera",
-    metodoPago: "tarjeta",
-    totalArticulos: 7,
-    total: 689.0,
-    estatus: "finalizada",
-  },
-  {
-    id: 9,
-    folio: "V-00009",
-    fecha: "2026-04-01",
-    hora: "01:15 PM",
-    cliente: "Cliente general",
-    metodoPago: "efectivo",
-    totalArticulos: 2,
-    total: 78.0,
-    estatus: "pendiente",
-  },
-  {
-    id: 10,
-    folio: "V-00010",
-    fecha: "2026-04-01",
-    hora: "01:40 PM",
-    cliente: "Carlos Medina",
-    metodoPago: "tarjeta",
-    totalArticulos: 9,
-    total: 845.6,
-    estatus: "finalizada",
-  },
-  {
-    id: 11,
-    folio: "V-00011",
-    fecha: "2026-04-02",
-    hora: "09:05 AM",
-    cliente: "Cliente general",
-    metodoPago: "efectivo",
-    totalArticulos: 2,
-    total: 63.5,
-    estatus: "finalizada",
-  },
-  {
-    id: 12,
-    folio: "V-00012",
-    fecha: "2026-04-02",
-    hora: "09:48 AM",
-    cliente: "Fernanda Ruiz",
-    metodoPago: "transferencia",
-    totalArticulos: 3,
-    total: 184.0,
-    estatus: "finalizada",
-  },
-  {
-    id: 13,
-    folio: "V-00013",
-    fecha: "2026-04-02",
-    hora: "10:30 AM",
-    cliente: "Cliente general",
-    metodoPago: "tarjeta",
-    totalArticulos: 5,
-    total: 299.9,
-    estatus: "cancelada",
-  },
-  {
-    id: 14,
-    folio: "V-00014",
-    fecha: "2026-04-02",
-    hora: "11:12 AM",
-    cliente: "Roberto Díaz",
-    metodoPago: "efectivo",
-    totalArticulos: 4,
-    total: 156.0,
-    estatus: "finalizada",
-  },
-  {
-    id: 15,
-    folio: "V-00015",
-    fecha: "2026-04-02",
-    hora: "12:22 PM",
-    cliente: "Cliente general",
-    metodoPago: "tarjeta",
-    totalArticulos: 10,
-    total: 920.0,
-    estatus: "finalizada",
-  },
-  {
-    id: 16,
-    folio: "V-00016",
-    fecha: "2026-04-02",
-    hora: "01:05 PM",
-    cliente: "Daniela Cruz",
-    metodoPago: "transferencia",
-    totalArticulos: 1,
-    total: 35.0,
-    estatus: "pendiente",
-  },
-  {
-    id: 17,
-    folio: "V-00017",
-    fecha: "2026-04-02",
-    hora: "02:10 PM",
-    cliente: "Cliente general",
-    metodoPago: "efectivo",
-    totalArticulos: 6,
-    total: 410.5,
-    estatus: "finalizada",
-  },
-  {
-    id: 18,
-    folio: "V-00018",
-    fecha: "2026-04-02",
-    hora: "03:20 PM",
-    cliente: "Patricia Gómez",
-    metodoPago: "tarjeta",
-    totalArticulos: 3,
-    total: 132.0,
-    estatus: "finalizada",
-  },
-  {
-    id: 19,
-    folio: "V-00019",
-    fecha: "2026-04-02",
-    hora: "04:00 PM",
-    cliente: "Cliente general",
-    metodoPago: "efectivo",
-    totalArticulos: 7,
-    total: 560.75,
-    estatus: "finalizada",
-  },
-  {
-    id: 20,
-    folio: "V-00020",
-    fecha: "2026-04-02",
-    hora: "04:45 PM",
-    cliente: "Miguel Santos",
-    metodoPago: "transferencia",
-    totalArticulos: 2,
-    total: 98.0,
-    estatus: "cancelada",
-  },
-  {
-    id: 21,
-    folio: "V-00021",
-    fecha: "2026-04-03",
-    hora: "09:25 AM",
-    cliente: "Cliente general",
-    metodoPago: "tarjeta",
-    totalArticulos: 5,
-    total: 278.3,
-    estatus: "finalizada",
-  },
-  {
-    id: 22,
-    folio: "V-00022",
-    fecha: "2026-04-03",
-    hora: "10:40 AM",
-    cliente: "Laura Navarro",
-    metodoPago: "efectivo",
-    totalArticulos: 4,
-    total: 149.0,
-    estatus: "finalizada",
-  },
-  {
-    id: 23,
-    folio: "V-00023",
-    fecha: "2026-04-03",
-    hora: "11:18 AM",
-    cliente: "Cliente general",
-    metodoPago: "transferencia",
-    totalArticulos: 2,
-    total: 84.0,
-    estatus: "pendiente",
-  },
-  {
-    id: 24,
-    folio: "V-00024",
-    fecha: "2026-04-03",
-    hora: "12:55 PM",
-    cliente: "Andrea Flores",
-    metodoPago: "tarjeta",
-    totalArticulos: 8,
-    total: 615.4,
-    estatus: "finalizada",
-  },
-]
+type ApiVenta = {
+  id: number
+  folio: string
+  fecha_hora: string
+  cliente_nombre?: string | null
+  metodo_pago: "efectivo" | "tarjeta" | "transferencia"
+  total_articulos: number
+  total: number | string
+  estatus: "finalizada" | "pendiente" | "cancelada"
+}
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
 const ITEMS_PER_PAGE = 10
 
 function formatCurrency(value: number) {
@@ -344,25 +89,113 @@ function getMetodoPagoLabel(method: Venta["metodoPago"]) {
   }
 }
 
+function formatFecha(isoDate: string) {
+  const date = new Date(isoDate)
+
+  if (Number.isNaN(date.getTime())) return "-"
+
+  return new Intl.DateTimeFormat("es-MX", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date)
+}
+
+function formatHora(isoDate: string) {
+  const date = new Date(isoDate)
+
+  if (Number.isNaN(date.getTime())) return "-"
+
+  return new Intl.DateTimeFormat("es-MX", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date)
+}
+
 export default function HistorialVentasPage() {
+  const [ventas, setVentas] = useState<Venta[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [search, setSearch] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
 
+  useEffect(() => {
+    let ignore = false
+
+    async function cargarVentas() {
+      try {
+        setLoading(true)
+        setError("")
+
+        const res = await fetch(`${API_URL}/ventas/finalizadas`, {
+          cache: "no-store",
+        })
+
+        if (!res.ok) {
+          throw new Error("No se pudieron cargar las ventas finalizadas")
+        }
+
+        const data: ApiVenta[] = await res.json()
+
+        if (ignore) return
+
+       const ventasMapeadas: Venta[] = data.map((venta) => ({
+         id: Number(venta.id ?? 0),
+         folio: String(
+           venta.folio ?? `V-${String(venta.id ?? 0).padStart(5, "0")}`
+         ),
+         fecha: formatFecha(String(venta.fecha_hora ?? "")),
+         hora: formatHora(String(venta.fecha_hora ?? "")),
+         cliente: String(venta.cliente_nombre ?? "Cliente general"),
+         metodoPago: (venta.metodo_pago ?? "efectivo") as Venta["metodoPago"],
+         totalArticulos: Number(venta.total_articulos ?? 0),
+         total: Number(venta.total ?? 0),
+         estatus: (venta.estatus ?? "pendiente") as Venta["estatus"],
+       }))
+
+        setVentas(ventasMapeadas)
+      } catch (err) {
+        console.error("Error al cargar historial de ventas:", err)
+        if (!ignore) {
+          setError("No fue posible cargar el historial de ventas.")
+          setVentas([])
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false)
+        }
+      }
+    }
+
+    cargarVentas()
+
+    return () => {
+      ignore = true
+    }
+  }, [])
+
   const ventasFiltradas = useMemo(() => {
-    const term = search.trim().toLowerCase()
+  const term = search.trim().toLowerCase()
 
-    if (!term) return ventasDummy
+  if (!term) return ventas
 
-    return ventasDummy.filter((venta) => {
-      return (
-        venta.folio.toLowerCase().includes(term) ||
-        venta.cliente.toLowerCase().includes(term) ||
-        venta.metodoPago.toLowerCase().includes(term) ||
-        venta.estatus.toLowerCase().includes(term) ||
-        String(venta.id).includes(term)
-      )
-    })
-  }, [search])
+  return ventas.filter((venta) => {
+    const folio = String(venta.folio ?? "").toLowerCase()
+    const cliente = String(venta.cliente ?? "").toLowerCase()
+    const metodoPago = String(venta.metodoPago ?? "").toLowerCase()
+    const estatus = String(venta.estatus ?? "").toLowerCase()
+    const id = String(venta.id ?? "")
+
+    return (
+      folio.includes(term) ||
+      cliente.includes(term) ||
+      metodoPago.includes(term) ||
+      estatus.includes(term) ||
+      id.includes(term)
+    )
+  })
+}, [ventas, search])
 
   const totalPages = Math.ceil(ventasFiltradas.length / ITEMS_PER_PAGE)
 
@@ -373,8 +206,10 @@ export default function HistorialVentasPage() {
   }, [currentPage, ventasFiltradas])
 
   const totalVentas = useMemo(() => {
-    return ventasFiltradas.reduce((acc, venta) => acc + venta.total, 0)
-  }, [ventasFiltradas])
+    return ventas
+      .filter((venta) => venta.estatus === "finalizada")
+      .reduce((acc, venta) => acc + venta.total, 0)
+  }, [ventas])
 
   const handleSearchChange = (value: string) => {
     setSearch(value)
@@ -406,7 +241,7 @@ export default function HistorialVentasPage() {
             <CardDescription>Total de ventas</CardDescription>
             <CardTitle className="flex items-center gap-2 text-2xl">
               <ReceiptText className="h-5 w-5" />
-              {ventasFiltradas.length}
+              {loading ? "..." : ventasFiltradas.length}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -416,7 +251,7 @@ export default function HistorialVentasPage() {
             <CardDescription>Monto acumulado</CardDescription>
             <CardTitle className="flex items-center gap-2 text-2xl">
               <Wallet className="h-5 w-5" />
-              {formatCurrency(totalVentas)}
+              {loading ? "..." : formatCurrency(totalVentas)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -425,7 +260,9 @@ export default function HistorialVentasPage() {
           <CardHeader className="pb-2">
             <CardDescription>Página actual</CardDescription>
             <CardTitle className="text-2xl">
-              {totalPages > 0 ? currentPage : 0} / {totalPages || 0}
+              {loading
+                ? "..."
+                : `${totalPages > 0 ? currentPage : 0} / ${totalPages || 0}`}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -445,7 +282,7 @@ export default function HistorialVentasPage() {
             <Input
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Buscar por folio, cliente, método o estatus..."
+              placeholder="Buscar por folio, cliente, método o estatus."
               className="pl-9"
             />
           </div>
@@ -470,7 +307,25 @@ export default function HistorialVentasPage() {
               </TableHeader>
 
               <TableBody>
-                {ventasPaginadas.length > 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={10}
+                      className="py-10 text-center text-muted-foreground"
+                    >
+                      Cargando ventas...
+                    </TableCell>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={10}
+                      className="py-10 text-center text-destructive"
+                    >
+                      {error}
+                    </TableCell>
+                  </TableRow>
+                ) : ventasPaginadas.length > 0 ? (
                   ventasPaginadas.map((venta) => (
                     <TableRow key={venta.id}>
                       <TableCell className="font-medium">{venta.id}</TableCell>
@@ -532,7 +387,7 @@ export default function HistorialVentasPage() {
                 variant="outline"
                 size="sm"
                 onClick={goToPreviousPage}
-                disabled={currentPage === 1 || totalPages === 0}
+                disabled={currentPage === 1 || totalPages === 0 || loading}
               >
                 <ChevronLeft className="mr-1 h-4 w-4" />
                 Anterior
@@ -546,7 +401,9 @@ export default function HistorialVentasPage() {
                 variant="outline"
                 size="sm"
                 onClick={goToNextPage}
-                disabled={currentPage === totalPages || totalPages === 0}
+                disabled={
+                  currentPage === totalPages || totalPages === 0 || loading
+                }
               >
                 Siguiente
                 <ChevronRight className="ml-1 h-4 w-4" />

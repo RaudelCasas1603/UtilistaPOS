@@ -1,4 +1,6 @@
 import Link from "next/link"
+import MarcarDevolucionButton from "./MarcarDevolucionButton"
+
 import {
   ArrowLeft,
   CalendarDays,
@@ -40,8 +42,11 @@ type VentaDetalle = {
   cliente: {
     id: number
     nombre: string
+    telefono?: string
+    correo?: string
   }
   usuario: string
+  usuarioId: number
   metodoPago: "efectivo" | "tarjeta" | "transferencia"
   estatus: "finalizada" | "pendiente" | "cancelada"
   subtotal: number
@@ -50,6 +55,7 @@ type VentaDetalle = {
   totalArticulos: number
   items: Array<{
     id: number
+    idProducto: number
     producto: string
     codigo: string
     cantidad: number
@@ -58,119 +64,66 @@ type VentaDetalle = {
   }>
 }
 
-const ventasDummy: VentaDetalle[] = [
-  {
-    id: 1,
-    folio: "V-00001",
-    fecha: "2026-04-21",
-    hora: "11:24 AM",
-    cliente: {
-      id: 1,
-      nombre: "Cliente general",
-    },
-    usuario: "Administrador",
-    metodoPago: "efectivo",
-    estatus: "finalizada",
-    subtotal: 86,
-    descuento: 0,
-    total: 86,
-    totalArticulos: 2,
-    items: [
-      {
-        id: 1,
-        producto: "Libreta francesa cuadro 100 hojas",
-        codigo: "P005",
-        cantidad: 2,
-        precioUnitario: 43,
-        importe: 86,
-      },
-      {
-        id: 2,
-        producto: "Lápiz mirado HB",
-        codigo: "P014",
-        cantidad: 1,
-        precioUnitario: 18,
-        importe: 18,
-      },
-      {
-        id: 3,
-        producto: "Borrador blanco",
-        codigo: "P018",
-        cantidad: 2,
-        precioUnitario: 9,
-        importe: 18,
-      },
-    ],
-  },
-  {
-    id: 2,
-    folio: "V-00002",
-    fecha: "2026-04-21",
-    hora: "12:10 PM",
-    cliente: {
-      id: 2,
-      nombre: "María López",
-    },
-    usuario: "Cajero 1",
-    metodoPago: "tarjeta",
-    estatus: "finalizada",
-    subtotal: 248,
-    descuento: 18,
-    total: 230,
-    totalArticulos: 5,
-    items: [
-      {
-        id: 1,
-        producto: "Cuaderno profesional raya",
-        codigo: "P010",
-        cantidad: 2,
-        precioUnitario: 52,
-        importe: 104,
-      },
-      {
-        id: 2,
-        producto: "Pluma tinta azul",
-        codigo: "P021",
-        cantidad: 3,
-        precioUnitario: 48,
-        importe: 144,
-      },
-    ],
-  },
-  {
-    id: 3,
-    folio: "V-00003",
-    fecha: "2026-04-21",
-    hora: "01:45 PM",
-    cliente: {
-      id: 3,
-      nombre: "Juan Pérez",
-    },
-    usuario: "Administrador",
-    metodoPago: "transferencia",
-    estatus: "pendiente",
-    subtotal: 150,
-    descuento: 0,
-    total: 150,
-    totalArticulos: 3,
-    items: [
-      {
-        id: 1,
-        producto: "Resaltador amarillo",
-        codigo: "P032",
-        cantidad: 3,
-        precioUnitario: 50,
-        importe: 150,
-      },
-    ],
-  },
-]
+type ApiVentaDetalle = {
+  id: number
+  folio?: string | null
+  fecha_hora?: string | null
+  id_cliente?: number | null
+  id_usuario?: number | null
+  subtotal?: number | string | null
+  descuento?: number | string | null
+  metodo_pago?: "efectivo" | "tarjeta" | "transferencia" | null
+  total?: number | string | null
+  total_articulos?: number | null
+  estatus?: "finalizada" | "pendiente" | "cancelada" | null
+  cliente_nombre?: string | null
+  cliente_telefono?: string | null
+  cliente_correo?: string | null
+  items?: Array<{
+    id: number
+    id_producto?: number | null
+    nombre?: string | null
+    codigo_producto?: string | null
+    cantidad?: number | string | null
+    precio_unitario?: number | string | null
+    descuento_unitario?: number | string | null
+    subtotal?: number | string | null
+  }>
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
   }).format(value)
+}
+
+function formatFecha(isoDate?: string | null) {
+  if (!isoDate) return "-"
+
+  const date = new Date(isoDate)
+  if (Number.isNaN(date.getTime())) return "-"
+
+  return new Intl.DateTimeFormat("es-MX", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date)
+}
+
+function formatHora(isoDate?: string | null) {
+  if (!isoDate) return "-"
+
+  const date = new Date(isoDate)
+  if (Number.isNaN(date.getTime())) return "-"
+
+  return new Intl.DateTimeFormat("es-MX", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date)
 }
 
 function getMetodoPagoLabel(metodo: VentaDetalle["metodoPago"]) {
@@ -199,16 +152,67 @@ function getBadgeVariantByStatus(status: VentaDetalle["estatus"]) {
   }
 }
 
+async function getVentaById(id: string): Promise<VentaDetalle | null> {
+  const res = await fetch(`${API_URL}/ventas/${id}`, {
+    cache: "no-store",
+  })
+
+  if (res.status === 404) {
+    return null
+  }
+
+  if (!res.ok) {
+    throw new Error("No se pudo cargar la venta")
+  }
+
+  const venta: ApiVentaDetalle | null = await res.json()
+
+  if (!venta) return null
+
+  return {
+    id: Number(venta.id ?? 0),
+    folio:
+      String(venta.folio ?? "").trim() ||
+      `V-${String(venta.id ?? 0).padStart(5, "0")}`,
+    fecha: formatFecha(venta.fecha_hora),
+    hora: formatHora(venta.fecha_hora),
+    cliente: {
+      id: Number(venta.id_cliente ?? 0),
+      nombre: String(venta.cliente_nombre ?? "Cliente general"),
+      telefono: venta.cliente_telefono ?? "",
+      correo: venta.cliente_correo ?? "",
+    },
+    usuario: venta.id_usuario ? `Usuario ${venta.id_usuario}` : "Sin usuario",
+    usuarioId: Number(venta.id_usuario ?? 0),
+    metodoPago: (venta.metodo_pago ?? "efectivo") as VentaDetalle["metodoPago"],
+    estatus: (venta.estatus ?? "pendiente") as VentaDetalle["estatus"],
+    subtotal: Number(venta.subtotal ?? 0),
+    descuento: Number(venta.descuento ?? 0),
+    total: Number(venta.total ?? 0),
+    totalArticulos: Number(venta.total_articulos ?? 0),
+    items: Array.isArray(venta.items)
+      ? venta.items.map((item) => ({
+          id: Number(item.id ?? 0),
+          idProducto: Number(item.id_producto ?? 0),
+          producto: String(item.nombre ?? "Producto"),
+          codigo: String(item.codigo_producto ?? "-"),
+          cantidad: Number(item.cantidad ?? 0),
+          precioUnitario: Number(item.precio_unitario ?? 0),
+          importe: Number(item.subtotal ?? 0),
+        }))
+      : [],
+  }
+}
+
 export default async function VentaDetallePage({ params }: Props) {
   const { id } = await params
-
-  const venta = ventasDummy.find((item) => item.id === Number(id))
+  const venta = await getVentaById(id)
 
   if (!venta) {
     return (
       <div className="space-y-4">
         <Button asChild variant="outline" size="sm">
-          <Link href="/ventas">
+          <Link href="/historial-ventas">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver al historial
           </Link>
@@ -218,7 +222,7 @@ export default async function VentaDetallePage({ params }: Props) {
           <CardHeader>
             <CardTitle>Venta no encontrada</CardTitle>
             <CardDescription>
-              No existe una venta con el id #{id} en la data dummy.
+              No existe una venta con el id #{id}.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -244,106 +248,181 @@ export default async function VentaDetallePage({ params }: Props) {
           </p>
         </div>
 
-        <Button asChild variant="outline">
-          <Link href="/ventas">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver al historial
-          </Link>
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <MarcarDevolucionButton
+            ventaId={venta.id}
+            clienteId={venta.cliente.id}
+            usuarioId={venta.usuarioId}
+            items={venta.items}
+          />
+
+          <Button asChild variant="outline">
+            <Link href="/historial-ventas">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver al historial
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
-        <Card className="rounded-2xl">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Información general</CardTitle>
-            <CardDescription>Datos clave</CardDescription>
-          </CardHeader>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="space-y-4">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card className="w-full rounded-2xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Información general</CardTitle>
+                <CardDescription>Datos clave</CardDescription>
+              </CardHeader>
 
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              <div className="min-w-[110px] rounded-xl border px-4 py-3">
-                <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <ReceiptText className="h-3.5 w-3.5" />
-                  Folio
+              <CardContent>
+                <div className="flex flex-wrap gap-3">
+                  <div className="min-w-[110px] rounded-xl border px-4 py-2">
+                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <ReceiptText className="h-3.5 w-3.5" />
+                      Folio
+                    </div>
+                    <p className="text-base font-semibold">{venta.folio}</p>
+                  </div>
+
+                  <div className="min-w-[110px] rounded-xl border px-4 py-2">
+                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      Fecha
+                    </div>
+                    <p className="text-base font-semibold">{venta.fecha}</p>
+                  </div>
+
+                  <div className="min-w-[110px] rounded-xl border px-4 py-2">
+                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      Hora
+                    </div>
+                    <p className="text-base font-semibold">{venta.hora}</p>
+                  </div>
+
+                  <div className="min-w-[110px] rounded-xl border px-4 py-2">
+                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <CreditCard className="h-3.5 w-3.5" />
+                      Estatus
+                    </div>
+                    <p className="text-base font-semibold capitalize">
+                      {venta.estatus}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-base font-semibold">{venta.folio}</p>
-              </div>
+              </CardContent>
+            </Card>
 
-              <div className="min-w-[110px] rounded-xl border px-4 py-3">
-                <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  Fecha
+            <Card className="w-full rounded-2xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Cliente</CardTitle>
+                <CardDescription>Información del cliente</CardDescription>
+              </CardHeader>
+
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="rounded-xl border px-4 py-3">
+                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <UserRound className="h-3.5 w-3.5" />
+                      Nombre
+                    </div>
+                    <p className="text-base font-semibold">
+                      {venta.cliente.nombre}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border px-4 py-3">
+                    <div className="mb-1 text-xs font-medium text-muted-foreground">
+                      Teléfono
+                    </div>
+                    <p className="text-sm font-medium">
+                      {venta.cliente.telefono || "-"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border px-4 py-3">
+                    <div className="mb-1 text-xs font-medium text-muted-foreground">
+                      Correo
+                    </div>
+                    <p className="text-sm font-medium break-all">
+                      {venta.cliente.correo || "-"}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-base font-semibold">{venta.fecha}</p>
-                <p className="text-xs text-muted-foreground">{venta.hora}</p>
-              </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
-              <div className="min-w-[110px] rounded-xl border px-4 py-3">
-                <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <CreditCard className="h-3.5 w-3.5" />
-                  Pago
-                </div>
-                <p className="text-base font-semibold">
-                  {getMetodoPagoLabel(venta.metodoPago)}
-                </p>
-              </div>
-
-              <div className="min-w-[110px] rounded-xl border px-4 py-3">
-                <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <Wallet className="h-3.5 w-3.5" />
-                  Total
-                </div>
-                <p className="text-base font-semibold">
-                  {formatCurrency(venta.total)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Cliente</CardTitle>
-            <CardDescription>Resumen</CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <div className="rounded-xl border px-4 py-3">
-              <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <UserRound className="h-3.5 w-3.5" />
-                Nombre
-              </div>
-              <p className="text-base font-semibold">{venta.cliente.nombre}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="space-y-4">
-        {/* TABLA FULL WIDTH */}
-        <Card className="rounded-2xl">
+        <Card className="h-fit rounded-2xl">
           <CardHeader>
-            <CardTitle>Contenido del ticket</CardTitle>
-            <CardDescription>Artículos incluidos en esta venta</CardDescription>
+            <CardTitle className="text-base">Resumen de la venta</CardTitle>
+            <CardDescription>Totales y método de pago</CardDescription>
           </CardHeader>
 
           <CardContent>
-            <div className="rounded-xl border">
-              <div className="max-h-[460px] overflow-auto">
-                <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-background">
-                    <TableRow>
-                      <TableHead className="w-[70px]">#</TableHead>
-                      <TableHead>Producto</TableHead>
-                      <TableHead>Código</TableHead>
-                      <TableHead className="text-center">Cantidad</TableHead>
-                      <TableHead className="text-right">P. unitario</TableHead>
-                      <TableHead className="text-right">Importe</TableHead>
-                    </TableRow>
-                  </TableHeader>
+            <div className="space-y-4 rounded-xl border p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-medium">
+                  {formatCurrency(venta.subtotal)}
+                </span>
+              </div>
 
-                  <TableBody>
-                    {venta.items.map((item, index) => (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Descuento</span>
+                <span className="font-medium">
+                  {formatCurrency(venta.descuento)}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Artículos</span>
+                <span className="font-medium">{venta.totalArticulos}</span>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Método de pago</span>
+                <span className="font-medium">
+                  {getMetodoPagoLabel(venta.metodoPago)}
+                </span>
+              </div>
+
+              <div className="border-t pt-3">
+                <div className="flex items-center justify-between text-base font-bold">
+                  <span>Total</span>
+                  <span>{formatCurrency(venta.total)}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-base">Contenido del ticket</CardTitle>
+          <CardDescription>Productos incluidos en la venta</CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <div className="rounded-xl border">
+            <div className="max-h-[450px] overflow-auto">
+              <Table>
+                <TableHeader className="sticky top-0 z-10 bg-background">
+                  <TableRow>
+                    <TableHead className="w-[70px]">#</TableHead>
+                    <TableHead>Producto</TableHead>
+                    <TableHead>Código</TableHead>
+                    <TableHead className="text-center">Cantidad</TableHead>
+                    <TableHead className="text-right">P. unitario</TableHead>
+                    <TableHead className="text-right">Importe</TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {venta.items.length > 0 ? (
+                    venta.items.map((item, index) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">
                           {index + 1}
@@ -364,70 +443,23 @@ export default async function VentaDetallePage({ params }: Props) {
                           {formatCurrency(item.importe)}
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="py-10 text-center text-muted-foreground"
+                      >
+                        Esta venta no tiene productos cargados.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* RESUMEN ABAJO A LA DERECHA */}
-        <div className="flex justify-end">
-          <Card className="w-full max-w-sm rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-base">Resumen de venta</CardTitle>
-              <CardDescription>Totales del ticket</CardDescription>
-            </CardHeader>
-
-            <CardContent>
-              <div className="space-y-3 rounded-xl border p-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">
-                    {formatCurrency(venta.subtotal)}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Descuento</span>
-                  <span className="font-medium">
-                    {formatCurrency(venta.descuento)}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Artículos</span>
-                  <span className="font-medium">{venta.totalArticulos}</span>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Método de pago</span>
-                  <span className="font-medium">
-                    {getMetodoPagoLabel(venta.metodoPago)}
-                  </span>
-                </div>
-
-                <div className="border-t pt-3">
-                  <div className="flex items-center justify-between text-base font-bold">
-                    <span>Total</span>
-                    <span>{formatCurrency(venta.total)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <Button asChild variant="outline" className="w-full">
-                  <Link href="/historial-ventas">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Volver al historial
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
