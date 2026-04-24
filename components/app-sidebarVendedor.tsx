@@ -80,23 +80,10 @@ export default function AppSidebar() {
             )}
           </div>
 
-          <SidebarMenuItem>
-            <Link
-              href="/admin/dashboard"
-              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
-                collapsed ? "justify-center px-0" : "gap-4 px-4"
-              }`}
-            >
-              <LayoutDashboard className="h-7 w-7 shrink-0" />
-              {!collapsed && (
-                <span className="text-lg font-medium">Dashboard</span>
-              )}
-            </Link>
-          </SidebarMenuItem>
 
           <SidebarMenuItem>
             <Link
-              href="/admin/ventas"
+              href="vendedor/ventas"
               className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
                 collapsed ? "justify-center px-0" : "gap-4 px-4"
               }`}
@@ -109,7 +96,7 @@ export default function AppSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <Link
-              href="/admin/modulo-cobro"
+              href="vendedor/modulo-cobro"
               className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
                 collapsed ? "justify-center px-0" : "gap-4 px-4"
               }`}
@@ -123,7 +110,7 @@ export default function AppSidebar() {
 
           <SidebarMenuItem>
             <Link
-              href="/admin/corte-caja"
+              href="vendedor/corte-caja"
               className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
                 collapsed ? "justify-center px-0" : "gap-4 px-4"
               }`}
@@ -135,102 +122,6 @@ export default function AppSidebar() {
             </Link>
           </SidebarMenuItem>
 
-          <SidebarMenuItem>
-            <Link
-              href="/admin/productos"
-              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
-                collapsed ? "justify-center px-0" : "gap-4 px-4"
-              }`}
-            >
-              <Package2 className="h-7 w-7 shrink-0" />
-              {!collapsed && (
-                <span className="text-lg font-medium">Productos</span>
-              )}
-            </Link>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <Link
-              href="/admin/inventario"
-              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
-                collapsed ? "justify-center px-0" : "gap-4 px-4"
-              }`}
-            >
-              <Boxes className="h-7 w-7 shrink-0" />
-              {!collapsed && (
-                <span className="text-lg font-medium">Inventario</span>
-              )}
-            </Link>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <Link
-              href="/admin/clientes"
-              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
-                collapsed ? "justify-center px-0" : "gap-4 px-4"
-              }`}
-            >
-              <Users className="h-7 w-7 shrink-0" />
-              {!collapsed && (
-                <span className="text-lg font-medium">Clientes</span>
-              )}
-            </Link>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <Link
-              href="/admin/provedores"
-              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
-                collapsed ? "justify-center px-0" : "gap-4 px-4"
-              }`}
-            >
-              <Truck className="h-7 w-7 shrink-0" />
-              {!collapsed && (
-                <span className="text-lg font-medium">Provedores</span>
-              )}
-            </Link>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <Link
-              href="/admin/historial-ventas"
-              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
-                collapsed ? "justify-center px-0" : "gap-4 px-4"
-              }`}
-            >
-              <History className="h-7 w-7 shrink-0" />
-              {!collapsed && (
-                <span className="text-lg font-medium">Historial de Ventas</span>
-              )}
-            </Link>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <Link
-              href="/admin/devoluciones"
-              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
-                collapsed ? "justify-center px-0" : "gap-4 px-4"
-              }`}
-            >
-              <TicketX className="h-7 w-7 shrink-0" />
-              {!collapsed && (
-                <span className="text-lg font-medium">Devoluciones</span>
-              )}
-            </Link>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <Link
-              href="/admin/reportes"
-              className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
-                collapsed ? "justify-center px-0" : "gap-4 px-4"
-              }`}
-            >
-              <BarChart3 className="h-7 w-7 shrink-0" />
-              {!collapsed && (
-                <span className="text-lg font-medium">Reportes</span>
-              )}
-            </Link>
-          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
 
@@ -283,7 +174,7 @@ export default function AppSidebar() {
 
             <DropdownMenuItem className="cursor-pointer rounded-lg px-3 py-2 text-foreground focus:bg-accent focus:text-accent-foreground">
               <Link
-                href="/admin/configuracion"
+                href="vendedor/configuracion"
                 className="flex items-center text-base font-semibold"
               >
                 <SettingsIcon className="mr-6 h-5 w-5" />
