@@ -1,5 +1,6 @@
 import Link from "next/link"
 import MarcarDevolucionButton from "./MarcarDevolucionButton"
+import ReimprimirVentaButton from "./ReimprimiVentaButton"
 
 import {
   ArrowLeft,
@@ -249,6 +250,8 @@ export default async function VentaDetallePage({ params }: Props) {
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row">
+          <ReimprimirVentaButton ventaId={venta.id} />
+
           <MarcarDevolucionButton
             ventaId={venta.id}
             clienteId={venta.cliente.id}

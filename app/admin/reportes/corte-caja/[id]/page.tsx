@@ -3,6 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+
+import ReimprimirCorteButton from "./ReimprimirCorteButton"
 import {
   ArrowLeft,
   Banknote,
@@ -248,26 +250,14 @@ export default function CorteCajaDetallePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              <ReimprimirCorteButton corteId={corte.id} />
+
               <Button asChild variant="outline" size="sm">
                 <Link href="/admin/reportes/corte-caja">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Volver
                 </Link>
               </Button>
-
-              <Badge
-                variant="secondary"
-                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-none ${getEstadoBadgeClasses(
-                  corte.estado
-                )}`}
-              >
-                {corte.estado}
-              </Badge>
-
-              <div className="rounded-xl border bg-card px-4 py-2 text-right">
-                <p className="text-xs text-muted-foreground">Folio</p>
-                <p className="text-sm font-semibold">{corte.folio}</p>
-              </div>
             </div>
           </div>
 
