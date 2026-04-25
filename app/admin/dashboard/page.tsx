@@ -49,7 +49,7 @@ type ResumenResponse = {
     fin: string
   }
   resumen: {
-    ventas: number
+    utilidadRealCaja: number
     tickets: number
     ticketPromedio: number
     stockBajo: number
@@ -138,12 +138,6 @@ function formatCurrency(value: number) {
 
 function formatCompactNumber(value: number) {
   return new Intl.NumberFormat("es-MX").format(Number(value || 0))
-}
-
-function getTrendText(periodo: PeriodoValue) {
-  if (periodo === "dia") return "vs ayer"
-  if (periodo === "semana") return "vs semana pasada"
-  return "vs mes pasado"
 }
 
 function formatLabelDate(value: string) {
@@ -396,16 +390,13 @@ export default function DashboardPage() {
           <CardContent className="flex h-24 items-center justify-between p-4">
             <div>
               <p className="text-sm font-semibold text-muted-foreground">
-                Ventas
+                Ventas Netas
               </p>
               <p className="text-2xl font-bold text-foreground">
-                {loading ? "..." : formatCurrency(resumen?.resumen.ventas || 0)}
+                {loading
+                  ? "..."
+                  : formatCurrency(resumen?.resumen.utilidadRealCaja || 0)}
               </p>
-
-              <div className="flex items-center gap-1 text-xs text-emerald-600">
-                <TrendingUp className="h-4 w-4" />
-                <span>{getTrendText(periodoActual)}</span>
-              </div>
             </div>
 
             <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
@@ -425,11 +416,6 @@ export default function DashboardPage() {
                   ? "..."
                   : formatCompactNumber(resumen?.resumen.tickets || 0)}
               </p>
-
-              <div className="flex items-center gap-1 text-xs text-emerald-600">
-                <TrendingUp className="h-4 w-4" />
-                <span>{getTrendText(periodoActual)}</span>
-              </div>
             </div>
 
             <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600">
@@ -449,11 +435,6 @@ export default function DashboardPage() {
                   ? "..."
                   : formatCurrency(resumen?.resumen.ticketPromedio || 0)}
               </p>
-
-              <div className="flex items-center gap-1 text-xs text-amber-600">
-                <Receipt className="h-4 w-4" />
-                <span>{getTrendText(periodoActual)}</span>
-              </div>
             </div>
 
             <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
@@ -473,11 +454,6 @@ export default function DashboardPage() {
                   ? "..."
                   : formatCompactNumber(resumen?.resumen.stockBajo || 0)}
               </p>
-
-              <div className="flex items-center gap-1 text-xs text-rose-600">
-                <TrendingDown className="h-4 w-4" />
-                <span>requiere atención</span>
-              </div>
             </div>
 
             <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600">
