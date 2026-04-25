@@ -13,12 +13,12 @@ import {
 
 import {
   AlertTriangle,
-  CalendarDays,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
   Eye,
+  Loader2,
   Plus,
   Search,
   Wallet,
@@ -50,131 +50,170 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
+
 type EstadoCorte = "Cuadrado" | "Sobrante" | "Faltante"
+
+type ApiCorteCaja = {
+  id: number
+  fecha_corte: string
+  hora_corte: string
+  fecha_hora_corte: string
+  id_usuario: number
+  total_ventas: string
+  total_tarjeta: string
+  total_transferencias: string
+  total_efectivo: string
+  total_devoluciones: string
+  total_tickets: number
+  saldo_inicial: string
+  efectivo_esperado: string
+  efectivo_contado: string
+  diferencia: string
+  monto_sobrante: string
+  monto_faltante: string
+  tipo_resultado: "cuadrado" | "sobrante" | "faltante"
+  estado_corte: "abierto" | "cerrado"
+  observaciones: string
+  created_at: string
+}
 
 type CorteCaja = {
   id: number
   folio: string
   fecha: string
   hora: string
-  caja: string
   usuario: string
   ventasTotales: number
   efectivoContado: number
   diferencia: number
+  totalTickets: number
   estado: EstadoCorte
+  estadoCorte: string
 }
-
-const cortesData: CorteCaja[] = [
-  {
-    id: 1,
-    folio: "CC-20260401-001",
-    fecha: "01/04/2026",
-    hora: "09:15 PM",
-    caja: "Caja principal",
-    usuario: "Raudel Casas",
-    ventasTotales: 18450.75,
-    efectivoContado: 9816.25,
-    diferencia: 0,
-    estado: "Cuadrado",
-  },
-  {
-    id: 2,
-    folio: "CC-20260402-001",
-    fecha: "02/04/2026",
-    hora: "09:09 PM",
-    caja: "Caja principal",
-    usuario: "Raudel Casas",
-    ventasTotales: 17230.5,
-    efectivoContado: 9250,
-    diferencia: 180,
-    estado: "Sobrante",
-  },
-  {
-    id: 3,
-    folio: "CC-20260403-001",
-    fecha: "03/04/2026",
-    hora: "09:22 PM",
-    caja: "Caja principal",
-    usuario: "Andrea López",
-    ventasTotales: 19640.3,
-    efectivoContado: 10010,
-    diferencia: -250.5,
-    estado: "Faltante",
-  },
-  {
-    id: 4,
-    folio: "CC-20260404-001",
-    fecha: "04/04/2026",
-    hora: "09:18 PM",
-    caja: "Caja 2",
-    usuario: "Carlos Díaz",
-    ventasTotales: 14320,
-    efectivoContado: 7450,
-    diferencia: 0,
-    estado: "Cuadrado",
-  },
-  {
-    id: 5,
-    folio: "CC-20260405-001",
-    fecha: "05/04/2026",
-    hora: "09:11 PM",
-    caja: "Caja principal",
-    usuario: "Raudel Casas",
-    ventasTotales: 21100.9,
-    efectivoContado: 11035.2,
-    diferencia: -95,
-    estado: "Faltante",
-  },
-  {
-    id: 6,
-    folio: "CC-20260406-001",
-    fecha: "06/04/2026",
-    hora: "09:26 PM",
-    caja: "Caja 2",
-    usuario: "Mariana Torres",
-    ventasTotales: 15890,
-    efectivoContado: 8420,
-    diferencia: 75,
-    estado: "Sobrante",
-  },
-]
 
 const formatoMoneda = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",
 })
 
+function toNumber(value: string | number | null | undefined) {
+  const numberValue = Number(value)
+  return Number.isFinite(numberValue) ? numberValue : 0
+}
+
+function formatDate(value: string) {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) return "Sin fecha"
+
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date)
+}
+
+function formatTime(value: string) {
+  const date = new Date(value)
+
+  if (!Number.isNaN(date.getTime())) {
+    return new Intl.DateTimeFormat("es-MX", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).format(date)
+  }
+
+  return "Sin hora"
+}
+
+function getEstadoLabel(tipo: ApiCorteCaja["tipo_resultado"]): EstadoCorte {
+  if (tipo === "sobrante") return "Sobrante"
+  if (tipo === "faltante") return "Faltante"
+  return "Cuadrado"
+}
+
 function getEstadoBadgeClasses(estado: EstadoCorte) {
   switch (estado) {
     case "Cuadrado":
-      return "border-transparent dark:bg-emerald-300 dark:text-emerald-700 bg-red-500 text-emerald-400"
+      return "border-transparent bg-emerald-100 text-emerald-700"
     case "Sobrante":
-      return "border-transparent dark:bg-amber-300 dark:text-amber-700 bg-amber-950/40 text-amber-400"
+      return "border-transparent bg-amber-100 text-amber-700"
     case "Faltante":
-      return "border-transparent dark:bg-red-300 dark:text-red-700 bg-red-950/40 text-red-400"
+      return "border-transparent bg-red-100 text-red-700"
     default:
       return ""
   }
 }
 
+function mapCorte(api: ApiCorteCaja): CorteCaja {
+  const fechaBase = api.fecha_hora_corte || api.created_at || api.fecha_corte
+
+  return {
+    id: api.id,
+    folio: `CC-${api.id.toString().padStart(5, "0")}`,
+    fecha: formatDate(fechaBase),
+    hora: formatTime(fechaBase),
+    usuario: `Usuario ${api.id_usuario}`,
+    ventasTotales: toNumber(api.total_ventas),
+    efectivoContado: toNumber(api.efectivo_contado),
+    diferencia: toNumber(api.diferencia),
+    totalTickets: api.total_tickets ?? 0,
+    estado: getEstadoLabel(api.tipo_resultado),
+    estadoCorte: api.estado_corte,
+  }
+}
+
 export default function CorteCajaPage() {
+  const [cortes, setCortes] = React.useState<CorteCaja[]>([])
   const [search, setSearch] = React.useState("")
   const [estadoFiltro, setEstadoFiltro] = React.useState("todos")
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState("")
+
+  React.useEffect(() => {
+    async function fetchCortes() {
+      try {
+        setLoading(true)
+        setError("")
+
+        const res = await fetch(`${API_URL}/cortes-caja`, {
+          cache: "no-store",
+        })
+
+        if (!res.ok) {
+          throw new Error("No se pudieron cargar los cortes de caja")
+        }
+
+        const data: ApiCorteCaja[] = await res.json()
+        setCortes(data.map(mapCorte))
+      } catch (error) {
+        console.error(error)
+        setError("No se pudo conectar con el servidor.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCortes()
+  }, [])
 
   const dataFiltrada = React.useMemo(() => {
-    return cortesData.filter((corte) => {
+    return cortes.filter((corte) => {
+      const text = search.toLowerCase()
+
       const coincideBusqueda =
-        corte.folio.toLowerCase().includes(search.toLowerCase()) ||
-        corte.usuario.toLowerCase().includes(search.toLowerCase()) ||
-        corte.caja.toLowerCase().includes(search.toLowerCase())
+        corte.folio.toLowerCase().includes(text) ||
+        corte.usuario.toLowerCase().includes(text) ||
+        corte.estadoCorte.toLowerCase().includes(text)
 
       const coincideEstado =
         estadoFiltro === "todos" ? true : corte.estado === estadoFiltro
 
       return coincideBusqueda && coincideEstado
     })
-  }, [search, estadoFiltro])
+  }, [cortes, search, estadoFiltro])
 
   const totalVentas = dataFiltrada.reduce(
     (acc, corte) => acc + corte.ventasTotales,
@@ -190,15 +229,13 @@ export default function CorteCajaPage() {
     (corte) => corte.estado === "Cuadrado"
   ).length
 
-  const ultimoCorte = dataFiltrada[0]
-
   const columns = React.useMemo<ColumnDef<CorteCaja>[]>(
     () => [
       {
         accessorKey: "folio",
         header: "Folio",
         cell: ({ row }) => (
-          <div className="min-w-[170px] font-medium text-foreground">
+          <div className="min-w-[130px] font-medium text-foreground">
             {row.original.folio}
           </div>
         ),
@@ -214,17 +251,19 @@ export default function CorteCajaPage() {
         ),
       },
       {
-        accessorKey: "caja",
-        header: "Caja",
-        cell: ({ row }) => (
-          <div className="min-w-[130px]">{row.original.caja}</div>
-        ),
-      },
-      {
         accessorKey: "usuario",
         header: "Usuario",
         cell: ({ row }) => (
-          <div className="min-w-[150px]">{row.original.usuario}</div>
+          <div className="min-w-[120px]">{row.original.usuario}</div>
+        ),
+      },
+      {
+        accessorKey: "totalTickets",
+        header: () => <div className="text-center">Tickets</div>,
+        cell: ({ row }) => (
+          <div className="min-w-[80px] text-center font-medium">
+            {row.original.totalTickets}
+          </div>
         ),
       },
       {
@@ -255,10 +294,10 @@ export default function CorteCajaPage() {
             <div
               className={`min-w-[110px] text-right font-semibold ${
                 value === 0
-                  ? "text-emerald-400 dark:text-emerald-600"
+                  ? "text-emerald-600 dark:text-emerald-400"
                   : value > 0
-                    ? "text-amber-400 dark:text-amber-600"
-                    : "text-red-400 dark:text-red-500"
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-red-500 dark:text-red-400"
               }`}
             >
               {value > 0 ? "+" : ""}
@@ -269,11 +308,11 @@ export default function CorteCajaPage() {
       },
       {
         accessorKey: "estado",
-        header: "Estado",
+        header: "Resultado",
         cell: ({ row }) => (
           <Badge
             variant="secondary"
-            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.01em] shadow-none ${getEstadoBadgeClasses(
+            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-none ${getEstadoBadgeClasses(
               row.original.estado
             )}`}
           >
@@ -329,6 +368,14 @@ export default function CorteCajaPage() {
           </Link>
         </Button>
       </div>
+
+      {error && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="p-4 text-sm font-medium text-destructive">
+            {error}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card className="shadow-sm">
@@ -412,7 +459,7 @@ export default function CorteCajaPage() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar por folio, caja o usuario..."
+                placeholder="Buscar por folio, usuario o estado..."
                 className="pl-9"
               />
             </div>
@@ -420,10 +467,10 @@ export default function CorteCajaPage() {
             <div className="w-full lg:w-[220px]">
               <Select value={estadoFiltro} onValueChange={setEstadoFiltro}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por estado" />
+                  <SelectValue placeholder="Filtrar por resultado" />
                 </SelectTrigger>
-                <SelectContent className="rounded-lg border border-border bg-background shadow-lg">
-                  <SelectItem value="todos">Todos los estados</SelectItem>
+                <SelectContent>
+                  <SelectItem value="todos">Todos los resultados</SelectItem>
                   <SelectItem value="Cuadrado">Cuadrado</SelectItem>
                   <SelectItem value="Sobrante">Sobrante</SelectItem>
                   <SelectItem value="Faltante">Faltante</SelectItem>
@@ -457,7 +504,19 @@ export default function CorteCajaPage() {
               </TableHeader>
 
               <TableBody>
-                {table.getRowModel().rows.length ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-28 text-center"
+                    >
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Cargando cortes de caja...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : table.getRowModel().rows.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow key={row.id} className="hover:bg-muted/20">
                       {row.getVisibleCells().map((cell) => (
@@ -489,8 +548,11 @@ export default function CorteCajaPage() {
 
           <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
-              Página {table.getState().pagination.pageIndex + 1} de{" "}
-              {table.getPageCount()}
+              Página{" "}
+              {table.getPageCount() === 0
+                ? 0
+                : table.getState().pagination.pageIndex + 1}{" "}
+              de {table.getPageCount()}
             </p>
 
             <div className="flex items-center gap-2">
