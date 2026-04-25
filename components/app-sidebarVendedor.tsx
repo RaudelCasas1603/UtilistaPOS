@@ -80,10 +80,9 @@ export default function AppSidebar() {
             )}
           </div>
 
-
           <SidebarMenuItem>
             <Link
-              href="vendedor/ventas"
+              href="/vendedor/ventas"
               className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
                 collapsed ? "justify-center px-0" : "gap-4 px-4"
               }`}
@@ -96,7 +95,7 @@ export default function AppSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <Link
-              href="vendedor/modulo-cobro"
+              href="/vendedor/modulo-cobro"
               className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
                 collapsed ? "justify-center px-0" : "gap-4 px-4"
               }`}
@@ -110,7 +109,7 @@ export default function AppSidebar() {
 
           <SidebarMenuItem>
             <Link
-              href="vendedor/corte-caja"
+              href="/vendedor/corte-caja"
               className={`flex h-14 w-full items-center rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground ${
                 collapsed ? "justify-center px-0" : "gap-4 px-4"
               }`}
@@ -121,7 +120,6 @@ export default function AppSidebar() {
               )}
             </Link>
           </SidebarMenuItem>
-
         </SidebarMenu>
       </SidebarContent>
 
@@ -174,7 +172,7 @@ export default function AppSidebar() {
 
             <DropdownMenuItem className="cursor-pointer rounded-lg px-3 py-2 text-foreground focus:bg-accent focus:text-accent-foreground">
               <Link
-                href="vendedor/configuracion"
+                href="/vendedor/configuracion"
                 className="flex items-center text-base font-semibold"
               >
                 <SettingsIcon className="mr-6 h-5 w-5" />

@@ -43,10 +43,11 @@ type PeriodoReporte =
 
 type Resumen = {
   totalVendido: number
+  ventasBrutas: number
+  comisionTarjeta: number
   totalMargen: number
   totalTickets: number
   totalProductos: number
-  clientesAtendidos: number
   ticketPromedio: number
   margenPromedio: number
   diasConVenta: number
@@ -212,7 +213,8 @@ export default function ReporteVentasPage() {
       totalMargen: 0,
       totalTickets: 0,
       totalProductos: 0,
-      clientesAtendidos: 0,
+      ventasBrutas: 0,
+      comisionTarjeta: 0,
       ticketPromedio: 0,
       margenPromedio: 0,
       diasConVenta: 0,
@@ -430,7 +432,7 @@ export default function ReporteVentasPage() {
           <Card className="rounded-2xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total vendido
+                Total vendido Neto
               </CardTitle>
               <Wallet className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
@@ -439,7 +441,7 @@ export default function ReporteVentasPage() {
                 {loading ? "Cargando..." : formatCurrency(resumen.totalVendido)}
               </div>
               <p className="text-xs text-muted-foreground">
-                Ingreso total del periodo seleccionado
+                Total después de descontar comisión de tarjeta y devoluciones
               </p>
             </CardContent>
           </Card>
@@ -527,32 +529,34 @@ export default function ReporteVentasPage() {
 
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle className="text-base">Días con venta</CardTitle>
+              <CardTitle className="text-base">Comisión pagada</CardTitle>
               <CardDescription>
-                Actividad comercial en el periodo
+                Comisión absorbida por cobros con tarjeta
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="text-2xl font-bold">{resumen.diasConVenta}</div>
+              <div className="text-2xl font-bold">
+                {formatCurrency(resumen.comisionTarjeta)}
+              </div>
               <p className="text-sm text-muted-foreground">
-                Días que registraron al menos una venta
+                Costo financiero del periodo
               </p>
             </CardContent>
           </Card>
 
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle className="text-base">Clientes atendidos</CardTitle>
+              <CardTitle className="text-base">Ventas brutas</CardTitle>
               <CardDescription>
-                Métrica útil para el análisis operativo
+                Total cobrado antes de descontar comisión
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="text-2xl font-bold">
-                {resumen.clientesAtendidos}
+                {formatCurrency(resumen.ventasBrutas)}
               </div>
               <p className="text-sm text-muted-foreground">
-                Clientes únicos atendidos en el periodo
+                Venta total registrada en tickets
               </p>
             </CardContent>
           </Card>

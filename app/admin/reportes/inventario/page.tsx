@@ -154,7 +154,7 @@ export default function ReporteInventarioPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 xl:grid-cols-[220px_1fr_220px]">
+            <div className="h- grid grid-cols-1 gap-3 xl:grid-cols-[220px_1fr_220px]">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Empresa</label>
                 <Select
@@ -183,24 +183,34 @@ export default function ReporteInventarioPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tipo de reporte</label>
-                <select
+                <Select
                   value={tipoReporte}
-                  onChange={(e) =>
-                    setTipoReporte(e.target.value as TipoReporte)
+                  onValueChange={(value) =>
+                    setTipoReporte(value as TipoReporte)
                   }
-                  className="h-11 w-full rounded-2xl border bg-background px-3 text-sm shadow-sm transition outline-none focus:ring-2 focus:ring-sky-500/30"
                 >
-                  <option value="sin-stock">Solo productos que no hay</option>
-                  <option value="debajo-minimo">
-                    Productos debajo del mínimo
-                  </option>
-                  <option value="hacia-ideal">
-                    Todos para llegar al ideal
-                  </option>
-                </select>
+                  <SelectTrigger className="h-11 w-full rounded-2xl">
+                    <SelectValue placeholder="Selecciona tipo" />
+                  </SelectTrigger>
+
+                  <SelectContent
+                    className="rounded-lg border border-border bg-background shadow-lg"
+                    position="popper"
+                  >
+                    <SelectItem value="sin-stock">
+                      Solo productos que no hay
+                    </SelectItem>
+                    <SelectItem value="debajo-minimo">
+                      Productos debajo del mínimo
+                    </SelectItem>
+                    <SelectItem value="hacia-ideal">
+                      Todos para llegar al ideal
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="flex flex-col justify-end">
+              <div className="flex flex-col justify-end space-y-2">
                 <button
                   onClick={generarReporte}
                   disabled={loadingReporte || loadingProveedores}
@@ -217,6 +227,24 @@ export default function ReporteInventarioPage() {
                       Generar reporte
                     </>
                   )}
+                </button>
+
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams({
+                      proveedor: proveedorSeleccionado,
+                      tipoReporte,
+                    })
+
+                    window.open(
+                      `${API_URL}/inventario/reportes/faltantes/excel?${params.toString()}`,
+                      "_blank"
+                    )
+                  }}
+                  disabled={loadingReporte || loadingProveedores}
+                  className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  Exportar Excel
                 </button>
               </div>
             </div>
