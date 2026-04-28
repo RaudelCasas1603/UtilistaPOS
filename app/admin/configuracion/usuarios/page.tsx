@@ -62,7 +62,7 @@ export default function AdminUsuarios() {
       {/* Perfil de usuario + contraseña con scroll */}
       {/* ================================================= */}
       <div className="h-auto pr-2">
-        <div className="grid gap-6 md:grid-cols-2 w-full">
+        <div className="grid w-full gap-6 md:grid-cols-2">
           <Card className="w-full rounded-2xl">
             <CardHeader className="flex flex-row items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
@@ -77,7 +77,7 @@ export default function AdminUsuarios() {
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-4 mt-5">
+            <CardContent className="mt-5 space-y-4">
               <RowField
                 label="Nombre"
                 value={currentUser.name}
@@ -92,7 +92,7 @@ export default function AdminUsuarios() {
                 icon={<ShieldCheck className="h-4 w-4 text-muted-foreground" />}
               />
 
-              <div className="flex justify-end mt-5">
+              <div className="mt-5 flex justify-end">
                 {!editableUser ? (
                   <Button
                     variant="outline"
@@ -120,8 +120,6 @@ export default function AdminUsuarios() {
             </CardHeader>
 
             <CardContent className="space-y-4">
-              
-
               <PasswordField
                 label="Nueva contraseña"
                 placeholder="Mínimo 8 caracteres"
@@ -137,7 +135,9 @@ export default function AdminUsuarios() {
               />
 
               <div className="flex justify-end pt-2">
-                <Button className="rounded-xl text-base">Actualizar contraseña</Button>
+                <Button className="rounded-xl text-base">
+                  Actualizar contraseña
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -148,7 +148,7 @@ export default function AdminUsuarios() {
       {/* Toolbar */}
       {/* ================================================= */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:max-w-sm  !text-lg">
+        <div className="relative w-full !text-lg md:max-w-sm">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar usuario por nombre o rol"
@@ -156,7 +156,7 @@ export default function AdminUsuarios() {
           />
         </div>
 
-        <Button className="rounded-xl text-base mr-2">
+        <Button className="mr-2 rounded-xl text-base">
           <UserPlus className="mr-2 h-5 w-5" />
           Agregar usuario
         </Button>
@@ -165,7 +165,7 @@ export default function AdminUsuarios() {
       {/* ================================================= */}
       {/* Lista de usuarios con scroll */}
       {/* ================================================= */}
-      <div className="h-[380px] space-y-2 overflow-y-auto pr-2 rounded-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth ">
+      <div className="h-[650px] space-y-2 overflow-y-auto scroll-smooth rounded-xl pr-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {users.map((user) => (
           <UserRow
             key={user.id}
@@ -196,7 +196,9 @@ function RowField({
 }) {
   return (
     <div className="grid grid-cols-3 items-center gap-4">
-      <span className="text-lg font-medium text-muted-foreground text-center">{label}</span>
+      <span className="text-center text-lg font-medium text-muted-foreground">
+        {label}
+      </span>
 
       <div className="col-span-2">
         {!editable ? (
@@ -260,7 +262,7 @@ function PasswordField({
 }) {
   return (
     <div className="space-y-1">
-      <label className="text-lg font-medium text-muted-foreground ">
+      <label className="text-lg font-medium text-muted-foreground">
         {label}
       </label>
 

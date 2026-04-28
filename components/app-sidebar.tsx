@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   Sidebar,
   SidebarContent,
@@ -9,7 +10,6 @@ import {
   SidebarHeader,
   useSidebar,
   SidebarFooter,
-  SidebarMenuButton,
 } from "@/components/ui/sidebar"
 import {
   DropdownMenu,
@@ -40,16 +40,36 @@ import {
   TicketX,
 } from "lucide-react"
 
+type Usuario = {
+  id: number
+  nombre: string
+  username: string
+  rol: string
+  estatus: string
+}
+
 export default function AppSidebar() {
   const { state } = useSidebar()
   const collapsed = state === "collapsed"
   const { theme, setTheme } = useTheme()
+  const router = useRouter()
 
   const [mounted, setMounted] = useState(false)
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
 
   useEffect(() => {
     setMounted(true)
+
+    const rawUser = localStorage.getItem("usuario")
+    if (rawUser) {
+      setUsuario(JSON.parse(rawUser))
+    }
   }, [])
+
+  function handleLogout() {
+    localStorage.removeItem("usuario")
+    router.replace("/auth/login")
+  }
 
   const isDark = mounted ? theme === "dark" : false
 
@@ -107,6 +127,7 @@ export default function AppSidebar() {
               )}
             </Link>
           </SidebarMenuItem>
+
           <SidebarMenuItem>
             <Link
               href="/admin/modulo-cobro"
@@ -176,6 +197,7 @@ export default function AppSidebar() {
               )}
             </Link>
           </SidebarMenuItem>
+
           <SidebarMenuItem>
             <Link
               href="/admin/provedores"
@@ -248,9 +270,11 @@ export default function AppSidebar() {
 
               {!collapsed && (
                 <div className="flex flex-col items-start leading-tight">
-                  <span className="text-lg font-semibold">Enrique Peña</span>
-                  <span className="text-sm text-muted-foreground">
-                    Administrador
+                  <span className="text-lg font-semibold">
+                    {usuario?.nombre || "Usuario"}
+                  </span>
+                  <span className="text-sm text-muted-foreground capitalize">
+                    {usuario?.rol || "Sin rol"}
                   </span>
                 </div>
               )}
@@ -292,7 +316,11 @@ export default function AppSidebar() {
             </DropdownMenuItem>
 
             <DropdownMenuItem className="cursor-pointer rounded-lg px-3 py-2 text-red-500 focus:bg-accent focus:text-red-500">
-              <button className="flex text-base font-semibold">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex text-base font-semibold"
+              >
                 <LogOut className="mr-6 h-5 w-5" />
                 Cerrar sesión
               </button>
