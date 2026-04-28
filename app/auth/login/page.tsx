@@ -63,12 +63,12 @@ export default function LoginPage() {
       localStorage.setItem("usuario", JSON.stringify(usuario))
 
       if (usuario.rol === "admin") {
-        router.push("/admin")
+        router.push("/admin/dashboard")
         return
       }
 
       if (usuario.rol === "vendedor") {
-        router.push("/vendedor")
+        router.push("/vendedor/ventas")
         return
       }
 

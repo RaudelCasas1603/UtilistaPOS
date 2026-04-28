@@ -100,7 +100,7 @@ export default function MarcarDevolucionButton({
       setOpen(false)
       setMotivo("")
       router.refresh()
-      router.push(`/devoluciones/${data.id}`)
+      router.push(`/admin/devoluciones/${data.id}`)
     } catch (err) {
       setError(
         err instanceof Error

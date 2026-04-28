@@ -15,7 +15,6 @@ import {
 } from "@tanstack/react-table"
 
 import {
-  AlertTriangle,
   ArrowUpDown,
   Boxes,
   ChevronLeft,
@@ -37,22 +36,31 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
+
 type ProductInventory = {
   id: number
   id_producto: number
-  codigo_producto: string
-  codigo_barras: string
-  nombre: string
-  precio: number
-  costo: number
-  precio_publico: number
+  codigo_producto: string | null
+  codigo_barras: string | null
+  nombre: string | null
+  precio: number | string | null
+  costo: number | string | null
+  precio_publico: number | string | null
   stock_actual: number
   stock_minimo: number
   stock_deseado: number
 }
 
+function safeText(value: unknown) {
+  return String(value ?? "").toLowerCase()
+}
+
 function getInventoryStatus(product: ProductInventory) {
-  if (product.stock_actual === 0) {
+  const stockActual = Number(product.stock_actual ?? 0)
+  const stockMinimo = Number(product.stock_minimo ?? 0)
+
+  if (stockActual === 0) {
     return {
       label: "Agotado",
       className: "bg-red-500/10 text-red-600 dark:text-red-400",
@@ -60,7 +68,7 @@ function getInventoryStatus(product: ProductInventory) {
     }
   }
 
-  if (product.stock_actual < product.stock_minimo) {
+  if (stockActual < stockMinimo) {
     return {
       label: "Stock bajo",
       className: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
@@ -88,7 +96,7 @@ export default function InventarioPage() {
         setLoading(true)
         setError("")
 
-        const res = await fetch("http://localhost:3001/api/inventario", {
+        const res = await fetch(`${API_URL}/inventario`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -101,7 +109,7 @@ export default function InventarioPage() {
         }
 
         const result = await res.json()
-        setData(result)
+        setData(Array.isArray(result) ? result : [])
       } catch (err) {
         console.error(err)
         setError("Ocurrió un error al cargar el inventario.")
@@ -134,6 +142,9 @@ export default function InventarioPage() {
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
+        cell: ({ row }) => (
+          <span>{row.original.codigo_producto || "Sin código"}</span>
+        ),
       },
       {
         accessorKey: "nombre",
@@ -150,10 +161,10 @@ export default function InventarioPage() {
         cell: ({ row }) => (
           <div className="min-w-[220px]">
             <p className="font-semibold text-foreground">
-              {row.original.nombre}
+              {row.original.nombre || "Sin nombre"}
             </p>
             <p className="text-xs text-muted-foreground">
-              {row.original.codigo_barras}
+              {row.original.codigo_barras || "Sin código de barras"}
             </p>
           </div>
         ),
@@ -171,7 +182,7 @@ export default function InventarioPage() {
           </Button>
         ),
         cell: ({ row }) => {
-          const stock = row.original.stock_actual
+          const stock = Number(row.original.stock_actual ?? 0)
           const status = getInventoryStatus(row.original)
 
           return (
@@ -200,7 +211,7 @@ export default function InventarioPage() {
         ),
         cell: ({ row }) => (
           <span className="font-medium text-muted-foreground">
-            {row.original.stock_minimo} pzs
+            {Number(row.original.stock_minimo ?? 0)} pzs
           </span>
         ),
       },
@@ -218,7 +229,7 @@ export default function InventarioPage() {
         ),
         cell: ({ row }) => (
           <span className="font-medium text-foreground">
-            {row.original.stock_deseado} pzs
+            {Number(row.original.stock_deseado ?? 0)} pzs
           </span>
         ),
       },
@@ -234,10 +245,15 @@ export default function InventarioPage() {
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        accessorFn: (row) => Math.max(row.stock_deseado - row.stock_actual, 0),
+        accessorFn: (row) =>
+          Math.max(
+            Number(row.stock_deseado ?? 0) - Number(row.stock_actual ?? 0),
+            0
+          ),
         cell: ({ row }) => {
           const faltante = Math.max(
-            row.original.stock_deseado - row.original.stock_actual,
+            Number(row.original.stock_deseado ?? 0) -
+              Number(row.original.stock_actual ?? 0),
             0
           )
 
@@ -291,16 +307,17 @@ export default function InventarioPage() {
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
-      const search = String(filterValue).toLowerCase()
+      const search = safeText(filterValue)
 
       return (
-        String(row.original.id).toLowerCase().includes(search) ||
-        row.original.codigo_producto.toLowerCase().includes(search) ||
-        row.original.codigo_barras.toLowerCase().includes(search) ||
-        row.original.nombre.toLowerCase().includes(search) ||
-        String(row.original.stock_actual).toLowerCase().includes(search) ||
-        String(row.original.stock_minimo).toLowerCase().includes(search) ||
-        String(row.original.stock_deseado).toLowerCase().includes(search)
+        safeText(row.original.id).includes(search) ||
+        safeText(row.original.id_producto).includes(search) ||
+        safeText(row.original.codigo_producto).includes(search) ||
+        safeText(row.original.codigo_barras).includes(search) ||
+        safeText(row.original.nombre).includes(search) ||
+        safeText(row.original.stock_actual).includes(search) ||
+        safeText(row.original.stock_minimo).includes(search) ||
+        safeText(row.original.stock_deseado).includes(search)
       )
     },
     getCoreRowModel: getCoreRowModel(),
@@ -315,10 +332,17 @@ export default function InventarioPage() {
   })
 
   const totalProductos = data.length
-  const stockTotal = data.reduce((acc, item) => acc + item.stock_actual, 0)
-  const agotados = data.filter((item) => item.stock_actual === 0).length
+  const stockTotal = data.reduce(
+    (acc, item) => acc + Number(item.stock_actual ?? 0),
+    0
+  )
+  const agotados = data.filter(
+    (item) => Number(item.stock_actual ?? 0) === 0
+  ).length
   const bajoMinimo = data.filter(
-    (item) => item.stock_actual > 0 && item.stock_actual < item.stock_minimo
+    (item) =>
+      Number(item.stock_actual ?? 0) > 0 &&
+      Number(item.stock_actual ?? 0) < Number(item.stock_minimo ?? 0)
   ).length
 
   return (
@@ -360,6 +384,16 @@ export default function InventarioPage() {
               <p className="mt-1 text-2xl font-bold">{agotados}</p>
             </div>
             <ShieldAlert className="h-8 w-8 text-red-500" />
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/60 shadow-sm">
+          <CardContent className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-sm text-muted-foreground">Stock bajo</p>
+              <p className="mt-1 text-2xl font-bold">{bajoMinimo}</p>
+            </div>
+            <ShieldAlert className="h-8 w-8 text-amber-500" />
           </CardContent>
         </Card>
       </div>
@@ -476,7 +510,7 @@ export default function InventarioPage() {
 
                   <div className="min-w-[120px] text-center text-sm text-muted-foreground">
                     Página {table.getState().pagination.pageIndex + 1} de{" "}
-                    {table.getPageCount()}
+                    {Math.max(table.getPageCount(), 1)}
                   </div>
 
                   <Button

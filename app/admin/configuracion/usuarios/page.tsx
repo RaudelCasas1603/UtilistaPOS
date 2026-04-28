@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 
 import {
@@ -26,41 +26,40 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-/* =========================================================
-   PAGE
-========================================================= */
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
 
 export default function AdminUsuarios() {
   const [editableUser, setEditableUser] = useState(false)
 
-  const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
-  const currentUser = {
-    name: "Juan Pérez",
-    role: "Administrador",
-  }
+  // 🔥 usuario actual
+  const [currentUser, setCurrentUser] = useState<any>(null)
 
-  const users = [
-    { id: "1", name: "Juan Pérez", role: "Administrador" },
-    { id: "2", name: "María López", role: "Cajera" },
-    { id: "3", name: "Carlos Ramírez", role: "Vendedor" },
-    { id: "4", name: "Ana Torres", role: "Supervisor" },
-    { id: "5", name: "Luis Gómez", role: "Cajero" },
-    { id: "6", name: "Fernanda Ruiz", role: "Vendedor" },
-    { id: "7", name: "Diego Herrera", role: "Administrador" },
-    { id: "8", name: "Sofía Navarro", role: "Cajera" },
-  ]
+  // 🔥 lista usuarios
+  const [users, setUsers] = useState<any[]>([])
+
+  useEffect(() => {
+    // usuario logueado
+    const raw = localStorage.getItem("usuario")
+    if (raw) {
+      setCurrentUser(JSON.parse(raw))
+    }
+
+    // traer usuarios
+    fetch(`${API_URL}/usuarios`)
+      .then((res) => res.json())
+      .then((data) => {
+        setUsers(data.data || [])
+      })
+      .catch(console.error)
+  }, [])
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Título */}
       <h2 className="text-2xl font-semibold">Administración de usuarios</h2>
 
-      {/* ================================================= */}
-      {/* Perfil de usuario + contraseña con scroll */}
-      {/* ================================================= */}
       <div className="h-auto pr-2">
         <div className="grid w-full gap-6 md:grid-cols-2">
           <Card className="w-full rounded-2xl">
@@ -80,14 +79,14 @@ export default function AdminUsuarios() {
             <CardContent className="mt-5 space-y-4">
               <RowField
                 label="Nombre"
-                value={currentUser.name}
+                value={currentUser?.nombre || ""}
                 editable={editableUser}
                 icon={<User className="h-4 w-4 text-muted-foreground" />}
               />
 
               <RowField
                 label="Rol"
-                value={currentUser.role}
+                value={currentUser?.rol || ""}
                 editable={editableUser}
                 icon={<ShieldCheck className="h-4 w-4 text-muted-foreground" />}
               />
@@ -115,21 +114,21 @@ export default function AdminUsuarios() {
             <CardHeader>
               <CardTitle className="!text-2xl">Cambiar contraseña</CardTitle>
               <CardDescription className="text-lg">
-                Actualiza la contraseña del administrador
+                Actualiza la contraseña
               </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4">
               <PasswordField
                 label="Nueva contraseña"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mínimo 6 caracteres"
                 show={showNew}
                 onToggle={() => setShowNew(!showNew)}
               />
 
               <PasswordField
                 label="Confirmar contraseña"
-                placeholder="Repite la nueva contraseña"
+                placeholder="Repite la contraseña"
                 show={showConfirm}
                 onToggle={() => setShowConfirm(!showConfirm)}
               />
@@ -144,16 +143,11 @@ export default function AdminUsuarios() {
         </div>
       </div>
 
-      {/* ================================================= */}
-      {/* Toolbar */}
-      {/* ================================================= */}
+      {/* BUSCADOR */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="relative w-full !text-lg md:max-w-sm">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar usuario por nombre o rol"
-            className="pl-9"
-          />
+          <Input placeholder="Buscar usuario..." className="pl-9" />
         </div>
 
         <Button className="mr-2 rounded-xl text-base">
@@ -162,16 +156,14 @@ export default function AdminUsuarios() {
         </Button>
       </div>
 
-      {/* ================================================= */}
-      {/* Lista de usuarios con scroll */}
-      {/* ================================================= */}
-      <div className="h-[650px] space-y-2 overflow-y-auto scroll-smooth rounded-xl pr-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* LISTA */}
+      <div className="h-[650px] space-y-2 overflow-y-auto rounded-xl pr-2">
         {users.map((user) => (
           <UserRow
             key={user.id}
             id={user.id}
-            name={user.name}
-            role={user.role}
+            name={user.nombre}
+            role={user.rol}
           />
         ))}
       </div>
@@ -179,21 +171,9 @@ export default function AdminUsuarios() {
   )
 }
 
-/* =========================================================
-   COMPONENTS
-========================================================= */
+/* COMPONENTES */
 
-function RowField({
-  label,
-  value,
-  editable,
-  icon,
-}: {
-  label: string
-  value: string
-  editable: boolean
-  icon: React.ReactNode
-}) {
+function RowField({ label, value, editable, icon }: any) {
   return (
     <div className="grid grid-cols-3 items-center gap-4">
       <span className="text-center text-lg font-medium text-muted-foreground">
@@ -207,9 +187,9 @@ function RowField({
             <span>{value}</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 !text-lg">
+          <div className="flex items-center gap-2">
             {icon}
-            <Input defaultValue={value} className="h-9" />
+            <Input defaultValue={value} />
           </div>
         )}
       </div>
@@ -217,15 +197,7 @@ function RowField({
   )
 }
 
-function UserRow({
-  id,
-  name,
-  role,
-}: {
-  id: string
-  name: string
-  role: string
-}) {
+function UserRow({ id, name, role }: any) {
   return (
     <div className="flex items-center justify-between rounded-xl border px-4 py-3">
       <div className="flex items-center gap-3">
@@ -249,17 +221,7 @@ function UserRow({
   )
 }
 
-function PasswordField({
-  label,
-  placeholder,
-  show,
-  onToggle,
-}: {
-  label: string
-  placeholder: string
-  show: boolean
-  onToggle: () => void
-}) {
+function PasswordField({ label, placeholder, show, onToggle }: any) {
   return (
     <div className="space-y-1">
       <label className="text-lg font-medium text-muted-foreground">
@@ -272,15 +234,15 @@ function PasswordField({
         <Input
           type={show ? "text" : "password"}
           placeholder={placeholder}
-          className="pr-10 pl-9 !text-base"
+          className="pr-10 pl-9"
         />
 
         <button
           type="button"
           onClick={onToggle}
-          className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          className="absolute top-1/2 right-3 -translate-y-1/2"
         >
-          {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          {show ? <EyeOff /> : <Eye />}
         </button>
       </div>
     </div>
