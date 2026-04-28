@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 
 import {
@@ -14,6 +14,7 @@ import {
   Lock,
   Eye,
   EyeOff,
+  X,
 } from "lucide-react"
 
 import {
@@ -28,37 +29,142 @@ import { Input } from "@/components/ui/input"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
 
+type Usuario = {
+  id: number
+  nombre: string
+  username: string
+  rol: string
+  estatus: string
+}
+
 export default function AdminUsuarios() {
   const [editableUser, setEditableUser] = useState(false)
 
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showCreatePassword, setShowCreatePassword] = useState(false)
 
-  // 🔥 usuario actual
-  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [currentUser, setCurrentUser] = useState<Usuario | null>(null)
+  const [users, setUsers] = useState<Usuario[]>([])
+  const [search, setSearch] = useState("")
 
-  // 🔥 lista usuarios
-  const [users, setUsers] = useState<any[]>([])
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [message, setMessage] = useState("")
+
+  const [newUser, setNewUser] = useState({
+    nombre: "",
+    username: "",
+    password: "",
+    rol: "vendedor",
+  })
+
+  async function cargarUsuarios() {
+    try {
+      const res = await fetch(`${API_URL}/usuarios`)
+      const data = await res.json()
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || "No se pudieron cargar usuarios")
+      }
+
+      setUsers(data.data || [])
+    } catch (error) {
+      console.error(error)
+      setMessage(
+        error instanceof Error ? error.message : "Error al cargar usuarios"
+      )
+    }
+  }
 
   useEffect(() => {
-    // usuario logueado
     const raw = localStorage.getItem("usuario")
     if (raw) {
       setCurrentUser(JSON.parse(raw))
     }
 
-    // traer usuarios
-    fetch(`${API_URL}/usuarios`)
-      .then((res) => res.json())
-      .then((data) => {
-        setUsers(data.data || [])
-      })
-      .catch(console.error)
+    cargarUsuarios()
   }, [])
+
+  const filteredUsers = useMemo(() => {
+    const value = search.toLowerCase().trim()
+
+    if (!value) return users
+
+    return users.filter((user) => {
+      return (
+        user.nombre?.toLowerCase().includes(value) ||
+        user.username?.toLowerCase().includes(value) ||
+        user.rol?.toLowerCase().includes(value)
+      )
+    })
+  }, [users, search])
+
+  async function handleCreateUser(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setMessage("")
+
+    if (
+      !newUser.nombre.trim() ||
+      !newUser.username.trim() ||
+      !newUser.password.trim() ||
+      !newUser.rol.trim()
+    ) {
+      setMessage("Todos los campos son obligatorios")
+      return
+    }
+
+    if (newUser.password.length < 6) {
+      setMessage("La contraseña debe tener mínimo 6 caracteres")
+      return
+    }
+
+    try {
+      setCreating(true)
+
+      const res = await fetch(`${API_URL}/usuarios`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newUser),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || "No se pudo crear el usuario")
+      }
+
+      setNewUser({
+        nombre: "",
+        username: "",
+        password: "",
+        rol: "vendedor",
+      })
+
+      setShowCreateForm(false)
+      setMessage("Usuario creado correctamente")
+
+      await cargarUsuarios()
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Error al crear usuario"
+      )
+    } finally {
+      setCreating(false)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6">
       <h2 className="text-2xl font-semibold">Administración de usuarios</h2>
+
+      {message && (
+        <div className="rounded-xl border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          {message}
+        </div>
+      )}
 
       <div className="h-auto pr-2">
         <div className="grid w-full gap-6 md:grid-cols-2">
@@ -143,22 +249,152 @@ export default function AdminUsuarios() {
         </div>
       </div>
 
-      {/* BUSCADOR */}
+      {showCreateForm && (
+        <Card className="rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="!text-2xl">Agregar usuario</CardTitle>
+              <CardDescription className="text-lg">
+                Crea un nuevo usuario para el sistema
+              </CardDescription>
+            </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowCreateForm(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </CardHeader>
+
+          <CardContent>
+            <form
+              onSubmit={handleCreateUser}
+              className="grid gap-4 md:grid-cols-4"
+            >
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Nombre
+                </label>
+                <Input
+                  value={newUser.nombre}
+                  onChange={(e) =>
+                    setNewUser((prev) => ({
+                      ...prev,
+                      nombre: e.target.value,
+                    }))
+                  }
+                  placeholder="Nombre completo"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Usuario
+                </label>
+                <Input
+                  value={newUser.username}
+                  onChange={(e) =>
+                    setNewUser((prev) => ({
+                      ...prev,
+                      username: e.target.value,
+                    }))
+                  }
+                  placeholder="usuario"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Rol
+                </label>
+                <select
+                  value={newUser.rol}
+                  onChange={(e) =>
+                    setNewUser((prev) => ({
+                      ...prev,
+                      rol: e.target.value,
+                    }))
+                  }
+                  className="border-input h-10 w-full rounded-md border bg-background px-3 text-sm"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="vendedor">Vendedor</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Contraseña
+                </label>
+
+                <div className="relative">
+                  <Input
+                    value={newUser.password}
+                    onChange={(e) =>
+                      setNewUser((prev) => ({
+                        ...prev,
+                        password: e.target.value,
+                      }))
+                    }
+                    type={showCreatePassword ? "text" : "password"}
+                    placeholder="Mínimo 6 caracteres"
+                    className="pr-10"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowCreatePassword(!showCreatePassword)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground"
+                  >
+                    {showCreatePassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end md:col-span-4">
+                <Button
+                  type="submit"
+                  disabled={creating}
+                  className="rounded-xl text-base"
+                >
+                  <UserPlus className="mr-2 h-5 w-5" />
+                  {creating ? "Creando..." : "Crear usuario"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="relative w-full !text-lg md:max-w-sm">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Buscar usuario..." className="pl-9" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar usuario..."
+            className="pl-9"
+          />
         </div>
 
-        <Button className="mr-2 rounded-xl text-base">
+        <Button
+          type="button"
+          onClick={() => setShowCreateForm((prev) => !prev)}
+          className="mr-2 rounded-xl text-base"
+        >
           <UserPlus className="mr-2 h-5 w-5" />
           Agregar usuario
         </Button>
       </div>
 
-      {/* LISTA */}
       <div className="h-[650px] space-y-2 overflow-y-auto rounded-xl pr-2">
-        {users.map((user) => (
+        {filteredUsers.map((user) => (
           <UserRow
             key={user.id}
             id={user.id}
@@ -170,8 +406,6 @@ export default function AdminUsuarios() {
     </div>
   )
 }
-
-/* COMPONENTES */
 
 function RowField({ label, value, editable, icon }: any) {
   return (
