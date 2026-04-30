@@ -23,6 +23,9 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
+  CalendarDays,
+  Clock3,
+  ShieldCheck,
 } from "lucide-react"
 
 import { Switch } from "@/components/ui/switch"
@@ -67,6 +70,14 @@ type ApiImpresora = {
   default: boolean
 }
 
+type LicenciaInfo = {
+  estado: string
+  mensaje?: string
+  fecha_inicio: string | null
+  fecha_fin: string | null
+  dias_restantes: number | null
+}
+
 const initialConfig: ConfiguracionSistema = {
   nombre_negocio: "",
   telefono_negocio: "",
@@ -102,9 +113,13 @@ export default function ConfiguracionPage() {
   const [impresoras, setImpresoras] = useState<ApiImpresora[]>([])
   const [loadingImpresoras, setLoadingImpresoras] = useState(false)
 
+  const [licencia, setLicencia] = useState<LicenciaInfo | null>(null)
+  const [loadingLicencia, setLoadingLicencia] = useState(false)
+
   useEffect(() => {
     cargarConfiguracion()
     cargarImpresoras()
+    cargarLicencia()
   }, [])
 
   async function cargarConfiguracion() {
@@ -177,6 +192,52 @@ export default function ConfiguracionPage() {
     } finally {
       setLoadingImpresoras(false)
     }
+  }
+
+  async function cargarLicencia() {
+    try {
+      setLoadingLicencia(true)
+
+      const res = await fetch(`${API_URL}/licencia/estado`, {
+        cache: "no-store",
+      })
+
+      const data = await res.json()
+      const lic = data.licencia || data
+
+      const fechaFin = lic.fecha_fin || null
+
+      setLicencia({
+        estado: lic.estado || "sin_licencia",
+        mensaje: lic.mensaje || "",
+        fecha_inicio: lic.fecha_inicio || null,
+        fecha_fin: fechaFin,
+        dias_restantes: calcularDiasRestantes(fechaFin),
+      })
+    } catch (error) {
+      console.error(error)
+      setLicencia(null)
+    } finally {
+      setLoadingLicencia(false)
+    }
+  }
+
+  function calcularDiasRestantes(fechaFin: string | null): number | null {
+    if (!fechaFin) return null
+
+    const hoy = new Date()
+    const fin = new Date(fechaFin)
+
+    hoy.setHours(0, 0, 0, 0)
+    fin.setHours(0, 0, 0, 0)
+
+    const diff = fin.getTime() - hoy.getTime()
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
+  }
+
+  function formatearFecha(fecha: string | null): string {
+    if (!fecha) return "Sin información"
+    return new Date(fecha).toLocaleDateString("es-MX")
   }
 
   async function guardarConfiguracion() {
@@ -557,6 +618,73 @@ export default function ConfiguracionPage() {
           </CardContent>
         </Card>
       </div>
+      <Card className="rounded-2xl border shadow-sm">
+        <CardHeader>
+          <div className="flex items-start gap-3">
+            <div className="rounded-2xl bg-primary/10 p-3">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+
+            <div>
+              <CardTitle className="text-xl">Información de licencia</CardTitle>
+              <CardDescription>Vigencia actual del sistema</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          {loadingLicencia ? (
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <span>Cargando licencia...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              <div className="rounded-xl border bg-muted/20 p-4">
+                <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                  <ShieldCheck className="h-4 w-4" />
+                  Estado
+                </div>
+                <p className="text-lg font-semibold capitalize">
+                  {licencia?.estado || "Sin licencia"}
+                </p>
+              </div>
+
+              <div className="rounded-xl border bg-muted/20 p-4">
+                <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                  <CalendarDays className="h-4 w-4" />
+                  Fecha inicio
+                </div>
+                <p className="text-lg font-semibold">
+                  {formatearFecha(licencia?.fecha_inicio)}
+                </p>
+              </div>
+
+              <div className="rounded-xl border bg-muted/20 p-4">
+                <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                  <CalendarDays className="h-4 w-4" />
+                  Fecha fin
+                </div>
+                <p className="text-lg font-semibold">
+                  {formatearFecha(licencia?.fecha_fin)}
+                </p>
+              </div>
+
+              <div className="rounded-xl border bg-muted/20 p-4">
+                <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock3 className="h-4 w-4" />
+                  Días restantes
+                </div>
+                <p className="text-lg font-semibold">
+                  {licencia?.dias_restantes !== null &&
+                  licencia?.dias_restantes !== undefined
+                    ? `${licencia.dias_restantes} días`
+                    : "Sin información"}
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
         <Link
