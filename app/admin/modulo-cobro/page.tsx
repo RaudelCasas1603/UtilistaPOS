@@ -43,37 +43,22 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
 
-type ProductoPreview = {
-  id: number
-  producto: string
-  cantidad: number
-  subtotal: string | number
-}
+type MetodoPago = "efectivo" | "tarjeta" | "transferencia"
 
 type TicketPendiente = {
   id: number
-  folio: string
+  folio: string | null
   fecha_hora: string
-  id_cliente: number | null
-  cliente: string
-  subtotal: string | number
-  descuento: string | number
   total: string | number
   total_articulos: number
-  metodo_pago: string | null
-  estatus: string
-  observaciones: string | null
-  total_productos: number
-  productos_preview: ProductoPreview[]
+  cliente_nombre: string | null
 }
 
 type ProductoDetalle = {
   id: number
-  id_venta: number
   id_producto: number
-  producto: string
+  nombre: string
   codigo_producto: string | null
-  codigo_barras: string | null
   cantidad: number
   precio_unitario: string | number
   descuento_unitario: string | number
@@ -82,32 +67,21 @@ type ProductoDetalle = {
 
 type TicketDetalle = {
   id: number
-  folio: string
+  folio: string | null
   fecha_hora: string
   id_cliente: number | null
-  cliente: string
+  cliente_nombre: string | null
+  cliente_telefono?: string | null
+  cliente_correo?: string | null
   subtotal: string | number
   descuento: string | number
+  metodo_pago: MetodoPago | null
   total: string | number
   total_articulos: number
-  metodo_pago: string | null
   estatus: string
   observaciones: string | null
-  productos: ProductoDetalle[]
+  items: ProductoDetalle[]
 }
-
-type ApiPendientesResponse = {
-  ok: boolean
-  total: number
-  tickets: TicketPendiente[]
-}
-
-type ApiDetalleResponse = {
-  ok: boolean
-  ticket: TicketDetalle
-}
-
-type MetodoPago = "efectivo" | "tarjeta" | "transferencia"
 
 export default function ModuloCobro() {
   const [tickets, setTickets] = useState<TicketPendiente[]>([])
@@ -122,6 +96,7 @@ export default function ModuloCobro() {
   const [ticketCobro, setTicketCobro] = useState<
     TicketPendiente | TicketDetalle | null
   >(null)
+
   const [metodoPago, setMetodoPago] = useState<MetodoPago | "">("")
   const [observaciones, setObservaciones] = useState("")
   const [montoRecibido, setMontoRecibido] = useState("")
@@ -132,17 +107,14 @@ export default function ModuloCobro() {
 
   const fecha = useMemo(() => new Date(), [])
 
-  const fechaFormateada = new Intl.DateTimeFormat("es-MX", {
+  const fechaEncabezado = new Intl.DateTimeFormat("es-MX", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(fecha)
-
-  const capitalizar = (texto: string) =>
-    texto.charAt(0).toUpperCase() + texto.slice(1)
-
-  const fechaEncabezado = capitalizar(fechaFormateada)
+  })
+    .format(fecha)
+    .replace(/^./, (letra) => letra.toUpperCase())
 
   useEffect(() => {
     obtenerTicketsPendientes()
@@ -160,8 +132,9 @@ export default function ModuloCobro() {
     return () => clearTimeout(timer)
   }, [errorMessage])
 
-  const formatearMoneda = (valor: string | number) => {
+  const formatearMoneda = (valor: string | number | null | undefined) => {
     const numero = Number(valor || 0)
+
     return new Intl.NumberFormat("es-MX", {
       style: "currency",
       currency: "MXN",
@@ -169,21 +142,19 @@ export default function ModuloCobro() {
   }
 
   const formatearFecha = (fechaIso: string) => {
-    const fecha = new Date(fechaIso)
     return new Intl.DateTimeFormat("es-MX", {
       day: "numeric",
       month: "numeric",
       year: "numeric",
-    }).format(fecha)
+    }).format(new Date(fechaIso))
   }
 
   const formatearHora = (fechaIso: string) => {
-    const fecha = new Date(fechaIso)
     return new Intl.DateTimeFormat("es-MX", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
-    }).format(fecha)
+    }).format(new Date(fechaIso))
   }
 
   const obtenerTicketsPendientes = async () => {
@@ -191,21 +162,17 @@ export default function ModuloCobro() {
       setLoading(true)
       setError("")
 
-      const res = await fetch(`${API_URL}/cobros/pendientes`, {
+      const res = await fetch(`${API_URL}/ventas/pendientes`, {
         cache: "no-store",
       })
 
-      const data: ApiPendientesResponse = await res.json()
+      const data = await res.json()
 
       if (!res.ok || !data.ok) {
-        throw new Error(
-          data?.ok === false
-            ? "No se pudieron obtener los tickets pendientes"
-            : "Error al cargar tickets"
-        )
+        throw new Error(data?.message || "Error al cargar tickets pendientes")
       }
 
-      setTickets(data.tickets || [])
+      setTickets(data.data || data.tickets || [])
     } catch (err) {
       console.error(err)
       setError("No fue posible cargar los tickets pendientes.")
@@ -220,19 +187,17 @@ export default function ModuloCobro() {
       setCargandoDetalle(true)
       setTicketDetalle(null)
 
-      const res = await fetch(`${API_URL}/cobros/pendientes/${id}`, {
+      const res = await fetch(`${API_URL}/ventas/${id}`, {
         cache: "no-store",
       })
 
-      const data: ApiDetalleResponse = await res.json()
+      const data = await res.json()
 
       if (!res.ok || !data.ok) {
-        throw new Error(
-          data?.ticket ? "" : "No se pudo obtener el detalle del ticket"
-        )
+        throw new Error(data?.message || "No se pudo obtener el detalle")
       }
 
-      setTicketDetalle(data.ticket)
+      setTicketDetalle(data.data || data.venta || data.ticket)
     } catch (err) {
       console.error(err)
       setDetalleAbierto(false)
@@ -245,13 +210,16 @@ export default function ModuloCobro() {
   const abrirCobro = (ticket: TicketPendiente | TicketDetalle) => {
     setTicketCobro(ticket)
     setMetodoPago("")
-    setObservaciones(ticket.observaciones || "")
+    setObservaciones(
+      "observaciones" in ticket ? ticket.observaciones || "" : ""
+    )
     setMontoRecibido("")
     setCobroAbierto(true)
   }
 
   const totalNumerico = Number(ticketCobro?.total || 0)
   const montoRecibidoNumerico = Number(montoRecibido || 0)
+
   const cambio =
     metodoPago === "efectivo" && montoRecibidoNumerico >= totalNumerico
       ? montoRecibidoNumerico - totalNumerico
@@ -277,19 +245,16 @@ export default function ModuloCobro() {
     try {
       setProcesandoPago(true)
 
-      const res = await fetch(
-        `${API_URL}/cobros/pendientes/${ticketCobro.id}/cobrar`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            metodo_pago: metodoPago,
-            observaciones: observaciones.trim() || null,
-          }),
-        }
-      )
+      const res = await fetch(`${API_URL}/ventas/${ticketCobro.id}/finalizar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          metodo_pago: metodoPago,
+          observaciones: observaciones.trim() || "",
+        }),
+      })
 
       const data = await res.json()
 
@@ -327,6 +292,7 @@ export default function ModuloCobro() {
     <div className="flex h-full flex-col p-4">
       <div className="flex shrink-0 items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Módulo de Cobro</h1>
+
         <h1 className="ml-4 rounded-md p-2 text-right text-2xl font-semibold">
           {fechaEncabezado}
         </h1>
@@ -375,6 +341,7 @@ export default function ModuloCobro() {
                   No hay ventas pendientes por cobrar en este momento.
                 </CardDescription>
               </CardHeader>
+
               <CardFooter>
                 <Button onClick={obtenerTicketsPendientes}>Actualizar</Button>
               </CardFooter>
@@ -383,21 +350,19 @@ export default function ModuloCobro() {
         ) : (
           <div className="grid h-full grid-cols-1 gap-4 overflow-y-auto pr-2 [scrollbar-width:none] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 [&::-webkit-scrollbar]:hidden">
             {tickets.map((ticket) => {
-              const fechaTicket = formatearFecha(ticket.fecha_hora)
-              const horaTicket = formatearHora(ticket.fecha_hora)
-              const total = formatearMoneda(ticket.total)
+              const cliente = ticket.cliente_nombre || "Cliente general"
 
               return (
                 <Card
                   key={ticket.id}
-                  className="mt-2 flex h-[30rem] max-w-full flex-col rounded-2xl border border-border/60 py-4 shadow-sm transition-shadow hover:shadow-lg"
+                  className="mt-2 flex h-[24rem] max-w-full flex-col rounded-2xl border border-border/60 py-4 shadow-sm transition-shadow hover:shadow-lg"
                 >
                   <CardHeader className="space-y-3 px-5 pb-4">
                     <CardTitle>
                       <div className="flex items-center gap-2 text-lg">
                         <User2 className="h-4 w-4 shrink-0" />
                         <span className="truncate font-semibold">
-                          {ticket.cliente}
+                          {cliente}
                         </span>
                       </div>
                     </CardTitle>
@@ -405,15 +370,18 @@ export default function ModuloCobro() {
                     <CardDescription className="space-y-2 text-base">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <FileCheckIcon className="h-4 w-4 shrink-0" />
-                        <p>Ticket #{ticket.id}</p>
+                        <p>{ticket.folio || `Ticket #${ticket.id}`}</p>
                       </div>
 
                       <div className="flex items-center justify-between gap-3 text-muted-foreground">
                         <div className="flex items-center gap-2">
                           <CalendarClock className="h-4 w-4 shrink-0" />
-                          <p>{fechaTicket}</p>
+                          <p>{formatearFecha(ticket.fecha_hora)}</p>
                         </div>
-                        <p className="shrink-0">{horaTicket}</p>
+
+                        <p className="shrink-0">
+                          {formatearHora(ticket.fecha_hora)}
+                        </p>
                       </div>
 
                       <div className="border-t border-border/70 pt-1" />
@@ -421,34 +389,13 @@ export default function ModuloCobro() {
                   </CardHeader>
 
                   <CardContent className="flex-1 px-5">
-                    <div className="grid grid-cols-[minmax(0,1fr)_88px_92px] items-center gap-2 text-sm font-semibold text-card-foreground">
-                      <p className="truncate">Items</p>
-                      <p className="text-center">Cantidad</p>
-                      <p className="text-right">Precio</p>
-                    </div>
+                    <div className="rounded-xl border p-4">
+                      <p className="text-sm text-muted-foreground">Artículos</p>
 
-                    <div className="mt-3 space-y-2">
-                      {ticket.productos_preview.map((item) => (
-                        <div
-                          key={item.id}
-                          className="grid grid-cols-[minmax(0,1fr)_88px_92px] items-center gap-2 text-sm text-card-foreground"
-                        >
-                          <p className="truncate">{item.producto}</p>
-                          <p className="text-center tabular-nums">
-                            {item.cantidad}
-                          </p>
-                          <p className="text-right tabular-nums">
-                            {formatearMoneda(item.subtotal)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {ticket.total_productos > 3 ? (
-                      <p className="mt-3 text-xs text-muted-foreground">
-                        +{ticket.total_productos - 3} producto(s) más...
+                      <p className="mt-1 text-3xl font-bold tabular-nums">
+                        {ticket.total_articulos || 0}
                       </p>
-                    ) : null}
+                    </div>
                   </CardContent>
 
                   <CardFooter className="mx-5 mb-2 flex-col items-stretch gap-4 border-t border-border/70 bg-card pt-4">
@@ -456,7 +403,10 @@ export default function ModuloCobro() {
                       <p className="text-lg text-muted-foreground">
                         Total a pagar
                       </p>
-                      <p className="text-xl font-bold tabular-nums">{total}</p>
+
+                      <p className="text-xl font-bold tabular-nums">
+                        {formatearMoneda(ticket.total)}
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -472,7 +422,7 @@ export default function ModuloCobro() {
                         onClick={() => abrirCobro(ticket)}
                         className="rounded-xl bg-accent py-5 text-sm font-semibold text-foreground hover:bg-accent/80"
                       >
-                        Procesar Pago
+                        Procesar pago
                       </Button>
                     </div>
                   </CardFooter>
@@ -484,12 +434,15 @@ export default function ModuloCobro() {
       </div>
 
       <Dialog open={detalleAbierto} onOpenChange={setDetalleAbierto}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="sm:max-w-[760px]">
           <DialogHeader>
             <DialogTitle>Detalles de la orden</DialogTitle>
+
             <DialogDescription>
               {ticketDetalle
-                ? `Ticket #${ticketDetalle.id} · Cliente: ${ticketDetalle.cliente}`
+                ? `${ticketDetalle.folio || `Ticket #${ticketDetalle.id}`} · Cliente: ${
+                    ticketDetalle.cliente_nombre || "Cliente general"
+                  }`
                 : "Cargando detalle del ticket..."}
             </DialogDescription>
           </DialogHeader>
@@ -511,6 +464,7 @@ export default function ModuloCobro() {
                       {formatearFecha(ticketDetalle.fecha_hora)}
                     </p>
                   </div>
+
                   <div>
                     <p className="text-sm text-muted-foreground">Hora</p>
                     <p className="font-medium">
@@ -520,25 +474,48 @@ export default function ModuloCobro() {
                 </div>
 
                 <div className="rounded-lg border p-4">
-                  <div className="mb-3 grid grid-cols-3 font-semibold">
+                  <div className="mb-3 grid grid-cols-[1fr_90px_120px] gap-2 font-semibold">
                     <p>Producto</p>
                     <p className="text-center">Cantidad</p>
                     <p className="text-right">Subtotal</p>
                   </div>
 
                   <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
-                    {ticketDetalle.productos.map((item) => (
-                      <div key={item.id} className="grid grid-cols-3 gap-2">
-                        <p className="truncate">{item.producto}</p>
-                        <p className="text-center">{item.cantidad}</p>
-                        <p className="text-right">
+                    {ticketDetalle.items?.map((item) => (
+                      <div
+                        key={item.id}
+                        className="grid grid-cols-[1fr_90px_120px] gap-2 text-sm"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{item.nombre}</p>
+
+                          <p className="truncate text-xs text-muted-foreground">
+                            {item.codigo_producto || "Sin código"}
+                          </p>
+                        </div>
+
+                        <p className="text-center tabular-nums">
+                          {item.cantidad}
+                        </p>
+
+                        <p className="text-right tabular-nums">
                           {formatearMoneda(item.subtotal)}
                         </p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-4 border-t pt-4">
+                  <div className="mt-4 space-y-2 border-t pt-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>{formatearMoneda(ticketDetalle.subtotal)}</span>
+                    </div>
+
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Descuento</span>
+                      <span>{formatearMoneda(ticketDetalle.descuento)}</span>
+                    </div>
+
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
                       <span>{formatearMoneda(ticketDetalle.total)}</span>
@@ -559,7 +536,7 @@ export default function ModuloCobro() {
                   onClick={() => abrirCobro(ticketDetalle)}
                   className="bg-accent font-semibold text-foreground hover:bg-accent/80"
                 >
-                  Procesar Pago
+                  Procesar pago
                 </Button>
               </DialogFooter>
             </>
@@ -579,9 +556,17 @@ export default function ModuloCobro() {
         <DialogContent className="sm:max-w-[560px]">
           <DialogHeader>
             <DialogTitle>Finalizar venta</DialogTitle>
+
             <DialogDescription>
               {ticketCobro
-                ? `Ticket #${ticketCobro.id} · Cliente: ${ticketCobro.cliente}`
+                ? `${
+                    ticketCobro.folio || `Ticket #${ticketCobro.id}`
+                  } · Cliente: ${
+                    "cliente_nombre" in ticketCobro &&
+                    ticketCobro.cliente_nombre
+                      ? ticketCobro.cliente_nombre
+                      : "Cliente general"
+                  }`
                 : "Selecciona el método de pago para finalizar la venta."}
             </DialogDescription>
           </DialogHeader>
@@ -598,6 +583,7 @@ export default function ModuloCobro() {
 
             <div className="space-y-2">
               <Label htmlFor="metodo_pago">Método de pago</Label>
+
               <Select
                 value={metodoPago}
                 onValueChange={(value: MetodoPago) => setMetodoPago(value)}
@@ -605,6 +591,7 @@ export default function ModuloCobro() {
                 <SelectTrigger id="metodo_pago" className="w-full">
                   <SelectValue placeholder="Selecciona un método de pago" />
                 </SelectTrigger>
+
                 <SelectContent
                   className="rounded-lg border border-border bg-background shadow-lg"
                   position="popper"
@@ -615,12 +602,14 @@ export default function ModuloCobro() {
                       Efectivo
                     </div>
                   </SelectItem>
+
                   <SelectItem value="tarjeta">
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" />
                       Tarjeta
                     </div>
                   </SelectItem>
+
                   <SelectItem value="transferencia">
                     <div className="flex items-center gap-2">
                       <Landmark className="h-4 w-4" />
@@ -646,6 +635,7 @@ export default function ModuloCobro() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="monto_recibido">Monto recibido</Label>
+
                     <Input
                       id="monto_recibido"
                       type="number"
@@ -675,6 +665,7 @@ export default function ModuloCobro() {
 
                     <div className="flex items-center justify-between">
                       <p className="text-base font-semibold">Cambio</p>
+
                       <p
                         className={`text-2xl font-bold ${
                           montoInsuficiente ? "text-red-500" : "text-green-500"
@@ -696,6 +687,7 @@ export default function ModuloCobro() {
 
             <div className="space-y-2">
               <Label htmlFor="observaciones">Observaciones</Label>
+
               <Textarea
                 id="observaciones"
                 placeholder="Opcional: notas del cobro, referencia, caja, etc."
