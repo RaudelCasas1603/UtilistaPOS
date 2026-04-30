@@ -41,7 +41,7 @@ export default function LoginPage() {
     try {
       setLoading(true)
 
-      const res = await fetch(`${API_URL}/usuarios/login`, {
+      const resLogin = await fetch(`${API_URL}/usuarios/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -52,13 +52,29 @@ export default function LoginPage() {
         }),
       })
 
-      const data = await res.json()
+      const dataLogin = await resLogin.json()
 
-      if (!res.ok || !data.ok) {
-        throw new Error(data.message || "No se pudo iniciar sesión")
+      if (!resLogin.ok || !dataLogin.ok) {
+        throw new Error(dataLogin.message || "No se pudo iniciar sesión")
       }
 
-      const usuario = data.usuario
+      const usuario = dataLogin.usuario
+
+      const resLicencia = await fetch(`${API_URL}/licencia/validar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      const dataLicencia = await resLicencia.json()
+
+      if (!resLicencia.ok || !dataLicencia.ok) {
+        const estado = dataLicencia.estado || "error"
+
+        router.push(`/activacion?estado=${estado}`)
+        return
+      }
 
       localStorage.setItem("usuario", JSON.stringify(usuario))
 
@@ -86,7 +102,6 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-muted/30 p-6">
       <Card className="w-full max-w-md rounded-2xl shadow-sm">
         <CardHeader className="space-y-3 text-center">
-          {/* LOGO */}
           <div className="flex justify-center">
             <Image
               src={isDark ? "/IconoLogoClaro.svg" : "/IconoLogoOscuro.svg"}
@@ -106,7 +121,6 @@ export default function LoginPage() {
 
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* USERNAME */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Usuario</label>
 
@@ -123,7 +137,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* PASSWORD */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Contraseña</label>
 
@@ -153,16 +166,14 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* ERROR */}
             {error && (
               <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {error}
               </div>
             )}
 
-            {/* BUTTON */}
             <Button disabled={loading} className="h-11 w-full rounded-xl">
-              {loading ? "Ingresando..." : "Iniciar sesión"}
+              {loading ? "Validando acceso..." : "Iniciar sesión"}
             </Button>
           </form>
         </CardContent>
