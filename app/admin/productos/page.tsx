@@ -214,37 +214,20 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
   }, [])
 
   React.useEffect(() => {
-    if (open) {
-      fetchCatalogs()
-    }
+    if (open) fetchCatalogs()
   }, [open, fetchCatalogs])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!form.nombre.trim()) {
-      newErrors.nombre = "El nombre es obligatorio"
-    }
-
-    if (!form.precioCompra.trim()) {
+    if (!form.nombre.trim()) newErrors.nombre = "El nombre es obligatorio"
+    if (!form.precioCompra.trim())
       newErrors.precioCompra = "El precio de compra es obligatorio"
-    }
-
-    if (!form.precioVenta.trim()) {
+    if (!form.precioVenta.trim())
       newErrors.precioVenta = "El precio de venta es obligatorio"
-    }
-
-    if (!form.stock.trim()) {
-      newErrors.stock = "El stock inicial es obligatorio"
-    }
-
-    if (!form.idProveedor) {
-      newErrors.idProveedor = "Selecciona un proveedor"
-    }
-
-    if (!form.idCategoria) {
-      newErrors.idCategoria = "Selecciona una categoría"
-    }
+    if (!form.stock.trim()) newErrors.stock = "El stock inicial es obligatorio"
+    if (!form.idProveedor) newErrors.idProveedor = "Selecciona un proveedor"
+    if (!form.idCategoria) newErrors.idCategoria = "Selecciona una categoría"
 
     if (form.precioCompra && Number.isNaN(Number(form.precioCompra))) {
       newErrors.precioCompra = "El precio de compra debe ser numérico"
@@ -283,7 +266,6 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
     }
 
     setErrors(newErrors)
-
     return Object.keys(newErrors).length === 0
   }
 
@@ -322,13 +304,13 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button className="h-9 gap-2 px-3 text-xs xl:h-10 xl:text-sm">
+          <Plus className="h-4 w-4" />
           Nuevo producto
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[720px]">
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-[720px]">
         <DialogHeader>
           <DialogTitle>Agregar producto</DialogTitle>
           <DialogDescription>
@@ -336,7 +318,7 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2 md:grid-cols-2">
+        <div className="grid gap-3 py-2 md:grid-cols-2">
           <div className="grid gap-2">
             <Label htmlFor="codigoProducto">Código producto</Label>
             <Input
@@ -345,9 +327,6 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
               value={form.codigoProducto}
               onChange={(e) => handleChange("codigoProducto", e.target.value)}
             />
-            {errors.codigoProducto && (
-              <p className="text-xs text-red-500">{errors.codigoProducto}</p>
-            )}
           </div>
 
           <div className="grid gap-2">
@@ -358,9 +337,6 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
               value={form.codigoBarras}
               onChange={(e) => handleChange("codigoBarras", e.target.value)}
             />
-            {errors.codigoBarras && (
-              <p className="text-xs text-red-500">{errors.codigoBarras}</p>
-            )}
           </div>
 
           <div className="grid gap-2 md:col-span-2">
@@ -483,7 +459,7 @@ function ProductDialog({ onAddProduct }: ProductDialogProps) {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancelar
           </Button>
@@ -556,7 +532,6 @@ export default function ProductosPage() {
     }
 
     const nuevoProducto = mapApiProductoToProduct(result)
-
     setData((prev) => [nuevoProducto, ...prev])
 
     if (product.stock > 0) {
@@ -593,21 +568,19 @@ export default function ProductosPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Código producto
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            Código
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
       },
       {
         accessorKey: "codigoBarras",
-        header: "Código de barras",
+        header: "Barras",
         cell: ({ row }) => (
-          <span className="text-center font-mono text-xs md:text-sm">
-            {row.original.codigoBarras}
-          </span>
+          <span className="font-mono text-xs">{row.original.codigoBarras}</span>
         ),
       },
       {
@@ -615,19 +588,19 @@ export default function ProductosPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Nombre
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="min-w-[220px]">
-            <p className="truncate font-semibold text-foreground">
+          <div className="min-w-0">
+            <p className="truncate text-xs font-semibold text-foreground xl:text-sm">
               {row.original.nombre}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="truncate text-[11px] text-muted-foreground">
               {row.original.codigoProducto}
             </p>
           </div>
@@ -638,15 +611,15 @@ export default function ProductosPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Precio
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="font-medium">
+          <span className="text-xs font-medium xl:text-sm">
             {formatCurrency(row.original.precio)}
           </span>
         ),
@@ -656,15 +629,15 @@ export default function ProductosPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Costo
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-muted-foreground">
+          <span className="text-xs text-muted-foreground xl:text-sm">
             {formatCurrency(row.original.costo)}
           </span>
         ),
@@ -674,11 +647,11 @@ export default function ProductosPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            % ganancia
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            % Gan.
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         accessorFn: (row) => getProfitPercentage(row.costo, row.precio),
@@ -691,7 +664,7 @@ export default function ProductosPage() {
           return (
             <span
               className={[
-                "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
+                "inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
                 profit < 15
                   ? "bg-red-500/10 text-red-600 dark:text-red-400"
                   : profit < 30
@@ -706,18 +679,9 @@ export default function ProductosPage() {
       },
       {
         accessorKey: "precioPublico",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            className="h-auto p-0 font-semibold"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Precio público
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: "P. Público",
         cell: ({ row }) => (
-          <span className="font-semibold text-primary">
+          <span className="text-xs font-semibold text-primary xl:text-sm">
             {formatCurrency(row.original.precioPublico)}
           </span>
         ),
@@ -727,15 +691,17 @@ export default function ProductosPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Stock
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="font-medium">{row.original.stock}</span>
+          <span className="text-xs font-medium xl:text-sm">
+            {row.original.stock}
+          </span>
         ),
       },
       {
@@ -745,8 +711,13 @@ export default function ProductosPage() {
           const product = row.original
 
           return (
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/admin/productos/${product.id}`}>Ver detalles</Link>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 text-xs"
+            >
+              <Link href={`/admin/productos/${product.id}`}>Ver</Link>
             </Button>
           )
         },
@@ -806,122 +777,167 @@ export default function ProductosPage() {
       : 0
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Productos
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Administra precios, costos y margen de ganancia de tus productos.
-        </p>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden p-3 lg:p-4 xl:p-5">
+      <div className="shrink-0 space-y-2">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-bold tracking-tight text-foreground xl:text-2xl">
+            Productos
+          </h1>
+          <p className="text-xs text-muted-foreground xl:text-sm">
+            Administra precios, costos y margen de ganancia de tus productos.
+          </p>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Total productos dados de alta
+                </p>
+                <p className="mt-0.5 text-lg font-bold xl:text-2xl">
+                  {totalProductos}
+                </p>
+              </div>
+              <Package2 className="h-5 w-5 shrink-0 text-muted-foreground xl:h-7 xl:w-7" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Costo promedio
+                </p>
+                <p className="mt-0.5 truncate text-lg font-bold xl:text-2xl">
+                  {formatCurrency(promedioCosto)}
+                </p>
+              </div>
+              <Wallet className="h-5 w-5 shrink-0 text-muted-foreground xl:h-7 xl:w-7" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Precio promedio
+                </p>
+                <p className="mt-0.5 truncate text-lg font-bold xl:text-2xl">
+                  {formatCurrency(promedioPrecio)}
+                </p>
+              </div>
+              <BadgeDollarSign className="h-5 w-5 shrink-0 text-muted-foreground xl:h-7 xl:w-7" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Ganancia promedio
+                </p>
+                <p className="mt-0.5 text-lg font-bold xl:text-2xl">
+                  {promedioGanancia.toFixed(1)}%
+                </p>
+              </div>
+              <div className="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 xl:px-3 xl:py-1 xl:text-sm dark:text-emerald-400">
+                Margen
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Total productos dados de alta
-              </p>
-              <p className="mt-1 text-2xl font-bold">{totalProductos}</p>
-            </div>
-            <Package2 className="h-8 w-8 text-muted-foreground" />
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">Costo promedio</p>
-              <p className="mt-1 text-2xl font-bold">
-                {formatCurrency(promedioCosto)}
+      <Card className="mt-3 flex min-h-0 flex-1 flex-col border-border/60 shadow-sm">
+        <CardHeader className="shrink-0 p-3 xl:p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <CardTitle className="text-base xl:text-lg">
+                Listado de productos
+              </CardTitle>
+              <p className="mt-0.5 text-xs text-muted-foreground xl:text-sm">
+                Consulta y ordena la información de tus productos.
               </p>
             </div>
-            <Wallet className="h-8 w-8 text-muted-foreground" />
-          </CardContent>
-        </Card>
 
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">Precio promedio</p>
-              <p className="mt-1 text-2xl font-bold">
-                {formatCurrency(promedioPrecio)}
-              </p>
+            <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+              <div className="relative w-full sm:w-[300px] xl:w-[340px]">
+                <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={globalFilter ?? ""}
+                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  placeholder="Buscar por nombre, código o barras..."
+                  className="h-9 pl-9 text-xs xl:h-10 xl:text-sm"
+                />
+              </div>
+
+              <ProductDialog onAddProduct={handleAddProduct} />
             </div>
-            <BadgeDollarSign className="h-8 w-8 text-muted-foreground" />
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">Ganancia promedio</p>
-              <p className="mt-1 text-2xl font-bold">
-                {promedioGanancia.toFixed(1)}%
-              </p>
-            </div>
-            <div className="rounded-full bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-              Margen
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="mt-10 border-border/60 shadow-sm">
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle className="text-lg">Listado de productos</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Consulta y ordena la información de tus productos.
-            </p>
-          </div>
-
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <div className="relative w-full sm:w-[320px]">
-              <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={globalFilter ?? ""}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder="Buscar por nombre, código o barras..."
-                className="pl-9"
-              />
-            </div>
-
-            <ProductDialog onAddProduct={handleAddProduct} />
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="flex min-h-0 flex-1 flex-col gap-2 p-3 pt-0 xl:p-4 xl:pt-0">
           {loading ? (
-            <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+            <div className="flex h-full min-h-[220px] items-center justify-center text-sm text-muted-foreground">
               Cargando productos...
             </div>
           ) : error ? (
-            <div className="flex h-40 items-center justify-center text-sm text-red-500">
+            <div className="flex h-full min-h-[220px] items-center justify-center text-sm text-red-500">
               {error}
             </div>
           ) : (
             <>
-              <div className="overflow-hidden rounded-xl border border-border/60">
-                <div className="overflow-x-auto">
-                  <Table className="text-base">
-                    <TableHeader className="bg-muted/40">
+              <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border/60">
+                <div className="h-full overflow-x-hidden overflow-y-auto">
+                  <Table className="w-full table-fixed text-xs xl:text-sm">
+                    <TableHeader className="sticky top-0 z-10 bg-muted/40">
                       {table.getHeaderGroups().map((headerGroup) => (
-                        <TableRow key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <TableHead
-                              key={header.id}
-                              className="whitespace-nowrap"
-                            >
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext()
-                                  )}
-                            </TableHead>
-                          ))}
+                        <TableRow key={headerGroup.id} className="h-8">
+                          {headerGroup.headers.map((header) => {
+                            const hiddenColumn =
+                              header.column.id === "codigoBarras" ||
+                              header.column.id === "precioPublico"
+
+                            return (
+                              <TableHead
+                                key={header.id}
+                                className={[
+                                  "h-8 px-2 py-1 text-xs font-semibold whitespace-nowrap",
+                                  hiddenColumn ? "hidden 2xl:table-cell" : "",
+                                  header.column.id === "id" ? "w-[42px]" : "",
+                                  header.column.id === "codigoProducto"
+                                    ? "w-[95px]"
+                                    : "",
+                                  header.column.id === "nombre"
+                                    ? "w-[310px]"
+                                    : "",
+                                  header.column.id === "precio"
+                                    ? "w-[88px]"
+                                    : "",
+                                  header.column.id === "costo"
+                                    ? "w-[88px]"
+                                    : "",
+                                  header.column.id === "porcentajeGanancia"
+                                    ? "w-[78px]"
+                                    : "",
+                                  header.column.id === "stock"
+                                    ? "w-[58px]"
+                                    : "",
+                                  header.column.id === "acciones"
+                                    ? "w-[65px]"
+                                    : "",
+                                ].join(" ")}
+                              >
+                                {header.isPlaceholder
+                                  ? null
+                                  : flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext()
+                                    )}
+                              </TableHead>
+                            )
+                          })}
                         </TableRow>
                       ))}
                     </TableHeader>
@@ -931,19 +947,30 @@ export default function ProductosPage() {
                         table.getRowModel().rows.map((row) => (
                           <TableRow
                             key={row.id}
-                            className="transition-colors hover:bg-muted/30"
+                            className="h-10 transition-colors hover:bg-muted/30"
                           >
-                            {row.getVisibleCells().map((cell) => (
-                              <TableCell
-                                key={cell.id}
-                                className="align-middle whitespace-nowrap"
-                              >
-                                {flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext()
-                                )}
-                              </TableCell>
-                            ))}
+                            {row.getVisibleCells().map((cell) => {
+                              const hiddenColumn =
+                                cell.column.id === "codigoBarras" ||
+                                cell.column.id === "precioPublico"
+
+                              return (
+                                <TableCell
+                                  key={cell.id}
+                                  className={[
+                                    "h-10 overflow-hidden px-2 py-1 align-middle text-xs whitespace-nowrap xl:text-sm",
+                                    hiddenColumn ? "hidden 2xl:table-cell" : "",
+                                  ].join(" ")}
+                                >
+                                  <div className="truncate">
+                                    {flexRender(
+                                      cell.column.columnDef.cell,
+                                      cell.getContext()
+                                    )}
+                                  </div>
+                                </TableCell>
+                              )
+                            })}
                           </TableRow>
                         ))
                       ) : (
@@ -961,23 +988,24 @@ export default function ProductosPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">
+              <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-muted-foreground">
                   Mostrando {table.getRowModel().rows.length} de{" "}
                   {table.getFilteredRowModel().rows.length} productos filtrados.
                 </p>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2 sm:justify-start">
                   <Button
                     variant="outline"
                     size="icon"
+                    className="h-8 w-8"
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
 
-                  <div className="min-w-[120px] text-center text-sm text-muted-foreground">
+                  <div className="min-w-[95px] text-center text-xs text-muted-foreground">
                     Página {table.getState().pagination.pageIndex + 1} de{" "}
                     {table.getPageCount()}
                   </div>
@@ -985,6 +1013,7 @@ export default function ProductosPage() {
                   <Button
                     variant="outline"
                     size="icon"
+                    className="h-8 w-8"
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
                   >
