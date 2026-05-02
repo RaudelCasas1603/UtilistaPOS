@@ -249,9 +249,7 @@ export default function ClientesPage() {
   const handleAddClient = async () => {
     setShowRequiredErrors(true)
 
-    if (!isFormValid) {
-      return
-    }
+    if (!isFormValid) return
 
     try {
       setCreating(true)
@@ -299,29 +297,29 @@ export default function ClientesPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Nombre
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="min-w-[220px]">
-            <p className="font-semibold text-foreground">
+          <div className="min-w-0">
+            <p className="truncate text-xs font-semibold text-foreground xl:text-sm">
               {row.original.nombre}
             </p>
-            <div className="mt-1 flex items-center gap-2">
-              <p className="text-xs text-muted-foreground">
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <p className="truncate text-[11px] text-muted-foreground">
                 Ref: {row.original.referencia}
               </p>
 
               {row.original.estatus === "activo" ? (
-                <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[11px] font-semibold text-green-600 dark:text-green-400">
+                <span className="shrink-0 rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-semibold text-green-600 dark:text-green-400">
                   Activo
                 </span>
               ) : (
-                <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-600 dark:text-red-400">
+                <span className="shrink-0 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
                   Inactivo
                 </span>
               )}
@@ -334,15 +332,17 @@ export default function ClientesPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Teléfono
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="font-mono text-sm">{row.original.telefono}</span>
+          <span className="font-mono text-xs xl:text-sm">
+            {row.original.telefono}
+          </span>
         ),
       },
       {
@@ -350,15 +350,15 @@ export default function ClientesPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Correo
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs text-muted-foreground xl:text-sm">
             {row.original.correo}
           </span>
         ),
@@ -368,11 +368,11 @@ export default function ClientesPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Descuento
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            Desc.
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => {
@@ -381,7 +381,7 @@ export default function ClientesPage() {
           return (
             <span
               className={[
-                "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
+                "inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
                 getDiscountStyles(descuento),
               ].join(" ")}
             >
@@ -395,15 +395,15 @@ export default function ClientesPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Referencia
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-sm">{row.original.referencia}</span>
+          <span className="text-xs xl:text-sm">{row.original.referencia}</span>
         ),
       },
       {
@@ -413,8 +413,13 @@ export default function ClientesPage() {
           const client = row.original
 
           return (
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/admin/clientes/${client.id}`}>Ver detalles</Link>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 text-xs"
+            >
+              <Link href={`/admin/clientes/${client.id}`}>Ver</Link>
             </Button>
           )
         },
@@ -469,233 +474,236 @@ export default function ClientesPage() {
     .size
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Clientes
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Administra tu base de clientes, descuentos y canales de referencia.
-        </p>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden p-3 lg:p-4 xl:p-5">
+      <div className="shrink-0 space-y-2">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-bold tracking-tight text-foreground xl:text-2xl">
+            Clientes
+          </h1>
+          <p className="text-xs text-muted-foreground xl:text-sm">
+            Administra tu base de clientes, descuentos y canales de referencia.
+          </p>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Total clientes
+                </p>
+                <p className="mt-0.5 text-lg font-bold xl:text-2xl">
+                  {totalClientes}
+                </p>
+              </div>
+              <Users className="h-5 w-5 shrink-0 text-muted-foreground xl:h-7 xl:w-7" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Con descuento
+                </p>
+                <p className="mt-0.5 text-lg font-bold xl:text-2xl">
+                  {clientesConDescuento}
+                </p>
+              </div>
+              <BadgePercent className="h-5 w-5 shrink-0 text-muted-foreground xl:h-7 xl:w-7" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Descuento promedio
+                </p>
+                <p className="mt-0.5 text-lg font-bold xl:text-2xl">
+                  {descuentoPromedio.toFixed(1)}%
+                </p>
+              </div>
+              <div className="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 xl:px-3 xl:py-1 xl:text-sm dark:text-emerald-400">
+                Beneficio
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Referencias activas
+                </p>
+                <p className="mt-0.5 text-lg font-bold xl:text-2xl">
+                  {referenciasUnicas}
+                </p>
+              </div>
+              <Mail className="h-5 w-5 shrink-0 text-muted-foreground xl:h-7 xl:w-7" />
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">Total clientes</p>
-              <p className="mt-1 text-2xl font-bold">{totalClientes}</p>
-            </div>
-            <Users className="h-8 w-8 text-muted-foreground" />
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">Con descuento</p>
-              <p className="mt-1 text-2xl font-bold">{clientesConDescuento}</p>
-            </div>
-            <BadgePercent className="h-8 w-8 text-muted-foreground" />
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Descuento promedio
-              </p>
-              <p className="mt-1 text-2xl font-bold">
-                {descuentoPromedio.toFixed(1)}%
+      <Card className="mt-3 flex min-h-0 flex-1 flex-col border-border/60 shadow-sm">
+        <CardHeader className="shrink-0 p-3 xl:p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <CardTitle className="text-base xl:text-lg">
+                Listado de clientes
+              </CardTitle>
+              <p className="mt-0.5 text-xs text-muted-foreground xl:text-sm">
+                Consulta clientes por nombre, correo, teléfono o referencia.
               </p>
             </div>
-            <div className="rounded-full bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-              Beneficio
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Referencias activas
-              </p>
-              <p className="mt-1 text-2xl font-bold">{referenciasUnicas}</p>
-            </div>
-            <Mail className="h-8 w-8 text-muted-foreground" />
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+              <div className="relative w-full sm:w-[300px] xl:w-[340px]">
+                <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={globalFilter ?? ""}
+                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  placeholder="Buscar cliente..."
+                  className="h-9 pl-9 text-xs xl:h-10 xl:text-sm"
+                />
+              </div>
 
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle className="text-lg">Listado de clientes</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Consulta clientes por nombre, correo, teléfono o referencia.
-            </p>
-          </div>
+              <Dialog
+                open={open}
+                onOpenChange={(value) => {
+                  setOpen(value)
+                  if (!value) resetForm()
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button className="h-9 gap-2 px-3 text-xs xl:h-10 xl:text-sm">
+                    <Plus className="h-4 w-4" />
+                    Nuevo cliente
+                  </Button>
+                </DialogTrigger>
 
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <div className="relative w-full sm:w-[320px]">
-              <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={globalFilter ?? ""}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder="Buscar cliente..."
-                className="pl-9"
-              />
-            </div>
+                <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-[560px]">
+                  <DialogHeader>
+                    <DialogTitle>Agregar nuevo cliente</DialogTitle>
+                    <DialogDescription>
+                      Captura los datos del cliente según la estructura actual.
+                    </DialogDescription>
+                  </DialogHeader>
 
-            <Dialog
-              open={open}
-              onOpenChange={(value) => {
-                setOpen(value)
-                if (!value) {
-                  resetForm()
-                }
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button className="px-5 text-base">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Nuevo cliente
-                </Button>
-              </DialogTrigger>
+                  <div className="grid gap-3 py-2">
+                    <div className="grid gap-2">
+                      <RequiredLabel htmlFor="nombre">Nombre</RequiredLabel>
+                      <Input
+                        id="nombre"
+                        value={newClient.nombre}
+                        onChange={(e) => handleChange("nombre", e.target.value)}
+                        placeholder="Ej. Juan Pérez"
+                        className={getInputErrorClass(
+                          showRequiredErrors && requiredErrors.nombre
+                        )}
+                      />
+                    </div>
 
-              <DialogContent className="sm:max-w-[560px]">
-                <DialogHeader>
-                  <DialogTitle>Agregar nuevo cliente</DialogTitle>
-                  <DialogDescription>
-                    Captura los datos del cliente según la estructura actual.
-                  </DialogDescription>
-                </DialogHeader>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="grid gap-2">
+                        <RequiredLabel htmlFor="telefono">
+                          Teléfono
+                        </RequiredLabel>
+                        <Input
+                          id="telefono"
+                          value={newClient.telefono}
+                          onChange={(e) =>
+                            handleChange("telefono", e.target.value)
+                          }
+                          placeholder="Ej. 8441234567"
+                          className={getInputErrorClass(
+                            showRequiredErrors && requiredErrors.telefono
+                          )}
+                        />
+                      </div>
 
-                <div className="grid gap-4 py-2">
-                  <div className="grid gap-2">
-                    <RequiredLabel htmlFor="nombre">Nombre</RequiredLabel>
-                    <Input
-                      id="nombre"
-                      value={newClient.nombre}
-                      onChange={(e) => handleChange("nombre", e.target.value)}
-                      placeholder="Ej. Juan Pérez"
-                      className={getInputErrorClass(
-                        showRequiredErrors && requiredErrors.nombre
+                      <div className="grid gap-2">
+                        <RequiredLabel htmlFor="correo">Correo</RequiredLabel>
+                        <Input
+                          id="correo"
+                          type="email"
+                          value={newClient.correo}
+                          onChange={(e) =>
+                            handleChange("correo", e.target.value)
+                          }
+                          placeholder="Ej. cliente@correo.com"
+                          className={getInputErrorClass(
+                            showRequiredErrors && requiredErrors.correo
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="grid gap-2">
+                        <Label htmlFor="descuento">Descuento (%)</Label>
+                        <Input
+                          id="descuento"
+                          type="number"
+                          min={0}
+                          value={newClient.descuento}
+                          onChange={(e) =>
+                            handleChange("descuento", e.target.value)
+                          }
+                          placeholder="0"
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <RequiredLabel htmlFor="referencia">
+                          Referencia
+                        </RequiredLabel>
+                        <Input
+                          id="referencia"
+                          value={newClient.referencia}
+                          onChange={(e) =>
+                            handleChange("referencia", e.target.value)
+                          }
+                          placeholder="Ej. Facebook, recomendación, volante"
+                          className={getInputErrorClass(
+                            showRequiredErrors && requiredErrors.referencia
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <DialogFooter className="gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setOpen(false)
+                        resetForm()
+                      }}
+                      disabled={creating}
+                    >
+                      Cancelar
+                    </Button>
+
+                    <Button onClick={handleAddClient} disabled={creating}>
+                      {creating ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Plus className="mr-2 h-4 w-4" />
                       )}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Este campo es obligatorio.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-2 md:grid-cols-2">
-                    <div className="grid gap-2">
-                      <RequiredLabel htmlFor="telefono">Teléfono</RequiredLabel>
-                      <Input
-                        id="telefono"
-                        value={newClient.telefono}
-                        onChange={(e) =>
-                          handleChange("telefono", e.target.value)
-                        }
-                        placeholder="Ej. 8441234567"
-                        className={getInputErrorClass(
-                          showRequiredErrors && requiredErrors.telefono
-                        )}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Este campo es obligatorio.
-                      </p>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <RequiredLabel htmlFor="correo">Correo</RequiredLabel>
-                      <Input
-                        id="correo"
-                        type="email"
-                        value={newClient.correo}
-                        onChange={(e) => handleChange("correo", e.target.value)}
-                        placeholder="Ej. cliente@correo.com"
-                        className={getInputErrorClass(
-                          showRequiredErrors && requiredErrors.correo
-                        )}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Este campo es obligatorio.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-2 md:grid-cols-2">
-                    <div className="grid gap-2">
-                      <Label htmlFor="descuento">Descuento (%)</Label>
-                      <Input
-                        id="descuento"
-                        type="number"
-                        min={0}
-                        value={newClient.descuento}
-                        onChange={(e) =>
-                          handleChange("descuento", e.target.value)
-                        }
-                        placeholder="0"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Campo opcional.
-                      </p>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <RequiredLabel htmlFor="referencia">
-                        Referencia
-                      </RequiredLabel>
-                      <Input
-                        id="referencia"
-                        value={newClient.referencia}
-                        onChange={(e) =>
-                          handleChange("referencia", e.target.value)
-                        }
-                        placeholder="Ej. Facebook, recomendación, volante"
-                        className={getInputErrorClass(
-                          showRequiredErrors && requiredErrors.referencia
-                        )}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Este campo es obligatorio.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setOpen(false)
-                      resetForm()
-                    }}
-                    disabled={creating}
-                  >
-                    Cancelar
-                  </Button>
-
-                  <Button onClick={handleAddClient} disabled={creating}>
-                    {creating ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Plus className="mr-2 h-4 w-4" />
-                    )}
-                    Guardar cliente
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                      Guardar cliente
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="flex min-h-0 flex-1 flex-col gap-2 p-3 pt-0 xl:p-4 xl:pt-0">
           {loading ? (
-            <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-dashed">
+            <div className="flex h-full min-h-[220px] items-center justify-center rounded-xl border border-dashed">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Cargando clientes...
@@ -707,25 +715,53 @@ export default function ClientesPage() {
             </div>
           ) : (
             <>
-              <div className="overflow-hidden rounded-xl border border-border/60">
-                <div className="overflow-x-auto">
-                  <Table className="text-base">
-                    <TableHeader className="bg-muted/40">
+              <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border/60">
+                <div className="h-full overflow-x-hidden overflow-y-auto">
+                  <Table className="w-full table-fixed text-xs xl:text-sm">
+                    <TableHeader className="sticky top-0 z-10 bg-muted/40">
                       {table.getHeaderGroups().map((headerGroup) => (
-                        <TableRow key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <TableHead
-                              key={header.id}
-                              className="whitespace-nowrap"
-                            >
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext()
-                                  )}
-                            </TableHead>
-                          ))}
+                        <TableRow key={headerGroup.id} className="h-8">
+                          {headerGroup.headers.map((header) => {
+                            const hiddenColumn =
+                              header.column.id === "correo" ||
+                              header.column.id === "referencia"
+
+                            return (
+                              <TableHead
+                                key={header.id}
+                                className={[
+                                  "h-8 px-2 py-1 text-xs font-semibold whitespace-nowrap",
+                                  hiddenColumn ? "hidden 2xl:table-cell" : "",
+                                  header.column.id === "id" ? "w-[42px]" : "",
+                                  header.column.id === "nombre"
+                                    ? "w-[300px]"
+                                    : "",
+                                  header.column.id === "telefono"
+                                    ? "w-[125px]"
+                                    : "",
+                                  header.column.id === "correo"
+                                    ? "w-[230px]"
+                                    : "",
+                                  header.column.id === "descuento"
+                                    ? "w-[78px]"
+                                    : "",
+                                  header.column.id === "referencia"
+                                    ? "w-[140px]"
+                                    : "",
+                                  header.column.id === "acciones"
+                                    ? "w-[65px]"
+                                    : "",
+                                ].join(" ")}
+                              >
+                                {header.isPlaceholder
+                                  ? null
+                                  : flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext()
+                                    )}
+                              </TableHead>
+                            )
+                          })}
                         </TableRow>
                       ))}
                     </TableHeader>
@@ -735,19 +771,30 @@ export default function ClientesPage() {
                         table.getRowModel().rows.map((row) => (
                           <TableRow
                             key={row.id}
-                            className="transition-colors hover:bg-muted/30"
+                            className="h-10 transition-colors hover:bg-muted/30"
                           >
-                            {row.getVisibleCells().map((cell) => (
-                              <TableCell
-                                key={cell.id}
-                                className="align-middle whitespace-nowrap"
-                              >
-                                {flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext()
-                                )}
-                              </TableCell>
-                            ))}
+                            {row.getVisibleCells().map((cell) => {
+                              const hiddenColumn =
+                                cell.column.id === "correo" ||
+                                cell.column.id === "referencia"
+
+                              return (
+                                <TableCell
+                                  key={cell.id}
+                                  className={[
+                                    "h-10 overflow-hidden px-2 py-1 align-middle text-xs whitespace-nowrap xl:text-sm",
+                                    hiddenColumn ? "hidden 2xl:table-cell" : "",
+                                  ].join(" ")}
+                                >
+                                  <div className="truncate">
+                                    {flexRender(
+                                      cell.column.columnDef.cell,
+                                      cell.getContext()
+                                    )}
+                                  </div>
+                                </TableCell>
+                              )
+                            })}
                           </TableRow>
                         ))
                       ) : (
@@ -765,23 +812,24 @@ export default function ClientesPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">
+              <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-muted-foreground">
                   Mostrando {table.getRowModel().rows.length} de{" "}
                   {table.getFilteredRowModel().rows.length} clientes filtrados.
                 </p>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2 sm:justify-start">
                   <Button
                     variant="outline"
                     size="icon"
+                    className="h-8 w-8"
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
 
-                  <div className="min-w-[120px] text-center text-sm text-muted-foreground">
+                  <div className="min-w-[95px] text-center text-xs text-muted-foreground">
                     Página {table.getState().pagination.pageIndex + 1} de{" "}
                     {table.getPageCount()}
                   </div>
@@ -789,6 +837,7 @@ export default function ClientesPage() {
                   <Button
                     variant="outline"
                     size="icon"
+                    className="h-8 w-8"
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
                   >

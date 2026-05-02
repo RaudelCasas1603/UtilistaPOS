@@ -335,7 +335,7 @@ export default function ClienteDetallePage({ params }: Props) {
         : "outline"
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden p-3 lg:p-4 xl:p-5">
       {showAlert && (
         <Alert className="border-green-400 bg-green-400">
           <CheckCircle2 className="h-4 w-4 text-green-800" />
@@ -346,235 +346,161 @@ export default function ClienteDetallePage({ params }: Props) {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader className="flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-primary/10 p-3">
-                  <UserRound className="h-6 w-6" />
-                </div>
-                <div>
-                  <CardTitle className="text-2xl font-bold">
-                    Detalle del cliente
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    Consulta y edita la información general del cliente.
-                  </CardDescription>
-                </div>
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_280px]">
+        {/* INFO CLIENTE */}
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader className="flex flex-col gap-3 border-b p-3 sm:flex-row sm:items-center sm:justify-between xl:p-4">
+            <div className="flex items-center gap-2">
+              <div className="rounded-xl bg-primary/10 p-2">
+                <UserRound className="h-4 w-4" />
+              </div>
+              <div>
+                <CardTitle className="text-base xl:text-lg">
+                  Detalle del cliente
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Consulta y edita la información
+                </CardDescription>
               </div>
             </div>
 
             {!editMode ? (
-              <Button onClick={() => setEditMode(true)} className="gap-2">
-                <Pencil className="h-5 w-5" />
+              <Button size="sm" onClick={() => setEditMode(true)}>
+                <Pencil className="mr-1 h-4 w-4" />
                 Editar
               </Button>
             ) : (
-              <Button onClick={handleSave} className="gap-2" disabled={saving}>
+              <Button size="sm" onClick={handleSave} disabled={saving}>
                 {saving ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                 ) : (
-                  <Save className="h-5 w-5" />
+                  <Save className="mr-1 h-4 w-4" />
                 )}
                 Guardar
               </Button>
             )}
           </CardHeader>
 
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Nombre
-                </label>
+          <CardContent className="p-3 xl:p-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <Input
+                value={formData.nombre}
+                disabled={!editMode}
+                onChange={(e) => handleChange("nombre", e.target.value)}
+                className="h-9 text-sm"
+                placeholder="Nombre"
+              />
+
+              <Input
+                value={formData.telefono}
+                disabled={!editMode}
+                onChange={(e) => handleChange("telefono", e.target.value)}
+                className="h-9 text-sm"
+                placeholder="Teléfono"
+              />
+
+              <Input
+                value={formData.correo}
+                disabled={!editMode}
+                onChange={(e) => handleChange("correo", e.target.value)}
+                className="h-9 text-sm"
+                placeholder="Correo"
+              />
+
+              <div className="relative">
+                <Percent className="absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  value={formData.nombre}
+                  type="number"
+                  value={formData.descuento}
                   disabled={!editMode}
-                  onChange={(e) => handleChange("nombre", e.target.value)}
-                  className="h-11 text-base"
+                  onChange={(e) =>
+                    handleChange("descuento", Number(e.target.value))
+                  }
+                  className="h-9 pl-7 text-sm"
+                  placeholder="Descuento"
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Teléfono
-                </label>
-                <Input
-                  value={formData.telefono}
-                  disabled={!editMode}
-                  onChange={(e) => handleChange("telefono", e.target.value)}
-                  className="h-11 text-base"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Correo
-                </label>
-                <Input
-                  value={formData.correo}
-                  disabled={!editMode}
-                  onChange={(e) => handleChange("correo", e.target.value)}
-                  className="h-11 text-base"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Descuento
-                </label>
-                <div className="relative">
-                  <Percent className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={formData.descuento}
-                    disabled={!editMode}
-                    onChange={(e) =>
-                      handleChange("descuento", Number(e.target.value))
-                    }
-                    className="h-11 pl-9 text-base"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Referencia
-                </label>
-                <Input
-                  value={formData.referencia}
-                  disabled={!editMode}
-                  onChange={(e) => handleChange("referencia", e.target.value)}
-                  className="h-11 text-base"
-                />
-              </div>
+              <Input
+                value={formData.referencia}
+                disabled={!editMode}
+                onChange={(e) => handleChange("referencia", e.target.value)}
+                className="h-9 text-sm md:col-span-2"
+                placeholder="Referencia"
+              />
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid gap-4">
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-2xl bg-primary/10 p-3">
-                <ShoppingCart className="h-6 w-6" />
+        {/* CARDS LATERALES */}
+        <div className="grid gap-2">
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex items-center gap-2 p-3">
+              <ShoppingCart className="h-4 w-4" />
+              <div>
+                <p className="text-[11px] text-muted-foreground">Compras</p>
+                <p className="text-lg font-bold">{purchases.length}</p>
               </div>
-              <div className="min-w-0">
-                <p className="text-sm text-muted-foreground">
-                  Compras recientes
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex items-center gap-2 p-3">
+              <Wallet className="h-4 w-4" />
+              <div>
+                <p className="text-[11px] text-muted-foreground">
+                  Ticket prom.
                 </p>
-                <p className="text-2xl font-bold">
-                  {loadingPurchases ? "..." : purchases.length}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Últimos movimientos registrados
+                <p className="text-lg font-bold">
+                  {formatCurrency(ticketPromedio)}
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-2xl bg-primary/10 p-3">
-                <Wallet className="h-6 w-6" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm text-muted-foreground">Ticket promedio</p>
-                <p className="text-2xl font-bold">
-                  {loadingPurchases ? "..." : formatCurrency(ticketPromedio)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Basado en las últimas 8 compras
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-2xl bg-primary/10 p-3">
-                <Clock3 className="h-6 w-6" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm text-muted-foreground">Frecuencia</p>
-                <div className="mt-1 flex items-center gap-2">
-                  <p className="text-2xl font-bold">
-                    {loadingPurchases ? "..." : frecuenciaLabel}
-                  </p>
-                  {!loadingPurchases && (
-                    <Badge variant={frecuenciaVariant}>{frecuenciaLabel}</Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {loadingPurchases
-                    ? "Cargando compras..."
-                    : `Compra más alta: ${formatCurrency(compraMasAlta)}`}
-                </p>
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex items-center gap-2 p-3">
+              <Clock3 className="h-4 w-4" />
+              <div>
+                <p className="text-[11px] text-muted-foreground">Frecuencia</p>
+                <p className="text-lg font-bold">{frecuenciaLabel}</p>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      <Card>
-        <CardHeader className="border-b pb-4">
-          <CardTitle className="text-xl font-bold">Últimas 8 compras</CardTitle>
-          <CardDescription>
-            Historial reciente del cliente con número de ticket, fecha, hora y
-            total.
-          </CardDescription>
+      {/* TABLA */}
+      <Card className="mt-3 flex min-h-0 flex-1 flex-col border-border/60 shadow-sm">
+        <CardHeader className="p-3">
+          <CardTitle className="text-sm font-semibold">
+            Últimas compras
+          </CardTitle>
         </CardHeader>
 
-        <CardContent className="pt-5">
-          <div className="overflow-hidden rounded-xl border">
-            <Table>
-              <TableHeader className="text-xl">
-                <TableRow>
-                  <TableHead className="w-[160px]">Ticket</TableHead>
+        <CardContent className="min-h-0 flex-1 p-3 pt-0">
+          <div className="h-full overflow-auto rounded-lg border">
+            <Table className="text-xs">
+              <TableHeader className="bg-muted/40">
+                <TableRow className="h-8">
+                  <TableHead>Ticket</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Hora</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                 </TableRow>
               </TableHeader>
 
-              <TableBody className="text-md">
-                {loadingPurchases ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="py-8 text-center text-muted-foreground"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Cargando compras...
-                      </div>
+              <TableBody>
+                {purchases.map((p) => (
+                  <TableRow key={p.ticket} className="h-9">
+                    <TableCell>{p.ticket}</TableCell>
+                    <TableCell>{formatDate(p.fecha)}</TableCell>
+                    <TableCell>{p.hora}</TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {formatCurrency(p.total)}
                     </TableCell>
                   </TableRow>
-                ) : purchases.length > 0 ? (
-                  purchases.map((purchase) => (
-                    <TableRow key={purchase.ticket}>
-                      <TableCell className="font-medium">
-                        {purchase.ticket}
-                      </TableCell>
-                      <TableCell>{formatDate(purchase.fecha)}</TableCell>
-                      <TableCell>{purchase.hora}</TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatCurrency(purchase.total)}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="py-8 text-center text-muted-foreground"
-                    >
-                      Este cliente aún no tiene compras registradas.
-                    </TableCell>
-                  </TableRow>
-                )}
+                ))}
               </TableBody>
             </Table>
           </div>
