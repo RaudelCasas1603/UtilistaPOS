@@ -323,434 +323,489 @@ export default function ReporteVentasPage() {
   }))
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Reporte de ventas
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Consulta el rendimiento de ventas por rango de fechas.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-end">
-          <div className="space-y-1">
-            <label className="mr-2 text-sm font-medium">Fecha inicio</label>
-            <Input
-              type="date"
-              value={fechaInicio}
-              onChange={(e) => setFechaInicio(e.target.value)}
-              className="w-full sm:w-[170px]"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="mr-2 text-sm font-medium">Fecha fin</label>
-            <Input
-              type="date"
-              value={fechaFin}
-              onChange={(e) => setFechaFin(e.target.value)}
-              className="w-full sm:w-[170px]"
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              className="gap-2"
-              onClick={aplicarRangoPersonalizado}
-              disabled={loading || !fechaInicio || !fechaFin}
-            >
-              {loading && periodoActivo === "personalizado" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CalendarDays className="h-4 w-4" />
-              )}
-              Aplicar
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={periodoActivo === "hoy" ? "default" : "outline"}
-          size="sm"
-          onClick={() => aplicarPeriodo("hoy")}
-          disabled={loading}
-        >
-          Hoy
-        </Button>
-
-        <Button
-          variant={periodoActivo === "ultimos_7_dias" ? "default" : "outline"}
-          size="sm"
-          onClick={() => aplicarPeriodo("ultimos_7_dias")}
-          disabled={loading}
-        >
-          Últimos 7 días
-        </Button>
-
-        <Button
-          variant={periodoActivo === "ultimos_30_dias" ? "default" : "outline"}
-          size="sm"
-          onClick={() => aplicarPeriodo("ultimos_30_dias")}
-          disabled={loading}
-        >
-          Últimos 30 días
-        </Button>
-
-        <Button
-          variant={periodoActivo === "este_mes" ? "default" : "outline"}
-          size="sm"
-          onClick={() => aplicarPeriodo("este_mes")}
-          disabled={loading}
-        >
-          Mes actual
-        </Button>
-
-        <Button
-          variant={periodoActivo === "ultimos_7_meses" ? "default" : "outline"}
-          size="sm"
-          onClick={() => aplicarPeriodo("ultimos_7_meses")}
-          disabled={loading}
-        >
-          Últimos 7 meses
-        </Button>
-      </div>
-
-      {error ? (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error al cargar el reporte</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : null}
-
-      <div className="max-h-[850px] space-y-4 overflow-y-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card className="rounded-2xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total vendido Neto
-              </CardTitle>
-              <Wallet className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {loading ? "Cargando..." : formatCurrency(resumen.totalVendido)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Total después de descontar comisión de tarjeta y devoluciones
+    <div className="h-[calc(100vh-64px)] min-h-0 w-full overflow-hidden bg-background">
+      <div className="h-full w-full overflow-x-hidden overflow-y-auto px-3 pt-3 pb-10 lg:px-4 lg:pt-4 lg:pb-12 xl:px-5 xl:pt-5 xl:pb-14">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3">
+          {/* Header */}
+          <div className="flex shrink-0 flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-bold tracking-tight xl:text-2xl">
+                Reporte de ventas
+              </h1>
+              <p className="text-xs text-muted-foreground xl:text-sm">
+                Consulta el rendimiento de ventas por rango de fechas.
               </p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Margen total
-              </CardTitle>
-              <BadgeDollarSign className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {loading ? "Cargando..." : formatCurrency(resumen.totalMargen)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {formatPercent(resumen.margenPromedio)} sobre venta
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Número de tickets
-              </CardTitle>
-              <Receipt className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {loading ? "..." : resumen.totalTickets}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {formatCurrency(resumen.ticketPromedio)} por ticket
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Productos vendidos
-              </CardTitle>
-              <ShoppingBasket className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {loading ? "..." : resumen.totalProductos}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {resumen.promedioProductosPorTicket.toFixed(1)} por ticket
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-base">Mejor día de venta</CardTitle>
-              <CardDescription>
-                El día con mayor ingreso dentro del rango
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {mejorDia ? (
-                <>
-                  <div className="text-2xl font-bold">
-                    {formatShortDateEs(mejorDia.fechaReal || mejorDia.fecha)}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Venta: {formatCurrency(mejorDia.ventas)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Margen: {formatCurrency(mejorDia.margen)}
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No hay datos para este periodo
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-base">Comisión pagada</CardTitle>
-              <CardDescription>
-                Comisión absorbida por cobros con tarjeta
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="text-2xl font-bold">
-                {formatCurrency(resumen.comisionTarjeta)}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Costo financiero del periodo
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-base">Ventas brutas</CardTitle>
-              <CardDescription>
-                Total cobrado antes de descontar comisión
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="text-2xl font-bold">
-                {formatCurrency(resumen.ventasBrutas)}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Venta total registrada en tickets
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <CardTitle>Ventas y margen por día</CardTitle>
-            <CardDescription>
-              Comparativa diaria para identificar comportamiento del negocio
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[350px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={ventasPorDiaChart}
-                  margin={{ top: 6, right: 8, left: -12, bottom: 12 }}
-                  barCategoryGap={18}
-                >
-                  <CartesianGrid
-                    stroke="hsl(var(--border))"
-                    strokeDasharray="3 3"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="fechaLabel"
-                    tick={{ fill: "#94a3b8", fontSize: 12 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fill: "#94a3b8", fontSize: 12 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    content={<SalesMarginTooltip />}
-                    wrapperStyle={{ outline: "none" }}
-                  />
-                  <Legend />
-                  <Bar
-                    dataKey="ventas"
-                    name="Ventas"
-                    fill="#6366f1"
-                    radius={[10, 10, 0, 0]}
-                    activeBar={false}
-                  />
-                  <Bar
-                    dataKey="margen"
-                    name="Margen"
-                    fill="#22c55e"
-                    radius={[10, 10, 0, 0]}
-                    activeBar={false}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
             </div>
 
-            {!loading && ventasPorDia.length === 0 ? (
-              <p className="mt-4 text-sm text-muted-foreground">
-                No hay información para mostrar en la gráfica.
-              </p>
-            ) : null}
-          </CardContent>
-        </Card>
+            <div className="flex w-full flex-col gap-2 rounded-xl border p-3 sm:flex-row sm:flex-wrap sm:items-end lg:w-auto">
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Fecha inicio</label>
+                <Input
+                  type="date"
+                  value={fechaInicio}
+                  onChange={(e) => setFechaInicio(e.target.value)}
+                  className="h-9 w-full text-xs sm:w-[150px]"
+                />
+              </div>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle>Métodos de pago</CardTitle>
-              <CardDescription>
-                Distribución de ingresos por forma de cobro
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Fecha fin</label>
+                <Input
+                  type="date"
+                  value={fechaFin}
+                  onChange={(e) => setFechaFin(e.target.value)}
+                  className="h-9 w-full text-xs sm:w-[150px]"
+                />
+              </div>
+
+              <Button
+                className="h-9 gap-2 px-3 text-xs"
+                onClick={aplicarRangoPersonalizado}
+                disabled={loading || !fechaInicio || !fechaFin}
+              >
+                {loading && periodoActivo === "personalizado" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CalendarDays className="h-4 w-4" />
+                )}
+                Aplicar
+              </Button>
+            </div>
+          </div>
+
+          {/* Filtros */}
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Button
+              variant={periodoActivo === "hoy" ? "default" : "outline"}
+              size="sm"
+              className="h-8 px-3 text-xs"
+              onClick={() => aplicarPeriodo("hoy")}
+              disabled={loading}
+            >
+              Hoy
+            </Button>
+
+            <Button
+              variant={
+                periodoActivo === "ultimos_7_dias" ? "default" : "outline"
+              }
+              size="sm"
+              className="h-8 px-3 text-xs"
+              onClick={() => aplicarPeriodo("ultimos_7_dias")}
+              disabled={loading}
+            >
+              Últimos 7 días
+            </Button>
+
+            <Button
+              variant={
+                periodoActivo === "ultimos_30_dias" ? "default" : "outline"
+              }
+              size="sm"
+              className="h-8 px-3 text-xs"
+              onClick={() => aplicarPeriodo("ultimos_30_dias")}
+              disabled={loading}
+            >
+              Últimos 30 días
+            </Button>
+
+            <Button
+              variant={periodoActivo === "este_mes" ? "default" : "outline"}
+              size="sm"
+              className="h-8 px-3 text-xs"
+              onClick={() => aplicarPeriodo("este_mes")}
+              disabled={loading}
+            >
+              Mes actual
+            </Button>
+
+            <Button
+              variant={
+                periodoActivo === "ultimos_7_meses" ? "default" : "outline"
+              }
+              size="sm"
+              className="h-8 px-3 text-xs"
+              onClick={() => aplicarPeriodo("ultimos_7_meses")}
+              disabled={loading}
+            >
+              Últimos 7 meses
+            </Button>
+          </div>
+
+          {error ? (
+            <Alert variant="destructive" className="shrink-0">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error al cargar el reporte</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          {/* Cards resumen */}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            <Card className="min-w-0 border-border/60 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+                <CardTitle className="truncate text-xs font-medium">
+                  Total vendido Neto
+                </CardTitle>
+                <Wallet className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <div className="truncate text-lg font-bold xl:text-xl">
+                  {loading
+                    ? "Cargando..."
+                    : formatCurrency(resumen.totalVendido)}
+                </div>
+                <p className="line-clamp-1 text-[11px] text-muted-foreground">
+                  Neto después de comisiones y devoluciones
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0 border-border/60 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+                <CardTitle className="truncate text-xs font-medium">
+                  Margen total
+                </CardTitle>
+                <BadgeDollarSign className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <div className="truncate text-lg font-bold xl:text-xl">
+                  {loading
+                    ? "Cargando..."
+                    : formatCurrency(resumen.totalMargen)}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {formatPercent(resumen.margenPromedio)} sobre venta
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0 border-border/60 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+                <CardTitle className="truncate text-xs font-medium">
+                  Número de tickets
+                </CardTitle>
+                <Receipt className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <div className="truncate text-lg font-bold xl:text-xl">
+                  {loading ? "..." : resumen.totalTickets}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {formatCurrency(resumen.ticketPromedio)} por ticket
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0 border-border/60 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+                <CardTitle className="truncate text-xs font-medium">
+                  Productos vendidos
+                </CardTitle>
+                <ShoppingBasket className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <div className="truncate text-lg font-bold xl:text-xl">
+                  {loading ? "..." : resumen.totalProductos}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {resumen.promedioProductosPorTicket.toFixed(1)} por ticket
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Cards secundarias */}
+          <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
+            <Card className="min-w-0 border-border/60 shadow-sm">
+              <CardHeader className="p-3 pb-1">
+                <CardTitle className="text-sm">Mejor día de venta</CardTitle>
+                <CardDescription className="text-xs">
+                  Mayor ingreso del rango
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-1 p-3 pt-0">
+                {mejorDia ? (
+                  <>
+                    <div className="text-lg font-bold xl:text-xl">
+                      {formatShortDateEs(mejorDia.fechaReal || mejorDia.fecha)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Venta: {formatCurrency(mejorDia.ventas)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Margen: {formatCurrency(mejorDia.margen)}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    No hay datos para este periodo
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0 border-border/60 shadow-sm">
+              <CardHeader className="p-3 pb-1">
+                <CardTitle className="text-sm">Comisión pagada</CardTitle>
+                <CardDescription className="text-xs">
+                  Cobros con tarjeta
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-1 p-3 pt-0">
+                <div className="truncate text-lg font-bold xl:text-xl">
+                  {formatCurrency(resumen.comisionTarjeta)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Costo financiero del periodo
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0 border-border/60 shadow-sm">
+              <CardHeader className="p-3 pb-1">
+                <CardTitle className="text-sm">Ventas brutas</CardTitle>
+                <CardDescription className="text-xs">
+                  Antes de descontar comisión
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-1 p-3 pt-0">
+                <div className="truncate text-lg font-bold xl:text-xl">
+                  {formatCurrency(resumen.ventasBrutas)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Venta total registrada
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Gráfica */}
+          <Card className="min-w-0 overflow-hidden border-border/60 shadow-sm">
+            <CardHeader className="p-3 pb-1">
+              <CardTitle className="text-sm xl:text-base">
+                Ventas y margen por día
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Comparativa diaria del negocio
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {metodosPago.length > 0 ? (
-                metodosPago.map((metodo) => (
-                  <div
-                    key={metodo.nombre}
-                    className="flex items-center justify-between rounded-xl border p-3"
+
+            <CardContent className="p-3 pt-0">
+              <div className="h-[280px] min-h-[280px] w-full overflow-hidden xl:h-[320px] xl:min-h-[320px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={ventasPorDiaChart}
+                    margin={{ top: 8, right: 12, left: -10, bottom: 10 }}
+                    barCategoryGap={18}
                   >
-                    <div>
-                      <p className="font-medium">{metodo.nombre}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {metodo.porcentaje.toFixed(2)}%
-                      </p>
-                    </div>
-                    <p className="font-semibold">
-                      {formatCurrency(metodo.total)}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No hay métodos de pago registrados en este periodo.
+                    <CartesianGrid
+                      stroke="hsl(var(--border))"
+                      strokeDasharray="3 3"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="fechaLabel"
+                      tick={{ fill: "#94a3b8", fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      tick={{ fill: "#94a3b8", fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={45}
+                    />
+                    <Tooltip
+                      content={<SalesMarginTooltip />}
+                      wrapperStyle={{ outline: "none" }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar
+                      dataKey="ventas"
+                      name="Ventas"
+                      fill="#6366f1"
+                      radius={[8, 8, 0, 0]}
+                      activeBar={false}
+                    />
+                    <Bar
+                      dataKey="margen"
+                      name="Margen"
+                      fill="#22c55e"
+                      radius={[8, 8, 0, 0]}
+                      activeBar={false}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {!loading && ventasPorDia.length === 0 ? (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  No hay información para mostrar en la gráfica.
                 </p>
-              )}
+              ) : null}
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle>Top productos vendidos</CardTitle>
-              <CardDescription>
-                Los artículos con mayor movimiento
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {topProductos.length > 0 ? (
-                topProductos.map((producto, index) => (
-                  <div
-                    key={`${producto.id ?? producto.nombre}-${index}`}
-                    className="flex items-center justify-between rounded-xl border p-3"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full border text-sm font-semibold">
-                        {index + 1}
+          {/* Listas */}
+          <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+            <Card className="min-w-0 border-border/60 shadow-sm">
+              <CardHeader className="p-3 pb-1">
+                <CardTitle className="text-sm">Métodos de pago</CardTitle>
+                <CardDescription className="text-xs">
+                  Ingresos por forma de cobro
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-2 p-3 pt-0">
+                {metodosPago.length > 0 ? (
+                  metodosPago.map((metodo) => (
+                    <div
+                      key={metodo.nombre}
+                      className="flex min-w-0 items-center justify-between gap-3 rounded-lg border p-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {metodo.nombre}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {metodo.porcentaje.toFixed(2)}%
+                        </p>
                       </div>
-                      <div>
-                        <p className="font-medium">{producto.nombre}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {producto.cantidad} piezas vendidas
+
+                      <p className="shrink-0 text-sm font-semibold">
+                        {formatCurrency(metodo.total)}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    No hay métodos de pago registrados.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0 border-border/60 shadow-sm">
+              <CardHeader className="p-3 pb-1">
+                <CardTitle className="text-sm">
+                  Top productos vendidos
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Artículos con mayor movimiento
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-2 p-3 pt-0">
+                {topProductos.length > 0 ? (
+                  topProductos.map((producto, index) => (
+                    <div
+                      key={`${producto.id ?? producto.nombre}-${index}`}
+                      className="flex min-w-0 items-center justify-between gap-3 rounded-lg border p-2"
+                    >
+                      <div className="flex min-w-0 items-start gap-2">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold">
+                          {index + 1}
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">
+                            {producto.nombre}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {producto.cantidad} piezas vendidas
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm font-semibold">
+                          {formatCurrency(producto.ingreso)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Margen: {formatCurrency(producto.margen || 0)}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">
-                        {formatCurrency(producto.ingreso)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Margen: {formatCurrency(producto.margen || 0)}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No hay productos vendidos en este periodo.
-                </p>
-              )}
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    No hay productos vendidos.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Tabla final */}
+          <Card className="mb-4 min-w-0 overflow-hidden border-border/60 shadow-sm">
+            <CardHeader className="p-3 pb-1">
+              <CardTitle className="text-sm">Resumen diario</CardTitle>
+              <CardDescription className="text-xs">
+                Vista compacta de desempeño por día
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="p-3 pt-0">
+              <div className="w-full overflow-hidden rounded-lg border">
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full min-w-[640px] text-xs">
+                    <thead className="bg-muted/40">
+                      <tr className="border-b text-left">
+                        <th className="px-3 py-2 font-medium whitespace-nowrap">
+                          Fecha
+                        </th>
+                        <th className="px-3 py-2 font-medium whitespace-nowrap">
+                          Tickets
+                        </th>
+                        <th className="px-3 py-2 font-medium whitespace-nowrap">
+                          Total vendido
+                        </th>
+                        <th className="px-3 py-2 font-medium whitespace-nowrap">
+                          Margen
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {resumenDias.length > 0 ? (
+                        resumenDias.map((dia) => (
+                          <tr
+                            key={dia.fecha}
+                            className="border-b last:border-0"
+                          >
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {formatShortDateEs(dia.fechaReal || dia.fecha)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {dia.tickets}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {formatCurrency(dia.vendidos)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {formatCurrency(dia.margen)}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className="px-3 py-6 text-center text-muted-foreground"
+                          >
+                            No hay información diaria en este periodo.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
-
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <CardTitle>Resumen diario</CardTitle>
-            <CardDescription>
-              Vista compacta de desempeño por día
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[700px] text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th className="px-4 py-3 font-medium">Fecha</th>
-                    <th className="px-4 py-3 font-medium">Tickets</th>
-                    <th className="px-4 py-3 font-medium">Total vendido</th>
-                    <th className="px-4 py-3 font-medium">Margen</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {resumenDias.length > 0 ? (
-                    resumenDias.map((dia) => (
-                      <tr key={dia.fecha} className="border-b last:border-0">
-                        <td className="px-4 py-3">
-                          {formatShortDateEs(dia.fechaReal || dia.fecha)}
-                        </td>
-                        <td className="px-4 py-3">{dia.tickets}</td>
-                        <td className="px-4 py-3">
-                          {formatCurrency(dia.vendidos)}
-                        </td>
-                        <td className="px-4 py-3">
-                          {formatCurrency(dia.margen)}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-4 py-6 text-center text-muted-foreground"
-                      >
-                        No hay información diaria en este periodo.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

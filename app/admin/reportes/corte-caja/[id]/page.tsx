@@ -236,11 +236,11 @@ export default function CorteCajaDetallePage() {
   }
 
   return (
-    <div className="h-[calc(100vh-1rem)] overflow-hidden p-4">
-      <div className="flex h-full min-h-0 flex-col gap-4">
-        <div className="flex shrink-0 flex-col gap-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div>
+    <div className="h-[calc(100vh-64px)] min-h-0 w-full overflow-hidden bg-background">
+      <div className="h-full w-full overflow-x-hidden overflow-y-auto p-4 pb-12 md:p-6 md:pb-16">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
               <h1 className="text-2xl font-bold tracking-tight">
                 Detalle del corte
               </h1>
@@ -261,274 +261,280 @@ export default function CorteCajaDetallePage() {
             </div>
           </div>
 
-          <div className="grid shrink-0 gap-3 md:grid-cols-2 xl:grid-cols-5">
-            <Card>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <Card className="min-w-0">
+              <CardContent className="flex items-center justify-between gap-3 p-4">
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">
                     Ventas totales
                   </p>
-                  <p className="mt-1 text-[1.7rem] font-semibold">
+                  <p className="mt-1 truncate text-2xl font-semibold">
                     {formatoMoneda.format(corte.ventasTotales)}
                   </p>
                 </div>
-                <div className="rounded-2xl bg-muted p-3">
+                <div className="shrink-0 rounded-2xl bg-muted p-3">
                   <Receipt className="h-5 w-5 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
+            <Card className="min-w-0">
+              <CardContent className="flex items-center justify-between gap-3 p-4">
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">Tarjeta</p>
-                  <p className="mt-1 text-[1.7rem] font-semibold">
+                  <p className="mt-1 truncate text-2xl font-semibold">
                     {formatoMoneda.format(corte.tarjetaConComision)}
                   </p>
                 </div>
-                <div className="rounded-2xl bg-muted p-3">
+                <div className="shrink-0 rounded-2xl bg-muted p-3">
                   <CreditCard className="h-5 w-5 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
+            <Card className="min-w-0">
+              <CardContent className="flex items-center justify-between gap-3 p-4">
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">
                     Transferencias
                   </p>
-                  <p className="mt-1 text-[1.7rem] font-semibold">
+                  <p className="mt-1 truncate text-2xl font-semibold">
                     {formatoMoneda.format(corte.transferencias)}
                   </p>
                 </div>
-                <div className="rounded-2xl bg-muted p-3">
+                <div className="shrink-0 rounded-2xl bg-muted p-3">
                   <Banknote className="h-5 w-5 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
+            <Card className="min-w-0">
+              <CardContent className="flex items-center justify-between gap-3 p-4">
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">Devoluciones</p>
-                  <p className="mt-1 text-[1.7rem] font-semibold">
+                  <p className="mt-1 truncate text-2xl font-semibold">
                     {formatoMoneda.format(corte.devoluciones)}
                   </p>
                 </div>
-                <div className="rounded-2xl bg-muted p-3">
+                <div className="shrink-0 rounded-2xl bg-muted p-3">
                   <RefreshCcw className="h-5 w-5 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
+            <Card className="min-w-0">
+              <CardContent className="flex items-center justify-between gap-3 p-4">
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">
                     Efectivo contado
                   </p>
-                  <p className="mt-1 text-[1.7rem] font-semibold">
+                  <p className="mt-1 truncate text-2xl font-semibold">
                     {formatoMoneda.format(corte.efectivoContado)}
                   </p>
                 </div>
-                <div className="rounded-2xl bg-muted p-3">
+                <div className="shrink-0 rounded-2xl bg-muted p-3">
                   <Wallet className="h-5 w-5 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
           </div>
-        </div>
 
-        <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-          <Card className="flex min-h-0 flex-col shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <Coins className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-xl">Desglose de efectivo</CardTitle>
-              </div>
-              <CardDescription>
-                Cantidades capturadas por denominación en el corte.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-2">
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-xl border bg-card p-4">
-                  <p className="text-sm text-muted-foreground">Saldo inicial</p>
-                  <p className="mt-1 text-2xl font-semibold">
-                    {formatoMoneda.format(corte.saldoInicial)}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border bg-card p-4">
-                  <p className="text-sm text-muted-foreground">
-                    Efectivo vendido hoy
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold">
-                    {formatoMoneda.format(corte.efectivoDelDia)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-base font-semibold">Billetes y monedas</p>
-
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {corte.detalle.map((item) => {
-                    const denominacion = toNumber(item.denominacion)
-                    const subtotal = toNumber(item.subtotal)
-
-                    return (
-                      <div
-                        key={item.id}
-                        className="rounded-xl border bg-card p-3"
-                      >
-                        <div className="mb-3 flex items-start justify-between gap-3">
-                          <p className="text-xl font-semibold">
-                            {formatoMoneda.format(denominacion)}
-                          </p>
-                          <p className="text-right text-sm text-muted-foreground">
-                            Subtotal: {formatoMoneda.format(subtotal)}
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl bg-muted/30 px-4 py-3">
-                          <p className="text-sm text-muted-foreground">
-                            Cantidad
-                          </p>
-                          <p className="mt-1 text-xl font-semibold">
-                            {item.cantidad}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex min-h-0 flex-col gap-4">
-            <Card className="shrink-0 shadow-sm">
+          <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+            <Card className="min-w-0 shadow-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <ClipboardList className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle className="text-xl">Resumen del corte</CardTitle>
+                  <Coins className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle className="text-xl">
+                    Desglose de efectivo
+                  </CardTitle>
                 </div>
+                <CardDescription>
+                  Cantidades capturadas por denominación en el corte.
+                </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex justify-between gap-4">
-                    <p className="text-muted-foreground">Fecha</p>
-                    <p className="text-right font-medium">
-                      {corte.fecha} · {corte.hora}
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-xl border bg-card p-4">
+                    <p className="text-sm text-muted-foreground">
+                      Saldo inicial
                     </p>
-                  </div>
-
-                  <div className="flex justify-between gap-4">
-                    <p className="text-muted-foreground">Tickets</p>
-                    <p className="text-right font-medium">
-                      {corte.totalTickets}
-                    </p>
-                  </div>
-
-                  <div className="flex justify-between gap-4">
-                    <p className="text-muted-foreground">Saldo inicial</p>
-                    <p className="text-right font-medium">
+                    <p className="mt-1 text-2xl font-semibold">
                       {formatoMoneda.format(corte.saldoInicial)}
                     </p>
                   </div>
 
-                  <div className="flex justify-between gap-4">
-                    <p className="text-muted-foreground">Efectivo del día</p>
-                    <p className="text-right font-medium">
+                  <div className="rounded-xl border bg-card p-4">
+                    <p className="text-sm text-muted-foreground">
+                      Efectivo vendido hoy
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold">
                       {formatoMoneda.format(corte.efectivoDelDia)}
                     </p>
                   </div>
-
-                  <div className="flex justify-between gap-4">
-                    <p className="text-muted-foreground">Efectivo esperado</p>
-                    <p className="text-right text-2xl font-semibold">
-                      {formatoMoneda.format(corte.efectivoEsperado)}
-                    </p>
-                  </div>
-
-                  <div className="flex justify-between gap-4">
-                    <p className="text-muted-foreground">Efectivo contado</p>
-                    <p className="text-right text-2xl font-semibold">
-                      {formatoMoneda.format(corte.efectivoContado)}
-                    </p>
-                  </div>
                 </div>
 
-                <div className="rounded-xl border p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xl font-semibold">Diferencia</p>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        {corte.diferencia === 0
-                          ? "La caja cerró correctamente."
-                          : corte.diferencia > 0
-                            ? "Hay sobrante en caja."
-                            : "Hay faltante en caja."}
+                <div className="space-y-2">
+                  <p className="text-base font-semibold">Billetes y monedas</p>
+
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {corte.detalle.map((item) => {
+                      const denominacion = toNumber(item.denominacion)
+                      const subtotal = toNumber(item.subtotal)
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="min-w-0 rounded-xl border bg-card p-3"
+                        >
+                          <div className="mb-3 flex items-start justify-between gap-3">
+                            <p className="text-lg font-semibold whitespace-nowrap">
+                              {formatoMoneda.format(denominacion)}
+                            </p>
+                            <p className="text-right text-sm text-muted-foreground">
+                              Subtotal: {formatoMoneda.format(subtotal)}
+                            </p>
+                          </div>
+
+                          <div className="rounded-xl bg-muted/30 px-4 py-3">
+                            <p className="text-sm text-muted-foreground">
+                              Cantidad
+                            </p>
+                            <p className="mt-1 text-xl font-semibold">
+                              {item.cantidad}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex min-w-0 flex-col gap-4">
+              <Card className="shadow-sm">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-muted-foreground" />
+                    <CardTitle className="text-xl">Resumen del corte</CardTitle>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="flex justify-between gap-4">
+                      <p className="text-muted-foreground">Fecha</p>
+                      <p className="text-right font-medium">
+                        {corte.fecha} · {corte.hora}
                       </p>
                     </div>
 
-                    <p
-                      className={`text-right text-[1.75rem] font-semibold ${getDiferenciaTextClass(
-                        corte.diferencia
-                      )}`}
-                    >
-                      {corte.diferencia > 0 ? "+" : ""}
-                      {formatoMoneda.format(corte.diferencia)}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                    <div className="flex justify-between gap-4">
+                      <p className="text-muted-foreground">Tickets</p>
+                      <p className="text-right font-medium">
+                        {corte.totalTickets}
+                      </p>
+                    </div>
 
-            <Card className="shadow-sm">
-              <CardHeader className="pb-1">
-                <CardTitle className="text-base font-semibold">
-                  Información del cierre
-                </CardTitle>
-              </CardHeader>
+                    <div className="flex justify-between gap-4">
+                      <p className="text-muted-foreground">Saldo inicial</p>
+                      <p className="text-right font-medium">
+                        {formatoMoneda.format(corte.saldoInicial)}
+                      </p>
+                    </div>
 
-              <CardContent className="space-y-2">
-                <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
-                  <div className="rounded-lg bg-muted p-1.5">
-                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex justify-between gap-4">
+                      <p className="text-muted-foreground">Efectivo del día</p>
+                      <p className="text-right font-medium">
+                        {formatoMoneda.format(corte.efectivoDelDia)}
+                      </p>
+                    </div>
+
+                    <div className="flex justify-between gap-4">
+                      <p className="text-muted-foreground">Efectivo esperado</p>
+                      <p className="text-right text-2xl font-semibold">
+                        {formatoMoneda.format(corte.efectivoEsperado)}
+                      </p>
+                    </div>
+
+                    <div className="flex justify-between gap-4">
+                      <p className="text-muted-foreground">Efectivo contado</p>
+                      <p className="text-right text-2xl font-semibold">
+                        {formatoMoneda.format(corte.efectivoContado)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="leading-tight">
+
+                  <div className="rounded-xl border p-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-xl font-semibold">Diferencia</p>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {corte.diferencia === 0
+                            ? "La caja cerró correctamente."
+                            : corte.diferencia > 0
+                              ? "Hay sobrante en caja."
+                              : "Hay faltante en caja."}
+                        </p>
+                      </div>
+
+                      <p
+                        className={`text-right text-[1.75rem] font-semibold ${getDiferenciaTextClass(
+                          corte.diferencia
+                        )}`}
+                      >
+                        {corte.diferencia > 0 ? "+" : ""}
+                        {formatoMoneda.format(corte.diferencia)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardHeader className="pb-1">
+                  <CardTitle className="text-base font-semibold">
+                    Información del cierre
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent className="space-y-2">
+                  <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
+                    <div className="rounded-lg bg-muted p-1.5">
+                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="leading-tight">
+                      <p className="text-xs text-muted-foreground">
+                        Fecha y hora
+                      </p>
+                      <p className="text-sm font-medium">
+                        {corte.fecha} · {corte.hora}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
+                    <div className="rounded-lg bg-muted p-1.5">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="leading-tight">
+                      <p className="text-xs text-muted-foreground">Usuario</p>
+                      <p className="text-sm font-medium">{corte.usuario}</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border px-3 py-2">
                     <p className="text-xs text-muted-foreground">
-                      Fecha y hora
+                      Observaciones
                     </p>
-                    <p className="text-sm font-medium">
-                      {corte.fecha} · {corte.hora}
+                    <p className="mt-1 text-sm font-medium">
+                      {corte.observaciones}
                     </p>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
-                  <div className="rounded-lg bg-muted p-1.5">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="leading-tight">
-                    <p className="text-xs text-muted-foreground">Usuario</p>
-                    <p className="text-sm font-medium">{corte.usuario}</p>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border px-3 py-2">
-                  <p className="text-xs text-muted-foreground">Observaciones</p>
-                  <p className="mt-1 text-sm font-medium">
-                    {corte.observaciones}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>

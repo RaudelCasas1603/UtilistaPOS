@@ -229,13 +229,13 @@ export default function CorteCajaPage() {
     (corte) => corte.estado === "Cuadrado"
   ).length
 
-  const columns = React.useMemo<ColumnDef<CorteCaja>[]>(
-    () => [
+  const columns = React.useMemo<ColumnDef<CorteCaja>[]>(() => {
+    const baseColumns: ColumnDef<CorteCaja>[] = [
       {
         accessorKey: "folio",
         header: "Folio",
         cell: ({ row }) => (
-          <div className="min-w-[130px] font-medium text-foreground">
+          <div className="min-w-[120px] font-medium text-foreground">
             {row.original.folio}
           </div>
         ),
@@ -244,7 +244,7 @@ export default function CorteCajaPage() {
         accessorKey: "fecha",
         header: "Fecha",
         cell: ({ row }) => (
-          <div className="min-w-[120px] leading-tight">
+          <div className="min-w-[110px] leading-tight">
             <p className="font-medium text-foreground">{row.original.fecha}</p>
             <p className="text-xs text-muted-foreground">{row.original.hora}</p>
           </div>
@@ -254,14 +254,14 @@ export default function CorteCajaPage() {
         accessorKey: "usuario",
         header: "Usuario",
         cell: ({ row }) => (
-          <div className="min-w-[120px]">{row.original.usuario}</div>
+          <div className="min-w-[100px]">{row.original.usuario}</div>
         ),
       },
       {
         accessorKey: "totalTickets",
         header: () => <div className="text-center">Tickets</div>,
         cell: ({ row }) => (
-          <div className="min-w-[80px] text-center font-medium">
+          <div className="min-w-[60px] text-center font-medium">
             {row.original.totalTickets}
           </div>
         ),
@@ -270,41 +270,19 @@ export default function CorteCajaPage() {
         accessorKey: "ventasTotales",
         header: () => <div className="text-right">Ventas</div>,
         cell: ({ row }) => (
-          <div className="min-w-[120px] text-right font-medium">
+          <div className="min-w-[100px] text-right font-medium">
             {formatoMoneda.format(row.original.ventasTotales)}
           </div>
         ),
       },
       {
         accessorKey: "efectivoContado",
-        header: () => <div className="text-right">Efectivo contado</div>,
+        header: () => <div className="text-right">Efectivo</div>,
         cell: ({ row }) => (
-          <div className="min-w-[140px] text-right">
+          <div className="min-w-[100px] text-right">
             {formatoMoneda.format(row.original.efectivoContado)}
           </div>
         ),
-      },
-      {
-        accessorKey: "diferencia",
-        header: () => <div className="text-right">Diferencia</div>,
-        cell: ({ row }) => {
-          const value = row.original.diferencia
-
-          return (
-            <div
-              className={`min-w-[110px] text-right font-semibold ${
-                value === 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : value > 0
-                    ? "text-amber-600 dark:text-amber-400"
-                    : "text-red-500 dark:text-red-400"
-              }`}
-            >
-              {value > 0 ? "+" : ""}
-              {formatoMoneda.format(value)}
-            </div>
-          )
-        },
       },
       {
         accessorKey: "estado",
@@ -324,19 +302,47 @@ export default function CorteCajaPage() {
         id: "acciones",
         header: () => <div className="text-right">Acciones</div>,
         cell: ({ row }) => (
-          <div className="flex min-w-[120px] justify-end">
-            <Button asChild variant="outline" size="sm" className="h-9 gap-2">
+          <div className="flex min-w-[70px] justify-end">
+            <Button asChild variant="outline" size="sm" className="h-8 px-2">
               <Link href={`/admin/reportes/corte-caja/${row.original.id}`}>
                 <Eye className="h-4 w-4" />
-                Ver detalle
               </Link>
             </Button>
           </div>
         ),
       },
-    ],
-    []
-  )
+    ]
+
+    const diferenciaColumn: ColumnDef<CorteCaja> = {
+      id: "diferencia",
+      accessorKey: "diferencia",
+      header: () => <div className="text-right">Diferencia</div>,
+      cell: ({ row }) => {
+        const value = row.original.diferencia
+
+        return (
+          <div
+            className={`min-w-[100px] text-right font-semibold ${
+              value === 0
+                ? "text-emerald-600 dark:text-emerald-400"
+                : value > 0
+                  ? "text-amber-600 dark:text-amber-400"
+                  : "text-red-500 dark:text-red-400"
+            }`}
+          >
+            {value > 0 ? "+" : ""}
+            {formatoMoneda.format(value)}
+          </div>
+        )
+      },
+    }
+
+    return [
+      ...baseColumns.slice(0, 6),
+      diferenciaColumn,
+      ...baseColumns.slice(6),
+    ]
+  }, [])
 
   const table = useReactTable({
     data: dataFiltrada,
@@ -351,236 +357,242 @@ export default function CorteCajaPage() {
   })
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Corte de caja</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Consulta el historial de cortes generados y crea nuevos cierres de
-            caja.
-          </p>
-        </div>
-
-        <Button asChild className="h-11 gap-2 px-5 text-sm font-semibold">
-          <Link href="/admin/corte-caja">
-            <Plus className="h-4 w-4" />
-            Nuevo corte
-          </Link>
-        </Button>
-      </div>
-
-      {error && (
-        <Card className="border-destructive/40 bg-destructive/5">
-          <CardContent className="p-4 text-sm font-medium text-destructive">
-            {error}
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
+    <div className="h-[calc(100vh-64px)] min-h-0 w-full overflow-hidden bg-background">
+      <div className="h-full w-full overflow-x-hidden overflow-y-auto p-4 pb-12 md:p-6 md:pb-16">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6">
+          {/* HEADER */}
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">
-                Cortes registrados
-              </p>
-              <p className="mt-1 text-3xl font-bold">{dataFiltrada.length}</p>
-            </div>
-            <div className="rounded-2xl bg-muted p-3">
-              <ClipboardList className="h-6 w-6 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">Ventas acumuladas</p>
-              <p className="mt-1 text-3xl font-bold">
-                {formatoMoneda.format(totalVentas)}
+              <h1 className="text-3xl font-bold tracking-tight">
+                Corte de caja
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Consulta el historial de cortes generados y crea nuevos cierres
+                de caja.
               </p>
             </div>
-            <div className="rounded-2xl bg-muted p-3">
-              <Wallet className="h-6 w-6 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">Cortes cuadrados</p>
-              <p className="mt-1 text-3xl font-bold">{cortesCuadrados}</p>
-            </div>
-            <div className="rounded-2xl bg-muted p-3">
-              <CheckCircle2 className="h-6 w-6 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Diferencia acumulada
-              </p>
-              <p
-                className={`mt-1 text-3xl font-bold ${
-                  totalDiferencias === 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : totalDiferencias > 0
-                      ? "text-amber-600 dark:text-amber-400"
-                      : "text-red-500 dark:text-red-400"
-                }`}
-              >
-                {totalDiferencias > 0 ? "+" : ""}
-                {formatoMoneda.format(totalDiferencias)}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-muted p-3">
-              <AlertTriangle className="h-6 w-6 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="shadow-sm">
-        <CardHeader className="space-y-4">
-          <div>
-            <CardTitle className="text-2xl">Historial de cortes</CardTitle>
-            <CardDescription className="mt-1 text-sm">
-              Revisa los cortes guardados y abre cualquiera para ver su detalle.
-            </CardDescription>
+            <Button asChild className="h-11 gap-2 px-5 text-sm font-semibold">
+              <Link href="/admin/corte-caja">
+                <Plus className="h-4 w-4" />
+                Nuevo corte
+              </Link>
+            </Button>
           </div>
 
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div className="relative w-full lg:max-w-sm">
-              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar por folio, usuario o estado..."
-                className="pl-9"
-              />
-            </div>
+          {/* ERROR */}
+          {error && (
+            <Card className="border-destructive/40 bg-destructive/5">
+              <CardContent className="p-4 text-sm font-medium text-destructive">
+                {error}
+              </CardContent>
+            </Card>
+          )}
 
-            <div className="w-full lg:w-[220px]">
-              <Select value={estadoFiltro} onValueChange={setEstadoFiltro}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por resultado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos los resultados</SelectItem>
-                  <SelectItem value="Cuadrado">Cuadrado</SelectItem>
-                  <SelectItem value="Sobrante">Sobrante</SelectItem>
-                  <SelectItem value="Faltante">Faltante</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* CARDS */}
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Card className="shadow-sm">
+              <CardContent className="flex items-center justify-between p-5">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Cortes registrados
+                  </p>
+                  <p className="mt-1 text-3xl font-bold">
+                    {dataFiltrada.length}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-muted p-3">
+                  <ClipboardList className="h-6 w-6 text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm">
+              <CardContent className="flex items-center justify-between p-5">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Ventas acumuladas
+                  </p>
+                  <p className="mt-1 text-3xl font-bold">
+                    {formatoMoneda.format(totalVentas)}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-muted p-3">
+                  <Wallet className="h-6 w-6 text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm">
+              <CardContent className="flex items-center justify-between p-5">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Cortes cuadrados
+                  </p>
+                  <p className="mt-1 text-3xl font-bold">{cortesCuadrados}</p>
+                </div>
+                <div className="rounded-2xl bg-muted p-3">
+                  <CheckCircle2 className="h-6 w-6 text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm">
+              <CardContent className="flex items-center justify-between p-5">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Diferencia acumulada
+                  </p>
+                  <p
+                    className={`mt-1 text-3xl font-bold ${
+                      totalDiferencias === 0
+                        ? "text-emerald-600"
+                        : totalDiferencias > 0
+                          ? "text-amber-600"
+                          : "text-red-500"
+                    }`}
+                  >
+                    {totalDiferencias > 0 ? "+" : ""}
+                    {formatoMoneda.format(totalDiferencias)}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-muted p-3">
+                  <AlertTriangle className="h-6 w-6 text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-4">
-          <div className="overflow-x-auto rounded-2xl border">
-            <Table className="min-w-[1080px]">
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="bg-muted/30">
-                    {headerGroup.headers.map((header) => (
-                      <TableHead
-                        key={header.id}
-                        className="h-12 px-4 text-xs font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
+          {/* TABLA */}
+          <Card className="overflow-hidden shadow-sm">
+            <CardHeader className="space-y-4">
+              <div>
+                <CardTitle className="text-2xl">Historial de cortes</CardTitle>
+                <CardDescription className="mt-1 text-sm">
+                  Revisa los cortes guardados y abre cualquiera para ver su
+                  detalle.
+                </CardDescription>
+              </div>
 
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-28 text-center"
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                <div className="relative w-full lg:max-w-sm">
+                  <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Buscar..."
+                    className="pl-9"
+                  />
+                </div>
+
+                <div className="w-full lg:w-[220px]">
+                  <Select value={estadoFiltro} onValueChange={setEstadoFiltro}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filtrar" />
+                    </SelectTrigger>
+
+                    <SelectContent
+                      className="rounded-lg border border-border bg-background shadow-lg"
+                      position="popper"
                     >
-                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Cargando cortes de caja...
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : table.getRowModel().rows.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-muted/20">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell
-                          key={cell.id}
-                          className="px-4 py-4 align-middle whitespace-nowrap"
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
+                      <SelectItem value="todos">Todos</SelectItem>
+                      <SelectItem value="Cuadrado">Cuadrado</SelectItem>
+                      <SelectItem value="Sobrante">Sobrante</SelectItem>
+                      <SelectItem value="Faltante">Faltante</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              <div className="w-full overflow-hidden rounded-2xl border">
+                <div className="w-full overflow-x-auto">
+                  <Table className="min-w-[820px] xl:min-w-[920px]">
+                    <TableHeader>
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id} className="bg-muted/30">
+                          {headerGroup.headers.map((header) => (
+                            <TableHead key={header.id}>
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                            </TableHead>
+                          ))}
+                        </TableRow>
                       ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      No se encontraron cortes con esos filtros.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                    </TableHeader>
 
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Página{" "}
-              {table.getPageCount() === 0
-                ? 0
-                : table.getState().pagination.pageIndex + 1}{" "}
-              de {table.getPageCount()}
-            </p>
+                    <TableBody>
+                      {loading ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={columns.length}
+                            className="h-28 text-center"
+                          >
+                            <Loader2 className="animate-spin" />
+                          </TableCell>
+                        </TableRow>
+                      ) : table.getRowModel().rows.length ? (
+                        table.getRowModel().rows.map((row) => (
+                          <TableRow key={row.id}>
+                            {row.getVisibleCells().map((cell) => (
+                              <TableCell key={cell.id}>
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={columns.length}
+                            className="text-center"
+                          >
+                            Sin resultados
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Anterior
-              </Button>
+              {/* PAGINACIÓN */}
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-sm text-muted-foreground">
+                  Página {table.getState().pagination.pageIndex + 1} de{" "}
+                  {table.getPageCount()}
+                </p>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Siguiente
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    Anterior
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    Siguiente
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
