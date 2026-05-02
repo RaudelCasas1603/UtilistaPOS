@@ -232,24 +232,26 @@ export default async function VentaDetallePage({ params }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
+    <div className="flex h-full min-h-0 flex-col space-y-3 overflow-hidden p-3 lg:p-4 xl:p-5">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">
-              Detalle de venta
+            <h1 className="text-xl font-bold xl:text-2xl">
+              Venta {venta.folio}
             </h1>
-            <Badge variant={getBadgeVariantByStatus(venta.estatus)}>
+            <Badge
+              variant={getBadgeVariantByStatus(venta.estatus)}
+              className="px-2 py-0 text-[11px]"
+            >
               {venta.estatus}
             </Badge>
           </div>
-
-          <p className="text-sm text-muted-foreground">
-            Consulta completa de la venta {venta.folio}.
+          <p className="text-xs text-muted-foreground">
+            Detalle completo de la venta
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-wrap gap-2">
           <ReimprimirVentaButton ventaId={venta.id} />
 
           <MarcarDevolucionButton
@@ -259,207 +261,158 @@ export default async function VentaDetallePage({ params }: Props) {
             items={venta.items}
           />
 
-          <Button asChild variant="outline">
+          <Button asChild size="sm" variant="outline">
             <Link href="/admin/historial-ventas">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Volver al historial
+              <ArrowLeft className="mr-1 h-3 w-3" />
+              Volver
             </Link>
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="space-y-4">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card className="w-full rounded-2xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Información general</CardTitle>
-                <CardDescription>Datos clave</CardDescription>
-              </CardHeader>
-
-              <CardContent>
-                <div className="flex flex-wrap gap-3">
-                  <div className="min-w-[110px] rounded-xl border px-4 py-2">
-                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <ReceiptText className="h-3.5 w-3.5" />
-                      Folio
-                    </div>
-                    <p className="text-base font-semibold">{venta.folio}</p>
-                  </div>
-
-                  <div className="min-w-[110px] rounded-xl border px-4 py-2">
-                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      Fecha
-                    </div>
-                    <p className="text-base font-semibold">{venta.fecha}</p>
-                  </div>
-
-                  <div className="min-w-[110px] rounded-xl border px-4 py-2">
-                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      Hora
-                    </div>
-                    <p className="text-base font-semibold">{venta.hora}</p>
-                  </div>
-
-                  <div className="min-w-[110px] rounded-xl border px-4 py-2">
-                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <CreditCard className="h-3.5 w-3.5" />
-                      Estatus
-                    </div>
-                    <p className="text-base font-semibold capitalize">
-                      {venta.estatus}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="w-full rounded-2xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Cliente</CardTitle>
-                <CardDescription>Información del cliente</CardDescription>
-              </CardHeader>
-
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="rounded-xl border px-4 py-3">
-                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <UserRound className="h-3.5 w-3.5" />
-                      Nombre
-                    </div>
-                    <p className="text-base font-semibold">
-                      {venta.cliente.nombre}
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border px-4 py-3">
-                    <div className="mb-1 text-xs font-medium text-muted-foreground">
-                      Teléfono
-                    </div>
-                    <p className="text-sm font-medium">
-                      {venta.cliente.telefono || "-"}
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border px-4 py-3">
-                    <div className="mb-1 text-xs font-medium text-muted-foreground">
-                      Correo
-                    </div>
-                    <p className="text-sm font-medium break-all">
-                      {venta.cliente.correo || "-"}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        <Card className="h-fit rounded-2xl">
-          <CardHeader>
-            <CardTitle className="text-base">Resumen de la venta</CardTitle>
-            <CardDescription>Totales y método de pago</CardDescription>
+      <div className="grid shrink-0 gap-3 xl:grid-cols-3">
+        <Card className="flex min-h-[190px] flex-col border-border/60 shadow-sm">
+          <CardHeader className="p-3 pb-2">
+            <CardTitle className="text-sm">Información</CardTitle>
           </CardHeader>
 
-          <CardContent>
-            <div className="space-y-4 rounded-xl border p-4">
-              <div className="flex items-center justify-between text-sm">
+          <CardContent className="grid flex-1 grid-cols-2 gap-2 p-3 pt-0 text-xs">
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Folio</p>
+              <p className="font-semibold">{venta.folio}</p>
+            </div>
+
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Fecha</p>
+              <p className="font-semibold">{venta.fecha}</p>
+            </div>
+
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Hora</p>
+              <p className="font-semibold">{venta.hora}</p>
+            </div>
+
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Estatus</p>
+              <p className="font-semibold capitalize">{venta.estatus}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="flex min-h-[190px] flex-col border-border/60 shadow-sm">
+          <CardHeader className="p-3 pb-2">
+            <CardTitle className="text-sm">Cliente</CardTitle>
+          </CardHeader>
+
+          <CardContent className="flex flex-1 flex-col gap-2 p-3 pt-0 text-xs">
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Nombre</p>
+              <p className="font-semibold">{venta.cliente.nombre}</p>
+            </div>
+
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Teléfono</p>
+              <p>{venta.cliente.telefono || "-"}</p>
+            </div>
+
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Correo</p>
+              <p className="break-all">{venta.cliente.correo || "-"}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="flex min-h-[190px] flex-col border-border/60 shadow-sm">
+          <CardHeader className="p-3 pb-2">
+            <CardTitle className="text-sm">Resumen</CardTitle>
+          </CardHeader>
+
+          <CardContent className="flex flex-1 flex-col justify-between p-3 pt-0 text-xs">
+            <div className="space-y-2">
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-medium">
-                  {formatCurrency(venta.subtotal)}
-                </span>
+                <span>{formatCurrency(venta.subtotal)}</span>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Descuento</span>
-                <span className="font-medium">
-                  {formatCurrency(venta.descuento)}
-                </span>
+                <span>{formatCurrency(venta.descuento)}</span>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Artículos</span>
-                <span className="font-medium">{venta.totalArticulos}</span>
+                <span>{venta.totalArticulos}</span>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Método de pago</span>
-                <span className="font-medium">
-                  {getMetodoPagoLabel(venta.metodoPago)}
-                </span>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Método</span>
+                <span>{getMetodoPagoLabel(venta.metodoPago)}</span>
               </div>
+            </div>
 
-              <div className="border-t pt-3">
-                <div className="flex items-center justify-between text-base font-bold">
-                  <span>Total</span>
-                  <span>{formatCurrency(venta.total)}</span>
-                </div>
-              </div>
+            <div className="flex justify-between border-t pt-2 text-sm font-bold">
+              <span>Total</span>
+              <span>{formatCurrency(venta.total)}</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="rounded-2xl">
-        <CardHeader>
-          <CardTitle className="text-base">Contenido del ticket</CardTitle>
-          <CardDescription>Productos incluidos en la venta</CardDescription>
+      <Card className="flex min-h-0 flex-1 flex-col border-border/60 shadow-sm">
+        <CardHeader className="p-3 pb-2">
+          <CardTitle className="text-sm">Productos del ticket</CardTitle>
         </CardHeader>
 
-        <CardContent>
-          <div className="rounded-xl border">
-            <div className="max-h-[450px] overflow-auto">
-              <Table>
-                <TableHeader className="sticky top-0 z-10 bg-background">
-                  <TableRow>
-                    <TableHead className="w-[70px]">#</TableHead>
-                    <TableHead>Producto</TableHead>
-                    <TableHead>Código</TableHead>
-                    <TableHead className="text-center">Cantidad</TableHead>
-                    <TableHead className="text-right">P. unitario</TableHead>
-                    <TableHead className="text-right">Importe</TableHead>
-                  </TableRow>
-                </TableHeader>
+        <CardContent className="min-h-0 flex-1 p-3 pt-0">
+          <div className="h-full overflow-auto rounded-lg border">
+            <Table className="text-xs">
+              <TableHeader className="sticky top-0 z-10 bg-muted/40">
+                <TableRow className="h-8">
+                  <TableHead className="w-[40px]">#</TableHead>
+                  <TableHead>Producto</TableHead>
+                  <TableHead className="w-[110px]">Código</TableHead>
+                  <TableHead className="w-[70px] text-center">Cant.</TableHead>
+                  <TableHead className="w-[100px] text-right">Precio</TableHead>
+                  <TableHead className="w-[110px] text-right">
+                    Importe
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
 
-                <TableBody>
-                  {venta.items.length > 0 ? (
-                    venta.items.map((item, index) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">
-                          {index + 1}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {item.producto}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {item.codigo}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {item.cantidad}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(item.precioUnitario)}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold">
-                          {formatCurrency(item.importe)}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={6}
-                        className="py-10 text-center text-muted-foreground"
-                      >
-                        Esta venta no tiene productos cargados.
+              <TableBody>
+                {venta.items.length > 0 ? (
+                  venta.items.map((item, i) => (
+                    <TableRow key={item.id} className="h-9">
+                      <TableCell>{i + 1}</TableCell>
+                      <TableCell className="truncate font-medium">
+                        {item.producto}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.codigo}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {item.cantidad}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(item.precioUnitario)}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {formatCurrency(item.importe)}
                       </TableCell>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="py-10 text-center text-muted-foreground"
+                    >
+                      Esta venta no tiene productos cargados.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
