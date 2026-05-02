@@ -135,15 +135,26 @@ export default function InventarioPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Código producto
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            Código
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span>{row.original.codigo_producto || "Sin código"}</span>
+          <span className="text-xs xl:text-sm">
+            {row.original.codigo_producto || "Sin código"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "codigo_barras",
+        header: "Barras",
+        cell: ({ row }) => (
+          <span className="font-mono text-xs">
+            {row.original.codigo_barras || "Sin barras"}
+          </span>
         ),
       },
       {
@@ -151,19 +162,19 @@ export default function InventarioPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Producto
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="min-w-[220px]">
-            <p className="font-semibold text-foreground">
+          <div className="min-w-0">
+            <p className="truncate text-xs font-semibold text-foreground xl:text-sm">
               {row.original.nombre || "Sin nombre"}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="truncate text-[11px] text-muted-foreground">
               {row.original.codigo_barras || "Sin código de barras"}
             </p>
           </div>
@@ -174,11 +185,11 @@ export default function InventarioPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Stock actual
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            Actual
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => {
@@ -188,7 +199,7 @@ export default function InventarioPage() {
           return (
             <span
               className={[
-                "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
+                "inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
                 status.className,
               ].join(" ")}
             >
@@ -202,15 +213,15 @@ export default function InventarioPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Stock mínimo
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            Mín.
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="font-medium text-muted-foreground">
+          <span className="text-xs font-medium text-muted-foreground xl:text-sm">
             {Number(row.original.stock_minimo ?? 0)} pzs
           </span>
         ),
@@ -220,15 +231,15 @@ export default function InventarioPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Stock deseado
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            Deseado
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="font-medium text-foreground">
+          <span className="text-xs font-medium text-foreground xl:text-sm">
             {Number(row.original.stock_deseado ?? 0)} pzs
           </span>
         ),
@@ -238,11 +249,11 @@ export default function InventarioPage() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="h-auto p-0 font-semibold"
+            className="h-auto p-0 text-xs font-semibold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Por reponer
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            Reponer
+            <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
           </Button>
         ),
         accessorFn: (row) =>
@@ -258,7 +269,9 @@ export default function InventarioPage() {
           )
 
           return (
-            <span className="font-semibold text-primary">{faltante} pzs</span>
+            <span className="text-xs font-semibold text-primary xl:text-sm">
+              {faltante} pzs
+            </span>
           )
         },
       },
@@ -271,7 +284,7 @@ export default function InventarioPage() {
           return (
             <span
               className={[
-                "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
+                "inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
                 status.className,
               ].join(" ")}
             >
@@ -287,8 +300,13 @@ export default function InventarioPage() {
           const product = row.original
 
           return (
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/admin/inventario/${product.id}`}>Ver detalles</Link>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 text-xs"
+            >
+              <Link href={`/admin/inventario/${product.id}`}>Ver</Link>
             </Button>
           )
         },
@@ -346,109 +364,166 @@ export default function InventarioPage() {
   ).length
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Inventario
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Supervisa existencias, mínimos y reabasto de tus productos.
-        </p>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden p-3 lg:p-4 xl:p-5">
+      <div className="shrink-0 space-y-2">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-bold tracking-tight text-foreground xl:text-2xl">
+            Inventario
+          </h1>
+          <p className="text-xs text-muted-foreground xl:text-sm">
+            Supervisa existencias, mínimos y reabasto de tus productos.
+          </p>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Productos
+                </p>
+                <p className="mt-0.5 text-lg font-bold xl:text-2xl">
+                  {totalProductos}
+                </p>
+              </div>
+              <Boxes className="h-5 w-5 shrink-0 text-muted-foreground xl:h-7 xl:w-7" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Stock total
+                </p>
+                <p className="mt-0.5 text-lg font-bold xl:text-2xl">
+                  {stockTotal}
+                </p>
+              </div>
+              <Warehouse className="h-5 w-5 shrink-0 text-muted-foreground xl:h-7 xl:w-7" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Agotados
+                </p>
+                <p className="mt-0.5 text-lg font-bold xl:text-2xl">
+                  {agotados}
+                </p>
+              </div>
+              <ShieldAlert className="h-5 w-5 shrink-0 text-red-500 xl:h-7 xl:w-7" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between gap-2 p-3 xl:h-20 xl:p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-muted-foreground xl:text-sm">
+                  Stock bajo
+                </p>
+                <p className="mt-0.5 text-lg font-bold xl:text-2xl">
+                  {bajoMinimo}
+                </p>
+              </div>
+              <ShieldAlert className="h-5 w-5 shrink-0 text-amber-500 xl:h-7 xl:w-7" />
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">Productos</p>
-              <p className="mt-1 text-2xl font-bold">{totalProductos}</p>
+      <Card className="mt-3 flex min-h-0 flex-1 flex-col border-border/60 shadow-sm">
+        <CardHeader className="shrink-0 p-3 xl:p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <CardTitle className="text-base xl:text-lg">
+                Control de inventario
+              </CardTitle>
+              <p className="mt-0.5 text-xs text-muted-foreground xl:text-sm">
+                Identifica productos con faltante, agotados o por debajo del
+                mínimo.
+              </p>
             </div>
-            <Boxes className="h-8 w-8 text-muted-foreground" />
-          </CardContent>
-        </Card>
 
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">Stock total</p>
-              <p className="mt-1 text-2xl font-bold">{stockTotal}</p>
-            </div>
-            <Warehouse className="h-8 w-8 text-muted-foreground" />
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">Agotados</p>
-              <p className="mt-1 text-2xl font-bold">{agotados}</p>
-            </div>
-            <ShieldAlert className="h-8 w-8 text-red-500" />
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 shadow-sm">
-          <CardContent className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-sm text-muted-foreground">Stock bajo</p>
-              <p className="mt-1 text-2xl font-bold">{bajoMinimo}</p>
-            </div>
-            <ShieldAlert className="h-8 w-8 text-amber-500" />
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle className="text-lg">Control de inventario</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Identifica productos con faltante, agotados o por debajo del
-              mínimo.
-            </p>
-          </div>
-
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <div className="relative w-full sm:w-[340px]">
+            <div className="relative w-full lg:w-[340px] xl:w-[380px]">
               <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={globalFilter ?? ""}
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 placeholder="Buscar producto, código o stock..."
-                className="pl-9"
+                className="h-9 pl-9 text-xs xl:h-10 xl:text-sm"
               />
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="flex min-h-0 flex-1 flex-col gap-2 p-3 pt-0 xl:p-4 xl:pt-0">
           {loading ? (
-            <div className="py-10 text-center text-muted-foreground">
+            <div className="flex h-full min-h-[220px] items-center justify-center text-sm text-muted-foreground">
               Cargando inventario...
             </div>
           ) : error ? (
-            <div className="py-10 text-center text-red-500">{error}</div>
+            <div className="flex h-full min-h-[220px] items-center justify-center text-sm text-red-500">
+              {error}
+            </div>
           ) : (
             <>
-              <div className="overflow-hidden rounded-xl border border-border/60">
-                <div className="overflow-x-auto">
-                  <Table className="text-base">
-                    <TableHeader className="bg-muted/40">
+              <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border/60">
+                <div className="h-full overflow-x-hidden overflow-y-auto">
+                  <Table className="w-full table-fixed text-xs xl:text-sm">
+                    <TableHeader className="sticky top-0 z-10 bg-muted/40">
                       {table.getHeaderGroups().map((headerGroup) => (
-                        <TableRow key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <TableHead
-                              key={header.id}
-                              className="whitespace-nowrap"
-                            >
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext()
-                                  )}
-                            </TableHead>
-                          ))}
+                        <TableRow key={headerGroup.id} className="h-8">
+                          {headerGroup.headers.map((header) => {
+                            const hiddenColumn =
+                              header.column.id === "codigo_barras" ||
+                              header.column.id === "stock_minimo" ||
+                              header.column.id === "stock_deseado"
+
+                            return (
+                              <TableHead
+                                key={header.id}
+                                className={[
+                                  "h-8 px-2 py-1 text-xs font-semibold whitespace-nowrap",
+                                  hiddenColumn ? "hidden 2xl:table-cell" : "",
+                                  header.column.id === "id" ? "w-[42px]" : "",
+                                  header.column.id === "codigo_producto"
+                                    ? "w-[95px]"
+                                    : "",
+                                  header.column.id === "nombre"
+                                    ? "w-[320px]"
+                                    : "",
+                                  header.column.id === "stock_actual"
+                                    ? "w-[78px]"
+                                    : "",
+                                  header.column.id === "stock_minimo"
+                                    ? "w-[78px]"
+                                    : "",
+                                  header.column.id === "stock_deseado"
+                                    ? "w-[90px]"
+                                    : "",
+                                  header.column.id === "faltante"
+                                    ? "w-[78px]"
+                                    : "",
+                                  header.column.id === "estado"
+                                    ? "w-[85px]"
+                                    : "",
+                                  header.column.id === "acciones"
+                                    ? "w-[65px]"
+                                    : "",
+                                ].join(" ")}
+                              >
+                                {header.isPlaceholder
+                                  ? null
+                                  : flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext()
+                                    )}
+                              </TableHead>
+                            )
+                          })}
                         </TableRow>
                       ))}
                     </TableHeader>
@@ -461,19 +536,33 @@ export default function InventarioPage() {
                           return (
                             <TableRow
                               key={row.id}
-                              className={`transition-colors hover:bg-muted/30 ${status.rowClassName}`}
+                              className={`h-10 transition-colors hover:bg-muted/30 ${status.rowClassName}`}
                             >
-                              {row.getVisibleCells().map((cell) => (
-                                <TableCell
-                                  key={cell.id}
-                                  className="align-middle whitespace-nowrap"
-                                >
-                                  {flexRender(
-                                    cell.column.columnDef.cell,
-                                    cell.getContext()
-                                  )}
-                                </TableCell>
-                              ))}
+                              {row.getVisibleCells().map((cell) => {
+                                const hiddenColumn =
+                                  cell.column.id === "codigo_barras" ||
+                                  cell.column.id === "stock_minimo" ||
+                                  cell.column.id === "stock_deseado"
+
+                                return (
+                                  <TableCell
+                                    key={cell.id}
+                                    className={[
+                                      "h-10 overflow-hidden px-2 py-1 align-middle text-xs whitespace-nowrap xl:text-sm",
+                                      hiddenColumn
+                                        ? "hidden 2xl:table-cell"
+                                        : "",
+                                    ].join(" ")}
+                                  >
+                                    <div className="truncate">
+                                      {flexRender(
+                                        cell.column.columnDef.cell,
+                                        cell.getContext()
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                )
+                              })}
                             </TableRow>
                           )
                         })
@@ -492,23 +581,24 @@ export default function InventarioPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">
+              <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-muted-foreground">
                   Mostrando {table.getRowModel().rows.length} de{" "}
                   {table.getFilteredRowModel().rows.length} productos filtrados.
                 </p>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2 sm:justify-start">
                   <Button
                     variant="outline"
                     size="icon"
+                    className="h-8 w-8"
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
 
-                  <div className="min-w-[120px] text-center text-sm text-muted-foreground">
+                  <div className="min-w-[95px] text-center text-xs text-muted-foreground">
                     Página {table.getState().pagination.pageIndex + 1} de{" "}
                     {Math.max(table.getPageCount(), 1)}
                   </div>
@@ -516,6 +606,7 @@ export default function InventarioPage() {
                   <Button
                     variant="outline"
                     size="icon"
+                    className="h-8 w-8"
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
                   >
