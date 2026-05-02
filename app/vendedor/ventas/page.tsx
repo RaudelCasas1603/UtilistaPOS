@@ -181,6 +181,7 @@ const ENDPOINTS = {
   imprimirTicket: (id: string | number) =>
     `${API_BASE}/api/impresion/ticket/${id}`,
 }
+
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
@@ -855,6 +856,7 @@ export default function VentasPage() {
       setSaving(false)
     }
   }
+
   const handleCancelar = async () => {
     try {
       if (!isPendingLoaded || !currentSaleId) return
@@ -889,7 +891,7 @@ export default function VentasPage() {
 
   if (loadingCatalogs) {
     return (
-      <div className="flex h-full items-center justify-center p-6">
+      <div className="flex h-full items-center justify-center p-4 sm:p-6">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           Cargando ventas...
@@ -900,7 +902,7 @@ export default function VentasPage() {
 
   return (
     <div className="h-full min-h-0 overflow-hidden bg-background">
-      <div className="mx-auto flex h-full min-h-0 max-w-[1900px] flex-col gap-6 overflow-hidden">
+      <div className="mx-auto flex h-full min-h-0 max-w-[1920px] flex-col gap-3 overflow-hidden px-0 sm:gap-4 lg:gap-4 xl:gap-5 2xl:gap-6">
         {uiAlert && (
           <Alert
             className={cn(
@@ -927,28 +929,32 @@ export default function VentasPage() {
         )}
 
         <Card className="shrink-0 border-border/60 shadow-sm">
-          <CardContent className="flex flex-col gap-4 p-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <CardContent className="flex flex-col gap-3 p-3 sm:p-4 lg:gap-3 xl:gap-4">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl xl:text-2xl 2xl:text-3xl">
                   Ventas
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground sm:text-sm">
                   Caja rápida para registrar y cobrar ventas
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center xl:justify-end">
                 <Dialog open={modalOpen} onOpenChange={setModalOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-10 w-10">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-full sm:w-10"
+                    >
                       <Search className="h-4 w-4" />
                     </Button>
                   </DialogTrigger>
 
-                  <DialogContent className="!w-[95vw] !max-w-6xl">
+                  <DialogContent className="!w-[96vw] !max-w-6xl">
                     <DialogHeader>
-                      <DialogTitle className="text-2xl">
+                      <DialogTitle className="text-xl sm:text-2xl">
                         Buscar productos
                       </DialogTitle>
                     </DialogHeader>
@@ -960,7 +966,7 @@ export default function VentasPage() {
                         onChange={(e) => setSearch(e.target.value)}
                       />
 
-                      <div className="max-h-[750px] space-y-3 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1 [scrollbar-width:none] xl:max-h-[70vh] [&::-webkit-scrollbar]:hidden">
                         {filteredProducts.length === 0 ? (
                           <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
                             No se encontraron productos.
@@ -974,7 +980,7 @@ export default function VentasPage() {
                               <div
                                 key={product.id}
                                 className={cn(
-                                  "flex items-center justify-between gap-4 rounded-xl border border-border/60 p-4 transition",
+                                  "flex flex-col gap-3 rounded-xl border border-border/60 p-3 transition sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4",
                                   isOutOfStock
                                     ? "cursor-not-allowed bg-muted/30 opacity-60"
                                     : "hover:bg-muted/30"
@@ -983,7 +989,7 @@ export default function VentasPage() {
                                 <div className="min-w-0 flex-1">
                                   <p
                                     className={cn(
-                                      "text-sm font-semibold md:text-base",
+                                      "line-clamp-2 text-sm font-semibold md:text-base",
                                       isOutOfStock
                                         ? "text-muted-foreground"
                                         : "text-foreground"
@@ -1018,10 +1024,10 @@ export default function VentasPage() {
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-between gap-3 sm:justify-end">
                                   <p
                                     className={cn(
-                                      "min-w-[90px] text-right text-sm font-bold",
+                                      "min-w-[90px] text-sm font-bold sm:text-right",
                                       isOutOfStock
                                         ? "text-muted-foreground"
                                         : "text-foreground"
@@ -1067,7 +1073,7 @@ export default function VentasPage() {
                       variant="outline"
                       role="combobox"
                       aria-expanded={ticketComboOpen}
-                      className="h-10 w-full justify-between sm:w-[280px]"
+                      className="h-10 w-full justify-between sm:w-[260px] xl:w-[280px]"
                     >
                       <div className="flex min-w-0 items-center gap-2">
                         <ReceiptText className="h-4 w-4 shrink-0" />
@@ -1085,7 +1091,7 @@ export default function VentasPage() {
                   <PopoverContent
                     align="start"
                     side="bottom"
-                    className="w-[280px] overflow-hidden rounded-xl border border-border bg-background p-0 shadow-md"
+                    className="w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-background p-0 shadow-md sm:w-[280px]"
                   >
                     <Command className="bg-popover rounded-lg border-0">
                       <CommandInput
@@ -1141,17 +1147,20 @@ export default function VentasPage() {
                   onOpenChange={setClientModalOpen}
                 >
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2 sm:w-auto"
+                    >
                       <UserRound className="h-4 w-4" />
-                      <span className="max-w-[140px] truncate">
+                      <span className="max-w-[220px] truncate sm:max-w-[140px] xl:max-w-[180px]">
                         {selectedClient.name}
                       </span>
                     </Button>
                   </DialogTrigger>
 
-                  <DialogContent className="!w-[95vw] !max-w-3xl">
+                  <DialogContent className="!w-[96vw] !max-w-3xl">
                     <DialogHeader>
-                      <DialogTitle className="text-2xl">
+                      <DialogTitle className="text-xl sm:text-2xl">
                         Seleccionar cliente
                       </DialogTitle>
                     </DialogHeader>
@@ -1163,7 +1172,7 @@ export default function VentasPage() {
                         onChange={(e) => setClientSearch(e.target.value)}
                       />
 
-                      <div className="max-h-[500px] space-y-3 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1 [scrollbar-width:none] xl:max-h-[500px] [&::-webkit-scrollbar]:hidden">
                         {filteredClients.length === 0 ? (
                           <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
                             No se encontraron clientes.
@@ -1174,15 +1183,15 @@ export default function VentasPage() {
                               key={client.id}
                               type="button"
                               onClick={() => handleSelectClient(client)}
-                              className={`w-full rounded-xl border p-4 text-left transition ${
+                              className={`w-full rounded-xl border p-3 text-left transition sm:p-4 ${
                                 selectedClient.id === client.id
                                   ? "border-primary bg-primary/5"
                                   : "border-border/60 hover:bg-muted/40"
                               }`}
                             >
-                              <div className="flex items-center justify-between gap-4">
+                              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-sm font-semibold text-foreground md:text-base">
+                                  <p className="truncate text-sm font-semibold text-foreground md:text-base">
                                     {client.name}
                                   </p>
 
@@ -1191,7 +1200,9 @@ export default function VentasPage() {
                                       {client.phone || "Sin teléfono"}
                                     </span>
                                     <span>•</span>
-                                    <span>{client.email || "Sin correo"}</span>
+                                    <span className="truncate">
+                                      {client.email || "Sin correo"}
+                                    </span>
                                     <span>•</span>
                                     <span>Desc. {client.discount}%</span>
                                   </div>
@@ -1211,7 +1222,10 @@ export default function VentasPage() {
                   </DialogContent>
                 </Dialog>
 
-                <Button className="gap-2" onClick={handleNewSale}>
+                <Button
+                  className="w-full gap-2 sm:w-auto"
+                  onClick={handleNewSale}
+                >
                   <Plus className="h-4 w-4" />
                   Nueva venta
                 </Button>
@@ -1233,10 +1247,13 @@ export default function VentasPage() {
                     }
                   }}
                   placeholder="Ingresa la clave del producto..."
-                  className="h-11"
+                  className="h-10 sm:h-11"
                 />
 
-                <Button onClick={handleDirectCodeSubmit} className="h-11 px-6">
+                <Button
+                  onClick={handleDirectCodeSubmit}
+                  className="h-10 px-6 sm:h-11"
+                >
                   Agregar
                 </Button>
               </div>
@@ -1249,7 +1266,7 @@ export default function VentasPage() {
                 {codeError}
               </p>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground sm:text-sm">
                 Captura la clave directamente o usa la lupa para buscar
                 productos.
               </p>
@@ -1257,19 +1274,21 @@ export default function VentasPage() {
           </CardContent>
         </Card>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-hidden xl:grid-cols-[1.55fr_0.95fr]">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(360px,0.95fr)] 2xl:grid-cols-[minmax(0,1.55fr)_minmax(420px,0.95fr)] 2xl:gap-6">
           <div className="flex min-h-0 flex-col overflow-hidden">
             <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-border/60 shadow-sm">
-              <CardHeader className="shrink-0 border-b border-border/60 pb-3">
+              <CardHeader className="shrink-0 border-b border-border/60 p-3 pb-3 sm:p-4 lg:p-5">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <CardTitle className="flex items-center gap-2 text-lg">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <ReceiptText className="h-5 w-5" />
                     Ticket actual
                   </CardTitle>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" className="px-3 py-1">
-                      {selectedClient.name || "Cliente general"}
+                    <Badge variant="secondary" className="max-w-full px-3 py-1">
+                      <span className="truncate">
+                        {selectedClient.name || "Cliente general"}
+                      </span>
                     </Badge>
                     <Badge variant="outline" className="px-3 py-1">
                       {totalItems} artículos
@@ -1283,9 +1302,9 @@ export default function VentasPage() {
                 </div>
               </CardHeader>
 
-              <CardContent className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <CardContent className="min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-width:none] sm:p-4 lg:p-5 [&::-webkit-scrollbar]:hidden">
                 {cart.length === 0 ? (
-                  <div className="flex h-full items-center justify-center rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                  <div className="flex h-full min-h-[260px] items-center justify-center rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
                     No hay productos en el ticket.
                   </div>
                 ) : (
@@ -1293,7 +1312,7 @@ export default function VentasPage() {
                     {cart.map((item) => (
                       <div
                         key={item.id}
-                        className="rounded-xl border border-border/60 bg-card p-4 transition-colors hover:bg-muted/30"
+                        className="rounded-xl border border-border/60 bg-card p-3 transition-colors hover:bg-muted/30 sm:p-4"
                       >
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                           <div className="min-w-0 flex-1">
@@ -1309,10 +1328,11 @@ export default function VentasPage() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
                             <Button
                               variant="outline"
                               size="icon"
+                              className="h-9 w-9"
                               onClick={() => decreaseQty(item.id)}
                             >
                               <Minus className="h-4 w-4" />
@@ -1325,6 +1345,7 @@ export default function VentasPage() {
                             <Button
                               variant="outline"
                               size="icon"
+                              className="h-9 w-9"
                               onClick={() => increaseQty(item.id)}
                             >
                               <Plus className="h-4 w-4" />
@@ -1333,6 +1354,7 @@ export default function VentasPage() {
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-9 w-9"
                               onClick={() => removeItem(item.id)}
                             >
                               <Trash2 className="h-4 w-4 text-rose-600" />
@@ -1340,7 +1362,7 @@ export default function VentasPage() {
                           </div>
                         </div>
 
-                        <div className="mt-3 flex items-center justify-between">
+                        <div className="mt-3 flex items-center justify-between gap-3">
                           <p className="text-xs text-muted-foreground">
                             Subtotal de línea
                           </p>
@@ -1358,17 +1380,17 @@ export default function VentasPage() {
 
           <div className="flex min-h-0 flex-col overflow-hidden">
             <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-border/60 shadow-sm">
-              <CardHeader className="shrink-0 pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
+              <CardHeader className="shrink-0 p-3 pb-3 sm:p-4 lg:p-5">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <HandCoins className="h-5 w-5" />
                   Resumen de cobro
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className="flex min-h-0 flex-1 flex-col justify-between gap-4 overflow-hidden pb-4">
-                <div className="space-y-5">
-                  <div className="rounded-xl border bg-muted/20 p-4">
-                    <div className="flex items-center justify-between">
+              <CardContent className="flex min-h-0 flex-1 flex-col justify-between gap-3 overflow-y-auto p-3 pt-0 [scrollbar-width:none] sm:p-4 sm:pt-0 lg:p-5 lg:pt-0 [&::-webkit-scrollbar]:hidden">
+                <div className="space-y-4 xl:space-y-5">
+                  <div className="rounded-xl border bg-muted/20 p-3 sm:p-4">
+                    <div className="flex items-center justify-between gap-3">
                       <span className="text-sm text-muted-foreground">
                         Subtotal
                       </span>
@@ -1377,7 +1399,7 @@ export default function VentasPage() {
                       </span>
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between">
+                    <div className="mt-3 flex items-center justify-between gap-3">
                       <span className="flex items-center gap-2 text-sm text-muted-foreground">
                         <BadgePercent className="h-4 w-4" />
                         Descuento ({selectedClient.discount}%)
@@ -1389,11 +1411,11 @@ export default function VentasPage() {
 
                     <Separator className="my-4" />
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <span className="text-base font-semibold text-foreground">
                         Total a cobrar
                       </span>
-                      <span className="text-3xl font-bold tracking-tight text-foreground">
+                      <span className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl xl:text-3xl 2xl:text-4xl">
                         {formatCurrency(total)}
                       </span>
                     </div>
@@ -1404,27 +1426,27 @@ export default function VentasPage() {
                       Métodos de pago
                     </p>
 
-                    <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 xl:grid-cols-3">
                       <Button
                         variant={
                           paymentMethod === "efectivo" ? "default" : "outline"
                         }
-                        className="h-12 gap-3"
+                        className="h-11 gap-2 px-2 text-xs sm:text-sm xl:h-12 xl:gap-2"
                         onClick={() => setPaymentMethod("efectivo")}
                       >
-                        <Wallet className="h-5 w-5" />
-                        Efectivo
+                        <Wallet className="h-4 w-4 shrink-0 xl:h-5 xl:w-5" />
+                        <span className="truncate">Efectivo</span>
                       </Button>
 
                       <Button
                         variant={
                           paymentMethod === "tarjeta" ? "default" : "outline"
                         }
-                        className="h-12 gap-3"
+                        className="h-11 gap-2 px-2 text-xs sm:text-sm xl:h-12 xl:gap-2"
                         onClick={() => setPaymentMethod("tarjeta")}
                       >
-                        <CreditCard className="h-5 w-5" />
-                        Tarjeta
+                        <CreditCard className="h-4 w-4 shrink-0 xl:h-5 xl:w-5" />
+                        <span className="truncate">Tarjeta</span>
                       </Button>
 
                       <Button
@@ -1433,16 +1455,16 @@ export default function VentasPage() {
                             ? "default"
                             : "outline"
                         }
-                        className="h-12 gap-3"
+                        className="h-11 gap-2 px-2 text-xs sm:text-sm xl:h-12 xl:gap-2"
                         onClick={() => setPaymentMethod("transferencia")}
                       >
-                        <Landmark className="h-5 w-5" />
-                        Transferencia
+                        <Landmark className="h-4 w-4 shrink-0 xl:h-5 xl:w-5" />
+                        <span className="truncate">Transferencia</span>
                       </Button>
                     </div>
 
                     {paymentMethod === "efectivo" && (
-                      <div className="space-y-3 rounded-xl border border-border/60 p-4">
+                      <div className="space-y-3 rounded-xl border border-border/60 p-3 sm:p-4">
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-foreground">
                             Monto recibido
@@ -1453,7 +1475,7 @@ export default function VentasPage() {
                             placeholder="Ej. 300"
                             value={cashReceived}
                             onChange={(e) => setCashReceived(e.target.value)}
-                            className="h-11"
+                            className="h-10 sm:h-11"
                           />
                         </div>
 
@@ -1509,7 +1531,7 @@ export default function VentasPage() {
                 <div className="shrink-0 space-y-3 pt-2">
                   <Separator />
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <Button
                       variant="outline"
                       className="h-11"
@@ -1535,7 +1557,7 @@ export default function VentasPage() {
 
                   <Button
                     size="lg"
-                    className="h-12 w-full text-base font-semibold"
+                    className="h-12 w-full text-sm font-semibold sm:text-base"
                     onClick={handleCobrar}
                     disabled={
                       saving ||
