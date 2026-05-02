@@ -200,207 +200,211 @@ export default function HistorialDevolucionesPage() {
   const hasta = Math.min(paginaSegura * ITEMS_POR_PAGINA, totalDevoluciones)
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Historial de devoluciones
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Revisa todas las devoluciones registradas y navega al detalle de cada
-          una.
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="rounded-2xl shadow-sm">
-          <CardContent className="flex items-center gap-3 p-5">
-            <div className="rounded-xl border bg-background p-3">
-              <RotateCcw className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Total de devoluciones
-              </p>
-              <p className="text-3xl font-bold">{totalDevoluciones}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl shadow-sm">
-          <CardContent className="flex items-center gap-3 p-5">
-            <div className="rounded-xl border bg-background p-3">
-              <Wallet className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Monto acumulado</p>
-              <p className="text-3xl font-bold">
-                {formatCurrency(montoAcumulado)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl shadow-sm">
-          <CardContent className="flex items-center gap-3 p-5">
-            <div className="rounded-xl border bg-background p-3">
-              <RotateCcw className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Página actual</p>
-              <p className="text-3xl font-bold">
-                {paginaSegura} / {totalPaginas}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-xl">Listado de devoluciones</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Consulta rápida con búsqueda y paginación.
+    <div className="flex h-full min-h-0 flex-col overflow-hidden p-3 lg:p-4 xl:p-5">
+      {/* HEADER */}
+      <div className="shrink-0 space-y-2">
+        <div>
+          <h1 className="text-xl font-bold xl:text-2xl">
+            Historial de devoluciones
+          </h1>
+          <p className="text-xs text-muted-foreground xl:text-sm">
+            Revisa todas las devoluciones registradas.
           </p>
+        </div>
+
+        {/* CARDS COMPACTAS */}
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between p-3">
+              <div>
+                <p className="text-[11px] text-muted-foreground">
+                  Total devoluciones
+                </p>
+                <p className="text-lg font-bold">{totalDevoluciones}</p>
+              </div>
+              <RotateCcw className="h-5 w-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between p-3">
+              <div>
+                <p className="text-[11px] text-muted-foreground">
+                  Monto acumulado
+                </p>
+                <p className="text-lg font-bold">
+                  {formatCurrency(montoAcumulado)}
+                </p>
+              </div>
+              <Wallet className="h-5 w-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="flex h-16 items-center justify-between p-3">
+              <div>
+                <p className="text-[11px] text-muted-foreground">Página</p>
+                <p className="text-lg font-bold">
+                  {paginaSegura} / {totalPaginas}
+                </p>
+              </div>
+              <RotateCcw className="h-5 w-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* TABLA */}
+      <Card className="mt-3 flex min-h-0 flex-1 flex-col border-border/60 shadow-sm">
+        {/* HEADER TABLA */}
+        <CardHeader className="p-3">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <CardTitle className="text-sm xl:text-base">
+                Listado de devoluciones
+              </CardTitle>
+            </div>
+
+            <div className="relative w-full lg:w-[320px]">
+              <Search className="absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar..."
+                className="h-9 pl-7 text-xs"
+              />
+            </div>
+          </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          <div className="relative max-w-sm">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por id, venta, cliente, motivo o estatus."
-              className="pl-9"
-            />
-          </div>
-
+        {/* CONTENIDO */}
+        <CardContent className="flex min-h-0 flex-1 flex-col gap-2 p-3 pt-0">
           {loading ? (
-            <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
+            <div className="flex min-h-[200px] items-center justify-center text-xs text-muted-foreground">
               Cargando devoluciones...
             </div>
           ) : error ? (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-              {error}
-            </div>
+            <div className="text-xs text-red-500">{error}</div>
           ) : devolucionesFiltradas.length === 0 ? (
-            <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
-              No se encontraron devoluciones.
+            <div className="flex min-h-[200px] items-center justify-center text-xs text-muted-foreground">
+              No hay devoluciones
             </div>
           ) : (
             <>
-              <div className="overflow-hidden rounded-xl border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[70px]">ID</TableHead>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Hora</TableHead>
-                      <TableHead>Venta</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Motivo</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Estatus</TableHead>
-                      <TableHead className="text-right">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-
-                  <TableBody>
-                    {devolucionesPaginadas.map((devolucion) => (
-                      <TableRow key={devolucion.id}>
-                        <TableCell className="font-medium">
-                          {devolucion.id}
-                        </TableCell>
-
-                        <TableCell>
-                          {formatDate(devolucion.fecha_hora)}
-                        </TableCell>
-
-                        <TableCell>
-                          {formatTime(devolucion.fecha_hora)}
-                        </TableCell>
-
-                        <TableCell>
-                          {devolucion.id_venta
-                            ? `V-${String(devolucion.id_venta).padStart(5, "0")}`
-                            : "—"}
-                        </TableCell>
-
-                        <TableCell>
-                          {devolucion.cliente_nombre || "Cliente general"}
-                        </TableCell>
-
-                        <TableCell className="max-w-[250px] truncate">
-                          {devolucion.motivo || "Sin motivo"}
-                        </TableCell>
-
-                        <TableCell className="font-semibold">
-                          {formatCurrency(devolucion.total)}
-                        </TableCell>
-
-                        <TableCell>
-                          <Badge
-                            className={getBadgeVariant(devolucion.estatus)}
-                          >
-                            {devolucion.estatus || "sin estatus"}
-                          </Badge>
-                        </TableCell>
-
-                        <TableCell className="text-right">
-                          <Button
-                            asChild
-                            variant="outline"
-                            size="sm"
-                            className="gap-2"
-                          >
-                            <Link href={`/admin/devoluciones/${devolucion.id}`}>
-                              <Eye className="h-4 w-4" />
-                              Ver detalles
-                            </Link>
-                          </Button>
-                        </TableCell>
+              <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
+                <div className="h-full overflow-x-hidden overflow-y-auto">
+                  <Table className="w-full table-fixed text-xs">
+                    <TableHeader className="bg-muted/40">
+                      <TableRow className="h-8">
+                        <TableHead className="w-[50px] px-2">ID</TableHead>
+                        <TableHead className="w-[90px] px-2">Fecha</TableHead>
+                        <TableHead className="w-[80px] px-2">Hora</TableHead>
+                        <TableHead className="w-[90px] px-2">Venta</TableHead>
+                        <TableHead className="w-[180px] px-2">
+                          Cliente
+                        </TableHead>
+                        <TableHead className="px-2">Motivo</TableHead>
+                        <TableHead className="w-[100px] px-2">Total</TableHead>
+                        <TableHead className="w-[110px] px-2">
+                          Estatus
+                        </TableHead>
+                        <TableHead className="w-[80px] px-2 text-right">
+                          Ver
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+
+                    <TableBody>
+                      {devolucionesPaginadas.map((d) => (
+                        <TableRow key={d.id} className="h-9 hover:bg-muted/30">
+                          <TableCell className="px-2 font-medium">
+                            {d.id}
+                          </TableCell>
+
+                          <TableCell className="px-2">
+                            {formatDate(d.fecha_hora)}
+                          </TableCell>
+
+                          <TableCell className="px-2">
+                            {formatTime(d.fecha_hora)}
+                          </TableCell>
+
+                          <TableCell className="px-2">
+                            {d.id_venta
+                              ? `V-${String(d.id_venta).padStart(5, "0")}`
+                              : "—"}
+                          </TableCell>
+
+                          <TableCell className="truncate px-2">
+                            {d.cliente_nombre || "Cliente general"}
+                          </TableCell>
+
+                          <TableCell className="truncate px-2">
+                            {d.motivo || "—"}
+                          </TableCell>
+
+                          <TableCell className="px-2 font-semibold">
+                            {formatCurrency(d.total)}
+                          </TableCell>
+
+                          <TableCell className="px-2">
+                            <Badge
+                              className={`${getBadgeVariant(d.estatus)} px-2 py-0 text-[11px]`}
+                            >
+                              {d.estatus || "—"}
+                            </Badge>
+                          </TableCell>
+
+                          <TableCell className="px-2 text-right">
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-2 text-xs"
+                            >
+                              <Link href={`/admin/devoluciones/${d.id}`}>
+                                <Eye className="h-3 w-3" />
+                              </Link>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-3 pt-2 md:flex-row md:items-center md:justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Mostrando {hasta === 0 ? 0 : desde} a {hasta} de{" "}
-                  {totalDevoluciones} devoluciones
+              {/* PAGINACIÓN */}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <p>
+                  {desde} - {hasta} de {totalDevoluciones}
                 </p>
 
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setPaginaActual((prev) => Math.max(prev - 1, 1))
-                    }
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => setPaginaActual((p) => Math.max(p - 1, 1))}
                     disabled={paginaSegura === 1}
-                    className="gap-2"
                   >
-                    <ChevronLeft className="h-4 w-4" />
-                    Anterior
+                    <ChevronLeft className="h-3 w-3" />
                   </Button>
 
-                  <div className="rounded-md border px-3 py-1.5 text-sm font-medium">
-                    Página {paginaSegura} de {totalPaginas}
-                  </div>
+                  <span>
+                    {paginaSegura} / {totalPaginas}
+                  </span>
 
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
+                    className="h-7 w-7"
                     onClick={() =>
-                      setPaginaActual((prev) =>
-                        Math.min(prev + 1, totalPaginas)
-                      )
+                      setPaginaActual((p) => Math.min(p + 1, totalPaginas))
                     }
                     disabled={paginaSegura === totalPaginas}
-                    className="gap-2"
                   >
-                    Siguiente
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-3 w-3" />
                   </Button>
                 </div>
               </div>

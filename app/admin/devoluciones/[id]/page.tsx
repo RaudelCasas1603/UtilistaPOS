@@ -109,129 +109,169 @@ export default function DevolucionDetallePage({ params }: Props) {
   }
 
   return (
-    <div className="space-y-4 p-6">
-      <h1 className="text-2xl font-bold">Devolución #{devolucion.id}</h1>
-
-      {/* GRID PRINCIPAL */}
-      <div className="grid grid-cols-3 gap-4">
-        {/* IZQUIERDA */}
-        <div className="col-span-2 space-y-4">
-          {/* INFO GENERAL */}
-          <Card className="p-3">
-            <CardContent className="grid grid-cols-3 gap-2 text-sm">
-              <div>
-                <p className="text-muted-foreground">Fecha</p>
-                <p>{formatDate(devolucion.fecha_hora)}</p>
-              </div>
-
-              <div>
-                <p className="text-muted-foreground">Hora</p>
-                <p>{formatTime(devolucion.fecha_hora)}</p>
-              </div>
-
-              <div>
-                <p className="text-muted-foreground">Venta</p>
-                <p>V-{devolucion.id_venta}</p>
-              </div>
-
-              <div>
-                <p className="text-muted-foreground">Estatus</p>
-                <Badge>{devolucion.estatus}</Badge>
-              </div>
-
-              <div className="col-span-2">
-                <p className="text-muted-foreground">Motivo</p>
-                <p>{devolucion.motivo || "—"}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* DERECHA (CLIENTE) */}
-        <div>
-          <Card className="p-2.5">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <UserRound className="h-4 w-4" />
-                Cliente
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="space-y-1 text-sm">
-              <p className="font-medium">
-                {devolucion.cliente_nombre || "Cliente general"}
-              </p>
-              <p className="text-muted-foreground">
-                {devolucion.cliente_telefono || "—"}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+    <div className="flex h-full min-h-0 flex-col space-y-3 overflow-hidden p-3 lg:p-4 xl:p-5">
+      <div className="shrink-0">
+        <h1 className="text-xl font-bold xl:text-2xl">
+          Devolución #{devolucion.id}
+        </h1>
+        <p className="text-xs text-muted-foreground xl:text-sm">
+          Detalle completo de la devolución
+        </p>
       </div>
-      {/* TICKET */}
-      <Card className="flex h-[420px] w-full flex-col">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ReceiptText className="h-4 w-4" />
-            Productos devueltos
-          </CardTitle>
-        </CardHeader>
 
-        <CardContent className="flex-1 overflow-auto text-sm">
-          <table className="w-full">
-            <thead>
-              <tr className="text-xs text-muted-foreground">
-                <th className="text-left">Producto</th>
-                <th className="text-center">Cant</th>
-                <th className="text-right">Precio</th>
-                <th className="text-right">Subtotal</th>
-              </tr>
-            </thead>
+      <div className="grid shrink-0 gap-3 xl:grid-cols-3">
+        <Card className="flex min-h-[170px] flex-col border-border/60 shadow-sm">
+          <CardHeader className="p-3 pb-2">
+            <CardTitle className="text-sm">Información</CardTitle>
+          </CardHeader>
 
-            <tbody>
-              {devolucion.items.map((item) => (
-                <tr key={item.id} className="border-t">
-                  <td className="py-2">
-                    <div className="font-medium">{item.nombre}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {item.codigo_producto}
-                    </div>
-                  </td>
-
-                  <td className="text-center">{item.cantidad}</td>
-
-                  <td className="text-right">
-                    {formatCurrency(item.precio_unitario)}
-                  </td>
-
-                  <td className="text-right font-medium">
-                    {formatCurrency(item.subtotal)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-
-      {/* RESUMEN */}
-      <div className="flex justify-end">
-        <Card className="w-[300px] p-3">
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>{formatCurrency(devolucion.subtotal)}</span>
+          <CardContent className="grid flex-1 grid-cols-2 gap-2 p-3 pt-0 text-xs">
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Fecha</p>
+              <p className="font-semibold">
+                {formatDate(devolucion.fecha_hora)}
+              </p>
             </div>
 
-            <Separator />
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Hora</p>
+              <p className="font-semibold">
+                {formatTime(devolucion.fecha_hora)}
+              </p>
+            </div>
 
-            <div className="flex justify-between text-base font-bold">
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Venta</p>
+              <p className="font-semibold">
+                V-{String(devolucion.id_venta).padStart(5, "0")}
+              </p>
+            </div>
+
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Estatus</p>
+              <Badge className="mt-1 px-2 py-0 text-[11px]">
+                {devolucion.estatus || "sin estatus"}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="flex min-h-[170px] flex-col border-border/60 shadow-sm">
+          <CardHeader className="p-3 pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <UserRound className="h-4 w-4" />
+              Cliente
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="flex flex-1 flex-col gap-2 p-3 pt-0 text-xs">
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Nombre</p>
+              <p className="font-semibold">
+                {devolucion.cliente_nombre || "Cliente general"}
+              </p>
+            </div>
+
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Teléfono</p>
+              <p>{devolucion.cliente_telefono || "—"}</p>
+            </div>
+
+            <div className="rounded-lg border p-2">
+              <p className="text-muted-foreground">Correo</p>
+              <p className="break-all">{devolucion.cliente_correo || "—"}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="flex min-h-[170px] flex-col border-border/60 shadow-sm">
+          <CardHeader className="p-3 pb-2">
+            <CardTitle className="text-sm">Resumen</CardTitle>
+          </CardHeader>
+
+          <CardContent className="flex flex-1 flex-col justify-between p-3 pt-0 text-xs">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>{formatCurrency(devolucion.subtotal)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Productos</span>
+                <span>{devolucion.items.length}</span>
+              </div>
+
+              <div className="rounded-lg border p-2">
+                <p className="text-muted-foreground">Motivo</p>
+                <p className="line-clamp-2">{devolucion.motivo || "—"}</p>
+              </div>
+            </div>
+
+            <div className="flex justify-between border-t pt-2 text-sm font-bold">
               <span>Total</span>
               <span>{formatCurrency(devolucion.total)}</span>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Card className="flex min-h-0 flex-1 flex-col border-border/60 shadow-sm">
+        <CardHeader className="p-3 pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <ReceiptText className="h-4 w-4" />
+            Productos devueltos
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="min-h-0 flex-1 p-3 pt-0">
+          <div className="h-full overflow-auto rounded-lg border">
+            <table className="w-full table-fixed text-xs">
+              <thead className="sticky top-0 z-10 bg-muted/40">
+                <tr className="h-8">
+                  <th className="w-[44px] px-2 text-left">#</th>
+                  <th className="px-2 text-left">Producto</th>
+                  <th className="w-[120px] px-2 text-left">Código</th>
+                  <th className="w-[70px] px-2 text-center">Cant.</th>
+                  <th className="w-[100px] px-2 text-right">Precio</th>
+                  <th className="w-[110px] px-2 text-right">Subtotal</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {devolucion.items.length > 0 ? (
+                  devolucion.items.map((item, index) => (
+                    <tr key={item.id} className="h-9 border-t">
+                      <td className="px-2">{index + 1}</td>
+                      <td className="truncate px-2 font-medium">
+                        {item.nombre}
+                      </td>
+                      <td className="truncate px-2 text-muted-foreground">
+                        {item.codigo_producto}
+                      </td>
+                      <td className="px-2 text-center">{item.cantidad}</td>
+                      <td className="px-2 text-right">
+                        {formatCurrency(item.precio_unitario)}
+                      </td>
+                      <td className="px-2 text-right font-semibold">
+                        {formatCurrency(item.subtotal)}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="py-10 text-center text-muted-foreground"
+                    >
+                      Esta devolución no tiene productos cargados.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
