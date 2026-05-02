@@ -453,134 +453,139 @@ export default function AdminCategorias() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold tracking-tight">
-            Administración de Categorías
-          </h2>
-          <p className="text-muted-foreground">
-            Crea, edita, activa, desactiva o elimina categorías de productos.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <Card className="min-w-[120px] border-border/70 shadow-sm">
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Total</p>
-              <p className="text-2xl font-bold">{categorias.length}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="min-w-[120px] border-border/70 shadow-sm">
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Activas</p>
-              <p className="text-2xl font-bold">{totalActivas}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="min-w-[120px] border-border/70 shadow-sm">
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Inactivas</p>
-              <p className="text-2xl font-bold">{totalInactivas}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <div className="flex justify-end">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Nueva categoría
-            </Button>
-          </DialogTrigger>
-
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Crear nueva categoría</DialogTitle>
-              <DialogDescription>
-                Agrega una nueva categoría para organizar tus productos.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nombre</label>
-                <Input
-                  placeholder="Ej. Abarrotes"
-                  value={nuevaNombre}
-                  onChange={(e) => setNuevaNombre(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Descripción</label>
-                <Textarea
-                  placeholder="Describe brevemente la categoría"
-                  value={nuevaDescripcion}
-                  onChange={(e) => setNuevaDescripcion(e.target.value)}
-                  rows={3}
-                />
-              </div>
+    <div className="h-[calc(100vh-64px)] min-h-0 w-full overflow-hidden bg-background">
+      <div className="h-full w-full overflow-x-hidden overflow-y-auto p-4 pb-16 md:p-6 md:pb-20">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-1">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Administración de Categorías
+              </h2>
+              <p className="text-muted-foreground">
+                Crea, edita, activa, desactiva o elimina categorías de
+                productos.
+              </p>
             </div>
 
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setOpen(false)
-                  setNuevaNombre("")
-                  setNuevaDescripcion("")
-                }}
-                disabled={creando}
-              >
-                Cancelar
-              </Button>
+            <div className="grid grid-cols-3 gap-3">
+              <Card className="min-w-[100px] border-border/70 shadow-sm">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Total</p>
+                  <p className="text-2xl font-bold">{categorias.length}</p>
+                </CardContent>
+              </Card>
 
-              <Button onClick={crearCategoria} disabled={creando}>
-                {creando ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="mr-2 h-4 w-4" />
-                )}
-                Crear categoría
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+              <Card className="min-w-[100px] border-border/70 shadow-sm">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Activas</p>
+                  <p className="text-2xl font-bold">{totalActivas}</p>
+                </CardContent>
+              </Card>
 
-      {loading ? (
-        <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-dashed">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Cargando categorías...
+              <Card className="min-w-[100px] border-border/70 shadow-sm">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Inactivas</p>
+                  <p className="text-2xl font-bold">{totalInactivas}</p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
+
+          <div className="flex justify-end">
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nueva categoría
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Crear nueva categoría</DialogTitle>
+                  <DialogDescription>
+                    Agrega una nueva categoría para organizar tus productos.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 py-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Nombre</label>
+                    <Input
+                      placeholder="Ej. Abarrotes"
+                      value={nuevaNombre}
+                      onChange={(e) => setNuevaNombre(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Descripción</label>
+                    <Textarea
+                      placeholder="Describe brevemente la categoría"
+                      value={nuevaDescripcion}
+                      onChange={(e) => setNuevaDescripcion(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setOpen(false)
+                      setNuevaNombre("")
+                      setNuevaDescripcion("")
+                    }}
+                    disabled={creando}
+                  >
+                    Cancelar
+                  </Button>
+
+                  <Button onClick={crearCategoria} disabled={creando}>
+                    {creando ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="mr-2 h-4 w-4" />
+                    )}
+                    Crear categoría
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {loading ? (
+            <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-dashed">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cargando categorías...
+              </div>
+            </div>
+          ) : error ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-950 dark:bg-red-950/30 dark:text-red-300">
+              {error}
+            </div>
+          ) : categoriasOrdenadas.length === 0 ? (
+            <div className="rounded-xl border border-dashed p-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                No hay categorías registradas todavía.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {categoriasOrdenadas.map((categoria) => (
+                <CategoriaCard
+                  key={categoria.id}
+                  categoria={categoria}
+                  onUpdated={handleUpdated}
+                  onDeleted={handleDeleted}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      ) : error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-950 dark:bg-red-950/30 dark:text-red-300">
-          {error}
-        </div>
-      ) : categoriasOrdenadas.length === 0 ? (
-        <div className="rounded-xl border border-dashed p-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            No hay categorías registradas todavía.
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
-          {categoriasOrdenadas.map((categoria) => (
-            <CategoriaCard
-              key={categoria.id}
-              categoria={categoria}
-              onUpdated={handleUpdated}
-              onDeleted={handleDeleted}
-            />
-          ))}
-        </div>
-      )}
+      </div>
     </div>
   )
 }

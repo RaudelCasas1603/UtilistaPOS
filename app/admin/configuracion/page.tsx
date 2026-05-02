@@ -19,7 +19,6 @@ import {
   Phone,
   MapPin,
   MessageSquareText,
-  ImageIcon,
   Loader2,
   CheckCircle2,
   XCircle,
@@ -317,7 +316,7 @@ export default function ConfiguracionPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+      <div className="flex h-[calc(100vh-64px)] w-full items-center justify-center bg-background">
         <div className="flex items-center gap-3 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Cargando configuración...</span>
@@ -327,372 +326,390 @@ export default function ConfiguracionPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col gap-6 bg-background p-6">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-medium">Administración del sistema</h2>
-        <p className="text-sm text-muted-foreground">
-          Configura los datos generales del negocio, pagos, terminal e
-          impresión.
-        </p>
-      </div>
-
-      {alert && (
-        <Alert
-          className={
-            alert.type === "success"
-              ? "border-emerald-500/40 bg-emerald-500/10"
-              : "border-destructive/40 bg-destructive/10"
-          }
-        >
-          {alert.type === "success" ? (
-            <CheckCircle2 className="h-4 w-4" />
-          ) : (
-            <XCircle className="h-4 w-4" />
-          )}
-          <AlertTitle>{alert.title}</AlertTitle>
-          <AlertDescription>{alert.message}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 2xl:grid-cols-4">
-        <Card className="rounded-2xl border shadow-sm">
-          <CardHeader>
-            <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-primary/10 p-3">
-                <Store className="h-6 w-6" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Datos del negocio</CardTitle>
-                <CardDescription>
-                  Información que aparecerá en tickets y configuración general.
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <ConfigRow
-              label="Nombre"
-              value={config.nombre_negocio}
-              editable={editableNegocio}
-              icon={<Store className="h-4 w-4 text-muted-foreground" />}
-              placeholder="Ej. Utilista Papelería"
-              onChange={(value) => updateField("nombre_negocio", value)}
-            />
-
-            <ConfigRow
-              label="Teléfono"
-              value={config.telefono_negocio}
-              editable={editableNegocio}
-              icon={<Phone className="h-4 w-4 text-muted-foreground" />}
-              placeholder="Ej. 3312345678"
-              onChange={(value) => updateField("telefono_negocio", value)}
-            />
-
-            <ConfigRow
-              label="Dirección"
-              value={config.direccion_negocio}
-              editable={editableNegocio}
-              icon={<MapPin className="h-4 w-4 text-muted-foreground" />}
-              placeholder="Ej. Zapopan, Jalisco"
-              onChange={(value) => updateField("direccion_negocio", value)}
-            />
-
-            <ConfigRow
-              label="Mensaje ticket"
-              value={config.mensaje_ticket}
-              editable={editableNegocio}
-              icon={
-                <MessageSquareText className="h-4 w-4 text-muted-foreground" />
-              }
-              placeholder="Ej. Gracias por su compra"
-              onChange={(value) => updateField("mensaje_ticket", value)}
-            />
-
-            <CardActions
-              editable={editableNegocio}
-              saving={saving}
-              onEdit={() => setEditableNegocio(true)}
-              onSave={guardarConfiguracion}
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border shadow-sm">
-          <CardHeader>
-            <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-primary/10 p-3">
-                <BanknoteArrowUp className="h-6 w-6" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">
-                  Datos de transferencia
-                </CardTitle>
-                <CardDescription>
-                  Datos bancarios para recibir transferencias.
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <ConfigRow
-              label="Cuenta / CLABE"
-              value={config.numero_cuenta}
-              editable={editableTransferencia}
-              icon={<Hash className="h-4 w-4 text-muted-foreground" />}
-              placeholder="Ej. 012345678901234567"
-              onChange={(value) => updateField("numero_cuenta", value)}
-            />
-
-            <ConfigRow
-              label="Banco"
-              value={config.nombre_banco}
-              editable={editableTransferencia}
-              icon={<Landmark className="h-4 w-4 text-muted-foreground" />}
-              placeholder="Ej. BBVA"
-              onChange={(value) => updateField("nombre_banco", value)}
-            />
-
-            <ConfigRow
-              label="Titular"
-              value={config.nombre_titular}
-              editable={editableTransferencia}
-              icon={<UserRound className="h-4 w-4 text-muted-foreground" />}
-              placeholder="Nombre del titular"
-              onChange={(value) => updateField("nombre_titular", value)}
-            />
-
-            <CardActions
-              editable={editableTransferencia}
-              saving={saving}
-              onEdit={() => setEditableTransferencia(true)}
-              onSave={guardarConfiguracion}
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border shadow-sm">
-          <CardHeader>
-            <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-primary/10 p-3">
-                <CreditCard className="h-6 w-6" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Pagos con terminal</CardTitle>
-                <CardDescription>
-                  Configura proveedor y comisión de cobro con tarjeta.
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <ConfigRow
-              label="Proveedor"
-              value={config.proveedor_terminal}
-              editable={editableTerminal}
-              icon={<Building2 className="h-4 w-4 text-muted-foreground" />}
-              placeholder="Ej. Mercado Pago"
-              onChange={(value) => updateField("proveedor_terminal", value)}
-            />
-
-            <ConfigRow
-              label="Comisión (%)"
-              value={config.comision_terminal}
-              editable={editableTerminal}
-              icon={<Percent className="h-4 w-4 text-muted-foreground" />}
-              placeholder="Ej. 3.5"
-              type="number"
-              onChange={(value) => updateField("comision_terminal", value)}
-            />
-
-            <CardActions
-              editable={editableTerminal}
-              saving={saving}
-              onEdit={() => setEditableTerminal(true)}
-              onSave={guardarConfiguracion}
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border shadow-sm">
-          <CardHeader>
-            <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-primary/10 p-3">
-                <Printer className="h-6 w-6" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Impresión de ticket</CardTitle>
-                <CardDescription>
-                  Habilita o deshabilita la impresión de tickets.
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between rounded-xl border bg-muted/20 px-4 py-3">
-              <span className="text-sm font-semibold">Habilitar impresora</span>
-
-              <Switch
-                checked={config.habilitar_impresora}
-                disabled={!editableImpresora}
-                onCheckedChange={(checked) =>
-                  setConfig((prev) => ({
-                    ...prev,
-                    habilitar_impresora: checked,
-                    nombre_impresora: checked ? prev.nombre_impresora : "",
-                  }))
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Seleccione una impresora
-              </label>
-
-              <Select
-                disabled={!editableImpresora || !config.habilitar_impresora}
-                value={config.nombre_impresora}
-                onValueChange={(value) =>
-                  updateField("nombre_impresora", value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccione impresora..." />
-                </SelectTrigger>
-
-                <SelectContent
-                  className="rounded-lg border border-border bg-background shadow-lg"
-                  position="popper"
-                >
-                  {loadingImpresoras ? (
-                    <SelectItem value="loading" disabled>
-                      Cargando impresoras...
-                    </SelectItem>
-                  ) : impresoras.length === 0 ? (
-                    <SelectItem value="empty" disabled>
-                      No se encontraron impresoras
-                    </SelectItem>
-                  ) : (
-                    impresoras.map((impresora) => (
-                      <SelectItem
-                        key={impresora.nombre}
-                        value={impresora.nombre}
-                      >
-                        {impresora.nombre}
-                        {impresora.default ? " · Predeterminada" : ""}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <CardActions
-              editable={editableImpresora}
-              saving={saving}
-              onEdit={() => setEditableImpresora(true)}
-              onSave={guardarConfiguracion}
-              disabled={
-                config.habilitar_impresora && !config.nombre_impresora.trim()
-              }
-            />
-          </CardContent>
-        </Card>
-      </div>
-      <Card className="rounded-2xl border shadow-sm">
-        <CardHeader>
-          <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-primary/10 p-3">
-              <ShieldCheck className="h-6 w-6" />
-            </div>
-
-            <div>
-              <CardTitle className="text-xl">Información de licencia</CardTitle>
-              <CardDescription>Vigencia actual del sistema</CardDescription>
-            </div>
+    <div className="h-[calc(100vh-64px)] min-h-0 w-full overflow-hidden bg-background">
+      <div className="h-full w-full overflow-x-hidden overflow-y-auto p-4 pb-16 md:p-6 md:pb-20">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6">
+          <div className="flex shrink-0 flex-col gap-2">
+            <h2 className="text-2xl font-medium">Administración del sistema</h2>
+            <p className="text-sm text-muted-foreground">
+              Configura los datos generales del negocio, pagos, terminal e
+              impresión.
+            </p>
           </div>
-        </CardHeader>
 
-        <CardContent>
-          {loadingLicencia ? (
-            <div className="flex items-center gap-3 text-muted-foreground">
-              <span>Cargando licencia...</span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-              <div className="rounded-xl border bg-muted/20 p-4">
-                <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-                  <ShieldCheck className="h-4 w-4" />
-                  Estado
-                </div>
-                <p className="text-lg font-semibold capitalize">
-                  {licencia?.estado || "Sin licencia"}
-                </p>
-              </div>
-
-              <div className="rounded-xl border bg-muted/20 p-4">
-                <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-                  <CalendarDays className="h-4 w-4" />
-                  Fecha inicio
-                </div>
-                <p className="text-lg font-semibold">
-                  {formatearFecha(licencia?.fecha_inicio)}
-                </p>
-              </div>
-
-              <div className="rounded-xl border bg-muted/20 p-4">
-                <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-                  <CalendarDays className="h-4 w-4" />
-                  Fecha fin
-                </div>
-                <p className="text-lg font-semibold">
-                  {formatearFecha(licencia?.fecha_fin)}
-                </p>
-              </div>
-
-              <div className="rounded-xl border bg-muted/20 p-4">
-                <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock3 className="h-4 w-4" />
-                  Días restantes
-                </div>
-                <p className="text-lg font-semibold">
-                  {licencia?.dias_restantes !== null &&
-                  licencia?.dias_restantes !== undefined
-                    ? `${licencia.dias_restantes} días`
-                    : "Sin información"}
-                </p>
-              </div>
-            </div>
+          {alert && (
+            <Alert
+              className={
+                alert.type === "success"
+                  ? "border-emerald-500/40 bg-emerald-500/10"
+                  : "border-destructive/40 bg-destructive/10"
+              }
+            >
+              {alert.type === "success" ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <XCircle className="h-4 w-4" />
+              )}
+              <AlertTitle>{alert.title}</AlertTitle>
+              <AlertDescription>{alert.message}</AlertDescription>
+            </Alert>
           )}
-        </CardContent>
-      </Card>
 
-      <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
-        <Link
-          href="/admin/configuracion/admin-categorias"
-          className="flex w-full justify-center"
-        >
-          <span className="flex h-24 w-full flex-col items-center justify-center gap-4 rounded-xl border py-2 text-center transition-all duration-300 hover:bg-primary/90 hover:text-primary-foreground md:w-1/2">
-            <LayoutGrid className="h-12 w-12" />
-            <span className="text-xl font-semibold">
-              Administración de Categorías
-            </span>
-          </span>
-        </Link>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 2xl:grid-cols-4">
+            <Card className="min-w-0 rounded-2xl border shadow-sm">
+              <CardHeader>
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-primary/10 p-3">
+                    <Store className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <CardTitle className="text-xl">Datos del negocio</CardTitle>
+                    <CardDescription>
+                      Información que aparecerá en tickets y configuración
+                      general.
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
 
-        <Link
-          href="/admin/configuracion/usuarios"
-          className="flex w-full justify-center"
-        >
-          <span className="flex h-24 w-full flex-col items-center justify-center gap-4 rounded-xl border text-center transition-all duration-300 hover:bg-primary/90 hover:text-primary-foreground md:w-1/2">
-            <UserRoundCog className="h-12 w-12" />
-            <span className="text-xl font-semibold">Administrar Usuarios</span>
-          </span>
-        </Link>
+              <CardContent className="space-y-4">
+                <ConfigRow
+                  label="Nombre"
+                  value={config.nombre_negocio}
+                  editable={editableNegocio}
+                  icon={<Store className="h-4 w-4 text-muted-foreground" />}
+                  placeholder="Ej. Utilista Papelería"
+                  onChange={(value) => updateField("nombre_negocio", value)}
+                />
+
+                <ConfigRow
+                  label="Teléfono"
+                  value={config.telefono_negocio}
+                  editable={editableNegocio}
+                  icon={<Phone className="h-4 w-4 text-muted-foreground" />}
+                  placeholder="Ej. 3312345678"
+                  onChange={(value) => updateField("telefono_negocio", value)}
+                />
+
+                <ConfigRow
+                  label="Dirección"
+                  value={config.direccion_negocio}
+                  editable={editableNegocio}
+                  icon={<MapPin className="h-4 w-4 text-muted-foreground" />}
+                  placeholder="Ej. Zapopan, Jalisco"
+                  onChange={(value) => updateField("direccion_negocio", value)}
+                />
+
+                <ConfigRow
+                  label="Mensaje ticket"
+                  value={config.mensaje_ticket}
+                  editable={editableNegocio}
+                  icon={
+                    <MessageSquareText className="h-4 w-4 text-muted-foreground" />
+                  }
+                  placeholder="Ej. Gracias por su compra"
+                  onChange={(value) => updateField("mensaje_ticket", value)}
+                />
+
+                <CardActions
+                  editable={editableNegocio}
+                  saving={saving}
+                  onEdit={() => setEditableNegocio(true)}
+                  onSave={guardarConfiguracion}
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0 rounded-2xl border shadow-sm">
+              <CardHeader>
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-primary/10 p-3">
+                    <BanknoteArrowUp className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <CardTitle className="text-xl">
+                      Datos de transferencia
+                    </CardTitle>
+                    <CardDescription>
+                      Datos bancarios para recibir transferencias.
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <ConfigRow
+                  label="Cuenta / CLABE"
+                  value={config.numero_cuenta}
+                  editable={editableTransferencia}
+                  icon={<Hash className="h-4 w-4 text-muted-foreground" />}
+                  placeholder="Ej. 012345678901234567"
+                  onChange={(value) => updateField("numero_cuenta", value)}
+                />
+
+                <ConfigRow
+                  label="Banco"
+                  value={config.nombre_banco}
+                  editable={editableTransferencia}
+                  icon={<Landmark className="h-4 w-4 text-muted-foreground" />}
+                  placeholder="Ej. BBVA"
+                  onChange={(value) => updateField("nombre_banco", value)}
+                />
+
+                <ConfigRow
+                  label="Titular"
+                  value={config.nombre_titular}
+                  editable={editableTransferencia}
+                  icon={<UserRound className="h-4 w-4 text-muted-foreground" />}
+                  placeholder="Nombre del titular"
+                  onChange={(value) => updateField("nombre_titular", value)}
+                />
+
+                <CardActions
+                  editable={editableTransferencia}
+                  saving={saving}
+                  onEdit={() => setEditableTransferencia(true)}
+                  onSave={guardarConfiguracion}
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0 rounded-2xl border shadow-sm">
+              <CardHeader>
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-primary/10 p-3">
+                    <CreditCard className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <CardTitle className="text-xl">
+                      Pagos con terminal
+                    </CardTitle>
+                    <CardDescription>
+                      Configura proveedor y comisión de cobro con tarjeta.
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <ConfigRow
+                  label="Proveedor"
+                  value={config.proveedor_terminal}
+                  editable={editableTerminal}
+                  icon={<Building2 className="h-4 w-4 text-muted-foreground" />}
+                  placeholder="Ej. Mercado Pago"
+                  onChange={(value) => updateField("proveedor_terminal", value)}
+                />
+
+                <ConfigRow
+                  label="Comisión (%)"
+                  value={config.comision_terminal}
+                  editable={editableTerminal}
+                  icon={<Percent className="h-4 w-4 text-muted-foreground" />}
+                  placeholder="Ej. 3.5"
+                  type="number"
+                  onChange={(value) => updateField("comision_terminal", value)}
+                />
+
+                <CardActions
+                  editable={editableTerminal}
+                  saving={saving}
+                  onEdit={() => setEditableTerminal(true)}
+                  onSave={guardarConfiguracion}
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0 rounded-2xl border shadow-sm">
+              <CardHeader>
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-primary/10 p-3">
+                    <Printer className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <CardTitle className="text-xl">
+                      Impresión de ticket
+                    </CardTitle>
+                    <CardDescription>
+                      Habilita o deshabilita la impresión de tickets.
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between rounded-xl border bg-muted/20 px-4 py-3">
+                  <span className="text-sm font-semibold">
+                    Habilitar impresora
+                  </span>
+
+                  <Switch
+                    checked={config.habilitar_impresora}
+                    disabled={!editableImpresora}
+                    onCheckedChange={(checked) =>
+                      setConfig((prev) => ({
+                        ...prev,
+                        habilitar_impresora: checked,
+                        nombre_impresora: checked ? prev.nombre_impresora : "",
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Seleccione una impresora
+                  </label>
+
+                  <Select
+                    disabled={!editableImpresora || !config.habilitar_impresora}
+                    value={config.nombre_impresora}
+                    onValueChange={(value) =>
+                      updateField("nombre_impresora", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccione impresora..." />
+                    </SelectTrigger>
+
+                    <SelectContent
+                      className="rounded-lg border border-border bg-background shadow-lg"
+                      position="popper"
+                    >
+                      {loadingImpresoras ? (
+                        <SelectItem value="loading" disabled>
+                          Cargando impresoras...
+                        </SelectItem>
+                      ) : impresoras.length === 0 ? (
+                        <SelectItem value="empty" disabled>
+                          No se encontraron impresoras
+                        </SelectItem>
+                      ) : (
+                        impresoras.map((impresora) => (
+                          <SelectItem
+                            key={impresora.nombre}
+                            value={impresora.nombre}
+                          >
+                            {impresora.nombre}
+                            {impresora.default ? " · Predeterminada" : ""}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <CardActions
+                  editable={editableImpresora}
+                  saving={saving}
+                  onEdit={() => setEditableImpresora(true)}
+                  onSave={guardarConfiguracion}
+                  disabled={
+                    config.habilitar_impresora &&
+                    !config.nombre_impresora.trim()
+                  }
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="rounded-2xl border shadow-sm">
+            <CardHeader>
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl bg-primary/10 p-3">
+                  <ShieldCheck className="h-6 w-6" />
+                </div>
+
+                <div className="min-w-0">
+                  <CardTitle className="text-xl">
+                    Información de licencia
+                  </CardTitle>
+                  <CardDescription>Vigencia actual del sistema</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent>
+              {loadingLicencia ? (
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Cargando licencia...</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="rounded-xl border bg-muted/20 p-4">
+                    <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                      <ShieldCheck className="h-4 w-4" />
+                      Estado
+                    </div>
+                    <p className="text-lg font-semibold capitalize">
+                      {licencia?.estado || "Sin licencia"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border bg-muted/20 p-4">
+                    <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                      <CalendarDays className="h-4 w-4" />
+                      Fecha inicio
+                    </div>
+                    <p className="text-lg font-semibold">
+                      {formatearFecha(licencia?.fecha_inicio)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border bg-muted/20 p-4">
+                    <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                      <CalendarDays className="h-4 w-4" />
+                      Fecha fin
+                    </div>
+                    <p className="text-lg font-semibold">
+                      {formatearFecha(licencia?.fecha_fin)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border bg-muted/20 p-4">
+                    <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock3 className="h-4 w-4" />
+                      Días restantes
+                    </div>
+                    <p className="text-lg font-semibold">
+                      {licencia?.dias_restantes !== null &&
+                      licencia?.dias_restantes !== undefined
+                        ? `${licencia.dias_restantes} días`
+                        : "Sin información"}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
+            <Link
+              href="/admin/configuracion/admin-categorias"
+              className="flex w-full justify-center"
+            >
+              <span className="flex h-24 w-full flex-col items-center justify-center gap-4 rounded-xl border py-2 text-center transition-all duration-300 hover:bg-primary/90 hover:text-primary-foreground xl:w-3/4">
+                <LayoutGrid className="h-10 w-10" />
+                <span className="text-lg font-semibold">
+                  Administración de Categorías
+                </span>
+              </span>
+            </Link>
+
+            <Link
+              href="/admin/configuracion/usuarios"
+              className="flex w-full justify-center"
+            >
+              <span className="flex h-24 w-full flex-col items-center justify-center gap-4 rounded-xl border text-center transition-all duration-300 hover:bg-primary/90 hover:text-primary-foreground xl:w-3/4">
+                <UserRoundCog className="h-10 w-10" />
+                <span className="text-lg font-semibold">
+                  Administrar Usuarios
+                </span>
+              </span>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -719,21 +736,21 @@ function ConfigRow({
     <div className="grid grid-cols-1 gap-2 xl:grid-cols-3 xl:items-center">
       <span className="text-sm font-medium text-muted-foreground">{label}</span>
 
-      <div className="xl:col-span-2">
+      <div className="min-w-0 xl:col-span-2">
         {!editable ? (
           <div className="flex min-h-9 items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-            {icon}
+            <span className="shrink-0">{icon}</span>
             <span className="truncate">{value || "Sin configurar"}</span>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            {icon}
+            <span className="shrink-0">{icon}</span>
             <Input
               type={type}
               value={value}
               placeholder={placeholder}
               onChange={(event) => onChange(event.target.value)}
-              className="h-9"
+              className="h-9 min-w-0"
             />
           </div>
         )}
