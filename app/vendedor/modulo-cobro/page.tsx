@@ -319,16 +319,18 @@ export default function ModuloCobro() {
   }
 
   return (
-    <div className="flex h-full flex-col p-4">
-      <div className="flex shrink-0 items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Módulo de Cobro</h1>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden p-3 sm:p-4 xl:p-5">
+      <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-bold sm:text-2xl xl:text-3xl">
+          Módulo de Cobro
+        </h1>
 
-        <h1 className="ml-4 rounded-md p-2 text-right text-2xl font-semibold">
+        <h1 className="rounded-md p-1 text-left text-sm font-semibold sm:ml-4 sm:text-right sm:text-base xl:text-lg">
           {fechaEncabezado}
         </h1>
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-3 shrink-0 space-y-3 xl:mt-4">
         {successMessage ? (
           <Alert className="border-green-500/40">
             <CheckCircle2 className="h-4 w-4" />
@@ -346,10 +348,10 @@ export default function ModuloCobro() {
         ) : null}
       </div>
 
-      <div className="mt-4 flex-1 overflow-hidden">
+      <div className="mt-3 min-h-0 flex-1 overflow-hidden xl:mt-4">
         {loading ? (
           <div className="flex h-full items-center justify-center">
-            <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground sm:text-base">
               <Loader2 className="h-5 w-5 animate-spin" />
               <span>Cargando tickets pendientes...</span>
             </div>
@@ -378,18 +380,18 @@ export default function ModuloCobro() {
             </Card>
           </div>
         ) : (
-          <div className="grid h-full grid-cols-1 gap-4 overflow-y-auto pr-2 [scrollbar-width:none] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 [&::-webkit-scrollbar]:hidden">
+          <div className="grid h-full grid-cols-1 gap-3 overflow-y-auto pr-1 [scrollbar-width:none] sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 2xl:gap-4 [&::-webkit-scrollbar]:hidden">
             {tickets.map((ticket) => {
               const cliente = obtenerCliente(ticket)
 
               return (
                 <Card
                   key={ticket.id}
-                  className="mt-2 flex h-[24rem] max-w-full flex-col rounded-2xl border border-border/60 py-4 shadow-sm transition-shadow hover:shadow-lg"
+                  className="mt-1 flex h-auto min-h-[20rem] max-w-full flex-col rounded-2xl border border-border/60 py-3 shadow-sm transition-shadow hover:shadow-lg lg:min-h-[21rem] xl:min-h-[23rem] 2xl:min-h-[24rem]"
                 >
-                  <CardHeader className="space-y-3 px-5 pb-4">
+                  <CardHeader className="space-y-2 px-4 pb-3 xl:space-y-3 xl:px-5 xl:pb-4">
                     <CardTitle>
-                      <div className="flex items-center gap-2 text-lg">
+                      <div className="flex items-center gap-2 text-base xl:text-lg">
                         <User2 className="h-4 w-4 shrink-0" />
                         <span className="truncate font-semibold">
                           {cliente}
@@ -397,16 +399,20 @@ export default function ModuloCobro() {
                       </div>
                     </CardTitle>
 
-                    <CardDescription className="space-y-2 text-base">
+                    <CardDescription className="space-y-2 text-sm xl:text-base">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <FileCheckIcon className="h-4 w-4 shrink-0" />
-                        <p>{ticket.folio || `Ticket #${ticket.id}`}</p>
+                        <p className="truncate">
+                          {ticket.folio || `Ticket #${ticket.id}`}
+                        </p>
                       </div>
 
                       <div className="flex items-center justify-between gap-3 text-muted-foreground">
-                        <div className="flex items-center gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
                           <CalendarClock className="h-4 w-4 shrink-0" />
-                          <p>{formatearFecha(ticket.fecha_hora)}</p>
+                          <p className="truncate">
+                            {formatearFecha(ticket.fecha_hora)}
+                          </p>
                         </div>
 
                         <p className="shrink-0">
@@ -418,39 +424,39 @@ export default function ModuloCobro() {
                     </CardDescription>
                   </CardHeader>
 
-                  <CardContent className="flex-1 px-5">
-                    <div className="rounded-xl border p-4">
+                  <CardContent className="flex-1 px-4 xl:px-5">
+                    <div className="rounded-xl border p-3 xl:p-4">
                       <p className="text-sm text-muted-foreground">Artículos</p>
 
-                      <p className="mt-1 text-3xl font-bold tabular-nums">
+                      <p className="mt-1 text-2xl font-bold tabular-nums xl:text-3xl">
                         {ticket.total_articulos || 0}
                       </p>
                     </div>
                   </CardContent>
 
-                  <CardFooter className="mx-5 mb-2 flex-col items-stretch gap-4 border-t border-border/70 bg-card pt-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-lg text-muted-foreground">
+                  <CardFooter className="mx-4 mb-1 flex-col items-stretch gap-3 border-t border-border/70 bg-card pt-3 xl:mx-5 xl:mb-2 xl:gap-4 xl:pt-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm text-muted-foreground xl:text-lg">
                         Total a pagar
                       </p>
 
-                      <p className="text-xl font-bold tabular-nums">
+                      <p className="text-lg font-bold tabular-nums xl:text-xl">
                         {formatearMoneda(ticket.total)}
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2 xl:gap-3">
                       <Button
                         variant="secondary"
                         onClick={() => abrirDetalle(ticket.id)}
-                        className="rounded-xl py-5 text-sm font-medium"
+                        className="rounded-xl py-3 text-xs font-medium sm:text-sm"
                       >
                         Ver detalles
                       </Button>
 
                       <Button
                         onClick={() => abrirCobro(ticket)}
-                        className="rounded-xl bg-accent py-5 text-sm font-semibold text-foreground hover:bg-accent/80"
+                        className="rounded-xl bg-accent py-3 text-xs font-semibold text-foreground hover:bg-accent/80 sm:text-sm"
                       >
                         Procesar pago
                       </Button>
@@ -464,7 +470,7 @@ export default function ModuloCobro() {
       </div>
 
       <Dialog open={detalleAbierto} onOpenChange={setDetalleAbierto}>
-        <DialogContent className="sm:max-w-[760px]">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[760px]">
           <DialogHeader>
             <DialogTitle>Detalles de la orden</DialogTitle>
 
@@ -485,7 +491,7 @@ export default function ModuloCobro() {
           ) : ticketDetalle ? (
             <>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 rounded-lg border p-4">
+                <div className="grid grid-cols-1 gap-3 rounded-lg border p-4 sm:grid-cols-2 sm:gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Fecha</p>
                     <p className="font-medium">
@@ -501,18 +507,18 @@ export default function ModuloCobro() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border p-4">
-                  <div className="mb-3 grid grid-cols-[1fr_90px_120px] gap-2 font-semibold">
+                <div className="rounded-lg border p-3 sm:p-4">
+                  <div className="mb-3 grid grid-cols-[1fr_70px_95px] gap-2 text-sm font-semibold sm:grid-cols-[1fr_90px_120px]">
                     <p>Producto</p>
                     <p className="text-center">Cantidad</p>
                     <p className="text-right">Subtotal</p>
                   </div>
 
-                  <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
+                  <div className="max-h-[45vh] space-y-2 overflow-y-auto pr-1 sm:max-h-[280px]">
                     {obtenerItems(ticketDetalle).map((item) => (
                       <div
                         key={item.id}
-                        className="grid grid-cols-[1fr_90px_120px] gap-2 text-sm"
+                        className="grid grid-cols-[1fr_70px_95px] gap-2 text-sm sm:grid-cols-[1fr_90px_120px]"
                       >
                         <div className="min-w-0">
                           <p className="truncate font-medium">
@@ -583,7 +589,7 @@ export default function ModuloCobro() {
       </Dialog>
 
       <Dialog open={cobroAbierto} onOpenChange={setCobroAbierto}>
-        <DialogContent className="sm:max-w-[560px]">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[560px]">
           <DialogHeader>
             <DialogTitle>Finalizar venta</DialogTitle>
 
@@ -594,7 +600,7 @@ export default function ModuloCobro() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <div className="rounded-xl border p-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">Total a pagar</p>
@@ -716,7 +722,7 @@ export default function ModuloCobro() {
                 placeholder="Opcional: notas del cobro, referencia, caja, etc."
                 value={observaciones}
                 onChange={(e) => setObservaciones(e.target.value)}
-                className="min-h-[110px]"
+                className="min-h-[90px] sm:min-h-[110px]"
               />
             </div>
           </div>
