@@ -348,220 +348,236 @@ export default function DashboardPage() {
   }, [categorias])
 
   return (
-    <>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="shrink-0 space-y-3 px-1 pb-3 sm:px-0">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-xl font-bold sm:text-2xl xl:text-3xl">
+            Dashboard
+          </h1>
 
-        <div className="mt-2 flex items-center justify-center gap-2">
-          <CalendarClockIcon className="ml-4 h-6 w-6" />
-          <div className="w-46">
-            <Combobox
-              items={periodos}
-              value={selectedPeriod}
-              onValueChange={(period: Periodo | null) => {
-                setSelectedPeriod(period)
-              }}
-              itemToStringValue={(period: Periodo) => period.label}
-            >
-              <ComboboxInput placeholder="Selecciona período" />
-              <ComboboxContent>
-                <ComboboxEmpty>Sin resultados.</ComboboxEmpty>
-                <ComboboxList>
-                  {(period) => (
-                    <ComboboxItem key={period.value} value={period}>
-                      {period.label}
-                    </ComboboxItem>
-                  )}
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
+          <div className="flex items-center gap-2 sm:justify-center">
+            <CalendarClockIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+            <div className="w-full min-w-[170px] sm:w-46">
+              <Combobox
+                items={periodos}
+                value={selectedPeriod}
+                onValueChange={(period: Periodo | null) => {
+                  setSelectedPeriod(period)
+                }}
+                itemToStringValue={(period: Periodo) => period.label}
+              >
+                <ComboboxInput placeholder="Selecciona período" />
+                <ComboboxContent>
+                  <ComboboxEmpty>Sin resultados.</ComboboxEmpty>
+                  <ComboboxList>
+                    {(period) => (
+                      <ComboboxItem key={period.value} value={period}>
+                        {period.label}
+                      </ComboboxItem>
+                    )}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            </div>
+          </div>
+        </div>
+
+        {error ? (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive sm:p-4">
+            {error}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="space-y-3 sm:space-y-4 xl:space-y-5">
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:max-w-[1150px]">
+            <Card className="border-border/60 bg-card shadow-md transition-all hover:shadow-lg">
+              <CardContent className="flex h-20 items-center justify-between gap-3 p-3 sm:h-24 sm:p-4 xl:h-24">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-muted-foreground sm:text-sm">
+                    Ventas Netas
+                  </p>
+                  <p className="truncate text-lg font-bold text-foreground sm:text-xl xl:text-2xl">
+                    {loading
+                      ? "..."
+                      : formatCurrency(resumen?.resumen.utilidadRealCaja || 0)}
+                  </p>
+                </div>
+
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 sm:h-14 sm:w-14">
+                  <HandCoins className="h-5 w-5 sm:h-7 sm:w-7" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/60 bg-card shadow-sm transition-all hover:shadow-md">
+              <CardContent className="flex h-20 items-center justify-between gap-3 p-3 sm:h-24 sm:p-4 xl:h-24">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-muted-foreground sm:text-sm">
+                    Tickets
+                  </p>
+                  <p className="truncate text-lg font-bold text-foreground sm:text-xl xl:text-2xl">
+                    {loading
+                      ? "..."
+                      : formatCompactNumber(resumen?.resumen.tickets || 0)}
+                  </p>
+                </div>
+
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 sm:h-14 sm:w-14">
+                  <ReceiptText className="h-5 w-5 sm:h-7 sm:w-7" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/60 bg-card shadow-sm transition-all hover:shadow-md">
+              <CardContent className="flex h-20 items-center justify-between gap-3 p-3 sm:h-24 sm:p-4 xl:h-24">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-muted-foreground sm:text-sm">
+                    Ticket Promedio
+                  </p>
+                  <p className="truncate text-lg font-bold text-foreground sm:text-xl xl:text-2xl">
+                    {loading
+                      ? "..."
+                      : formatCurrency(resumen?.resumen.ticketPromedio || 0)}
+                  </p>
+                </div>
+
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 sm:h-14 sm:w-14">
+                  <Receipt className="h-5 w-5 sm:h-7 sm:w-7" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/60 bg-card shadow-sm transition-all hover:shadow-md">
+              <CardContent className="flex h-20 items-center justify-between gap-3 p-3 sm:h-24 sm:p-4 xl:h-24">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-muted-foreground sm:text-sm">
+                    Stock Bajo
+                  </p>
+                  <p className="truncate text-lg font-bold text-foreground sm:text-xl xl:text-2xl">
+                    {loading
+                      ? "..."
+                      : formatCompactNumber(resumen?.resumen.stockBajo || 0)}
+                  </p>
+                </div>
+
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 sm:h-14 sm:w-14">
+                  <PackageMinus className="h-5 w-5 sm:h-7 sm:w-7" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="h-[260px] rounded-lg border border-muted-foreground p-1 sm:h-[310px] sm:p-2 xl:h-[330px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={ventasData}
+                margin={{ top: 10, right: 14, left: 0, bottom: 38 }}
+              >
+                <XAxis
+                  dataKey="day"
+                  tickFormatter={formatLabelDate}
+                  tick={{ fontSize: 12 }}
+                  label={{
+                    value:
+                      graficaVentas?.descripcion ||
+                      `Ventas por ${selectedPeriod?.label.toLowerCase()}`,
+                    position: "bottom",
+                    offset: 10,
+                    fontSize: 12,
+                  }}
+                />
+                <YAxis tick={{ fontSize: 12 }} width={50} />
+                <Tooltip
+                  content={
+                    <CustomBarTooltip prefix="Ventas" bulletColor="#a855f7" />
+                  }
+                  wrapperStyle={{ outline: "none" }}
+                />
+                <Bar
+                  dataKey="ventas"
+                  fill="var(--chart-12)"
+                  radius={[6, 6, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:gap-5">
+            <div className="h-[290px] rounded-lg border border-muted-foreground p-2 sm:h-[340px] sm:p-3 xl:h-[380px] xl:p-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={margenData}
+                  margin={{ top: 10, right: 14, left: 0, bottom: 38 }}
+                >
+                  <XAxis
+                    dataKey="day"
+                    tickFormatter={formatLabelDate}
+                    tick={{ fontSize: 12 }}
+                    label={{
+                      value:
+                        graficaMargen?.descripcion ||
+                        `Margen de ganancia por ${selectedPeriod?.label.toLowerCase()}`,
+                      position: "bottom",
+                      offset: 10,
+                      fontSize: 12,
+                    }}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} width={50} />
+                  <Tooltip
+                    content={
+                      <CustomBarTooltip prefix="Margen" bulletColor="#f59e0b" />
+                    }
+                    wrapperStyle={{ outline: "none" }}
+                  />
+                  <Bar
+                    dataKey="margen"
+                    fill="var(--chart-5)"
+                    radius={[6, 6, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="h-[290px] rounded-lg border border-muted-foreground p-2 sm:h-[340px] sm:p-3 xl:h-[380px] xl:p-4">
+              <h3 className="mb-1 text-center text-base text-foreground sm:mb-2 sm:text-lg xl:text-xl">
+                {categorias?.descripcion || "Porcentaje de Venta por Categoría"}
+              </h3>
+
+              <ResponsiveContainer width="100%" height="92%">
+                <PieChart margin={{ top: 6, right: 4, bottom: 26, left: 4 }}>
+                  <Pie
+                    data={categoriasData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius="45%"
+                    outerRadius="70%"
+                    paddingAngle={3}
+                  >
+                    {categoriasData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${entry.name}-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+
+                  <Tooltip
+                    content={<CustomPieTooltip />}
+                    wrapperStyle={{ outline: "none" }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={32}
+                    wrapperStyle={{ fontSize: 12 }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       </div>
-
-      {error ? (
-        <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-          {error}
-        </div>
-      ) : null}
-
-      <div className="mt-2 grid w-full grid-cols-1 gap-3 md:grid-cols-2 xl:w-3/5 xl:grid-cols-4">
-        <Card className="border-border/60 bg-card shadow-md transition-all hover:shadow-lg">
-          <CardContent className="flex h-24 items-center justify-between p-4">
-            <div>
-              <p className="text-sm font-semibold text-muted-foreground">
-                Ventas Netas
-              </p>
-              <p className="text-2xl font-bold text-foreground">
-                {loading
-                  ? "..."
-                  : formatCurrency(resumen?.resumen.utilidadRealCaja || 0)}
-              </p>
-            </div>
-
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
-              <HandCoins className="h-7 w-7" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 bg-card shadow-sm transition-all hover:shadow-md">
-          <CardContent className="flex h-24 items-center justify-between p-4">
-            <div>
-              <p className="text-sm font-semibold text-muted-foreground">
-                Tickets
-              </p>
-              <p className="text-2xl font-bold text-foreground">
-                {loading
-                  ? "..."
-                  : formatCompactNumber(resumen?.resumen.tickets || 0)}
-              </p>
-            </div>
-
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600">
-              <ReceiptText className="h-7 w-7" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 bg-card shadow-sm transition-all hover:shadow-md">
-          <CardContent className="flex h-24 items-center justify-between p-4">
-            <div>
-              <p className="text-sm font-semibold text-muted-foreground">
-                Ticket Promedio
-              </p>
-              <p className="text-2xl font-bold text-foreground">
-                {loading
-                  ? "..."
-                  : formatCurrency(resumen?.resumen.ticketPromedio || 0)}
-              </p>
-            </div>
-
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
-              <Receipt className="h-7 w-7" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 bg-card shadow-sm transition-all hover:shadow-md">
-          <CardContent className="flex h-24 items-center justify-between p-4">
-            <div>
-              <p className="text-sm font-semibold text-muted-foreground">
-                Stock Bajo
-              </p>
-              <p className="text-2xl font-bold text-foreground">
-                {loading
-                  ? "..."
-                  : formatCompactNumber(resumen?.resumen.stockBajo || 0)}
-              </p>
-            </div>
-
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600">
-              <PackageMinus className="h-7 w-7" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="my-4 mb-4 h-auto rounded-lg border border-muted-foreground">
-        <ResponsiveContainer width="100%" height={330}>
-          <BarChart
-            data={ventasData}
-            margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
-          >
-            <XAxis
-              dataKey="day"
-              tickFormatter={formatLabelDate}
-              label={{
-                value:
-                  graficaVentas?.descripcion ||
-                  `Ventas por ${selectedPeriod?.label.toLowerCase()}`,
-                position: "bottom",
-                offset: 10,
-              }}
-            />
-            <YAxis />
-            <Tooltip
-              content={
-                <CustomBarTooltip prefix="Ventas" bulletColor="#a855f7" />
-              }
-              wrapperStyle={{ outline: "none" }}
-            />
-            <Bar
-              dataKey="ventas"
-              fill="var(--chart-12)"
-              radius={[6, 6, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="mt-2 h-[380px] rounded-lg border border-muted-foreground p-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={margenData}
-              margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
-            >
-              <XAxis
-                dataKey="day"
-                tickFormatter={formatLabelDate}
-                label={{
-                  value:
-                    graficaMargen?.descripcion ||
-                    `Margen de ganancia por ${selectedPeriod?.label.toLowerCase()}`,
-                  position: "bottom",
-                  offset: 10,
-                }}
-              />
-              <YAxis />
-              <Tooltip
-                content={
-                  <CustomBarTooltip prefix="Margen" bulletColor="#f59e0b" />
-                }
-                wrapperStyle={{ outline: "none" }}
-              />
-              <Bar
-                dataKey="margen"
-                fill="var(--chart-5)"
-                radius={[6, 6, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="mt-2 h-[380px] rounded-lg border border-muted-foreground p-4">
-          <h3 className="mb-2 text-center text-xl text-foreground">
-            {categorias?.descripcion || "Porcentaje de Venta por Categoría"}
-          </h3>
-
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 10, right: 10, bottom: 30, left: 10 }}>
-              <Pie
-                data={categoriasData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={70}
-                outerRadius={120}
-                paddingAngle={3}
-              >
-                {categoriasData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${entry.name}-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-
-              <Tooltip
-                content={<CustomPieTooltip />}
-                wrapperStyle={{ outline: "none" }}
-              />
-              <Legend verticalAlign="bottom" height={36} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </>
+    </div>
   )
 }
