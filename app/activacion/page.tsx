@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { KeyRound, AlertTriangle } from "lucide-react"
 
@@ -17,6 +17,14 @@ import {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
 
 export default function ActivacionPage() {
+  return (
+    <Suspense fallback={null}>
+      <ActivacionContent />
+    </Suspense>
+  )
+}
+
+function ActivacionContent() {
   const router = useRouter()
   const params = useSearchParams()
 
@@ -27,9 +35,7 @@ export default function ActivacionPage() {
 
   useEffect(() => {
     const estadoParam = params.get("estado")
-    if (estadoParam) {
-      setEstado(estadoParam)
-    }
+    if (estadoParam) setEstado(estadoParam)
   }, [params])
 
   async function activarLicencia(e: React.FormEvent) {
@@ -50,7 +56,7 @@ export default function ActivacionPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          licencia_key: licenciaKey,
+          licencia_key: licenciaKey.trim(),
         }),
       })
 
@@ -60,7 +66,6 @@ export default function ActivacionPage() {
         throw new Error(data.mensaje || "No se pudo activar la licencia")
       }
 
-      // Redirige al login después de activar
       router.push("/auth/login")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al activar licencia")
@@ -103,10 +108,8 @@ export default function ActivacionPage() {
 
         <CardContent>
           <form onSubmit={activarLicencia} className="space-y-4">
-            {/* ESTADO */}
             {renderEstado()}
 
-            {/* INPUT */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Clave de licencia</label>
 
@@ -122,14 +125,12 @@ export default function ActivacionPage() {
               </div>
             </div>
 
-            {/* ERROR */}
             {error && (
               <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {error}
               </div>
             )}
 
-            {/* BOTÓN */}
             <Button disabled={loading} className="h-11 w-full rounded-xl">
               {loading ? "Activando..." : "Activar licencia"}
             </Button>

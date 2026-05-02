@@ -205,14 +205,12 @@ export default function ConfiguracionPage() {
       const data = await res.json()
       const lic = data.licencia || data
 
-      const fechaFin = lic.fecha_fin || null
-
       setLicencia({
         estado: lic.estado || "sin_licencia",
         mensaje: lic.mensaje || "",
         fecha_inicio: lic.fecha_inicio || null,
-        fecha_fin: fechaFin,
-        dias_restantes: calcularDiasRestantes(fechaFin),
+        fecha_fin: lic.fecha_fin || null,
+        dias_restantes: lic.dias_restantes ?? null,
       })
     } catch (error) {
       console.error(error)
@@ -222,20 +220,7 @@ export default function ConfiguracionPage() {
     }
   }
 
-  function calcularDiasRestantes(fechaFin: string | null): number | null {
-    if (!fechaFin) return null
-
-    const hoy = new Date()
-    const fin = new Date(fechaFin)
-
-    hoy.setHours(0, 0, 0, 0)
-    fin.setHours(0, 0, 0, 0)
-
-    const diff = fin.getTime() - hoy.getTime()
-    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
-  }
-
-  function formatearFecha(fecha: string | null): string {
+  function formatearFecha(fecha?: string | null): string {
     if (!fecha) return "Sin información"
     return new Date(fecha).toLocaleDateString("es-MX")
   }

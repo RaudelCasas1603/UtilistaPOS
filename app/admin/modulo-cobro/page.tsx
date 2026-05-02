@@ -51,13 +51,15 @@ type TicketPendiente = {
   fecha_hora: string
   total: string | number
   total_articulos: number
-  cliente_nombre: string | null
+  cliente?: string | null
+  cliente_nombre?: string | null
 }
 
 type ProductoDetalle = {
   id: number
   id_producto: number
-  nombre: string
+  nombre?: string
+  producto?: string
   codigo_producto: string | null
   cantidad: number
   precio_unitario: string | number
@@ -70,9 +72,8 @@ type TicketDetalle = {
   folio: string | null
   fecha_hora: string
   id_cliente: number | null
-  cliente_nombre: string | null
-  cliente_telefono?: string | null
-  cliente_correo?: string | null
+  cliente?: string | null
+  cliente_nombre?: string | null
   subtotal: string | number
   descuento: string | number
   metodo_pago: MetodoPago | null
@@ -80,7 +81,8 @@ type TicketDetalle = {
   total_articulos: number
   estatus: string
   observaciones: string | null
-  items: ProductoDetalle[]
+  productos?: ProductoDetalle[]
+  items?: ProductoDetalle[]
 }
 
 export default function ModuloCobro() {
@@ -157,12 +159,22 @@ export default function ModuloCobro() {
     }).format(new Date(fechaIso))
   }
 
+  const obtenerCliente = (ticket: TicketPendiente | TicketDetalle | null) => {
+    if (!ticket) return "Cliente general"
+    return ticket.cliente_nombre || ticket.cliente || "Cliente general"
+  }
+
+  const obtenerItems = (ticket: TicketDetalle | null) => {
+    if (!ticket) return []
+    return ticket.items || ticket.productos || []
+  }
+
   const obtenerTicketsPendientes = async () => {
     try {
       setLoading(true)
       setError("")
 
-      const res = await fetch(`${API_URL}/ventas/pendientes`, {
+      const res = await fetch(`${API_URL}/cobros/pendientes`, {
         cache: "no-store",
       })
 
@@ -172,7 +184,7 @@ export default function ModuloCobro() {
         throw new Error(data?.message || "Error al cargar tickets pendientes")
       }
 
-      setTickets(data.data || data.tickets || [])
+      setTickets(data.tickets || [])
     } catch (err) {
       console.error(err)
       setError("No fue posible cargar los tickets pendientes.")
@@ -187,7 +199,7 @@ export default function ModuloCobro() {
       setCargandoDetalle(true)
       setTicketDetalle(null)
 
-      const res = await fetch(`${API_URL}/ventas/${id}`, {
+      const res = await fetch(`${API_URL}/cobros/pendientes/${id}`, {
         cache: "no-store",
       })
 
@@ -197,7 +209,14 @@ export default function ModuloCobro() {
         throw new Error(data?.message || "No se pudo obtener el detalle")
       }
 
-      setTicketDetalle(data.data || data.venta || data.ticket)
+      const ticket = data.ticket
+
+      setTicketDetalle({
+        ...ticket,
+        cliente_nombre:
+          ticket.cliente_nombre || ticket.cliente || "Cliente general",
+        items: ticket.items || ticket.productos || [],
+      })
     } catch (err) {
       console.error(err)
       setDetalleAbierto(false)
@@ -245,16 +264,19 @@ export default function ModuloCobro() {
     try {
       setProcesandoPago(true)
 
-      const res = await fetch(`${API_URL}/ventas/${ticketCobro.id}/finalizar`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          metodo_pago: metodoPago,
-          observaciones: observaciones.trim() || "",
-        }),
-      })
+      const res = await fetch(
+        `${API_URL}/cobros/pendientes/${ticketCobro.id}/cobrar`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            metodo_pago: metodoPago,
+            observaciones: observaciones.trim() || "",
+          }),
+        }
+      )
 
       const data = await res.json()
 
@@ -265,6 +287,7 @@ export default function ModuloCobro() {
       setTickets((prev) =>
         prev.filter((ticket) => ticket.id !== ticketCobro.id)
       )
+
       setCobroAbierto(false)
       setDetalleAbierto(false)
       setTicketDetalle(null)
@@ -272,7 +295,14 @@ export default function ModuloCobro() {
       setMetodoPago("")
       setObservaciones("")
       setMontoRecibido("")
-      setSuccessMessage("Ticket cobrado correctamente.")
+
+      const impresion = data.ticket?.impresion
+
+      if (impresion && impresion.ok === false) {
+        setSuccessMessage("Ticket cobrado, pero no se pudo imprimir.")
+      } else {
+        setSuccessMessage("Ticket cobrado correctamente.")
+      }
     } catch (err: any) {
       console.error(err)
       setErrorMessage(err.message || "No fue posible finalizar la venta.")
@@ -350,7 +380,7 @@ export default function ModuloCobro() {
         ) : (
           <div className="grid h-full grid-cols-1 gap-4 overflow-y-auto pr-2 [scrollbar-width:none] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 [&::-webkit-scrollbar]:hidden">
             {tickets.map((ticket) => {
-              const cliente = ticket.cliente_nombre || "Cliente general"
+              const cliente = obtenerCliente(ticket)
 
               return (
                 <Card
@@ -440,9 +470,7 @@ export default function ModuloCobro() {
 
             <DialogDescription>
               {ticketDetalle
-                ? `${ticketDetalle.folio || `Ticket #${ticketDetalle.id}`} · Cliente: ${
-                    ticketDetalle.cliente_nombre || "Cliente general"
-                  }`
+                ? `${ticketDetalle.folio || `Ticket #${ticketDetalle.id}`} · Cliente: ${obtenerCliente(ticketDetalle)}`
                 : "Cargando detalle del ticket..."}
             </DialogDescription>
           </DialogHeader>
@@ -481,13 +509,15 @@ export default function ModuloCobro() {
                   </div>
 
                   <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
-                    {ticketDetalle.items?.map((item) => (
+                    {obtenerItems(ticketDetalle).map((item) => (
                       <div
                         key={item.id}
                         className="grid grid-cols-[1fr_90px_120px] gap-2 text-sm"
                       >
                         <div className="min-w-0">
-                          <p className="truncate font-medium">{item.nombre}</p>
+                          <p className="truncate font-medium">
+                            {item.nombre || item.producto || "Producto"}
+                          </p>
 
                           <p className="truncate text-xs text-muted-foreground">
                             {item.codigo_producto || "Sin código"}
@@ -559,14 +589,7 @@ export default function ModuloCobro() {
 
             <DialogDescription>
               {ticketCobro
-                ? `${
-                    ticketCobro.folio || `Ticket #${ticketCobro.id}`
-                  } · Cliente: ${
-                    "cliente_nombre" in ticketCobro &&
-                    ticketCobro.cliente_nombre
-                      ? ticketCobro.cliente_nombre
-                      : "Cliente general"
-                  }`
+                ? `${ticketCobro.folio || `Ticket #${ticketCobro.id}`} · Cliente: ${obtenerCliente(ticketCobro)}`
                 : "Selecciona el método de pago para finalizar la venta."}
             </DialogDescription>
           </DialogHeader>
